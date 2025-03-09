@@ -6,10 +6,8 @@ const GlobalStyles = createGlobalStyle`
     padding: 0;
     background: #0A0A0A;
     color: rgba(255, 255, 255, 0.9);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-      sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
@@ -21,14 +19,23 @@ const GlobalStyles = createGlobalStyle`
   }
 
   .ant-btn {
-    border-radius: 24px;
-    font-weight: 500;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
   }
 
   .ant-input {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 8px;
     color: white;
 
     &:hover, &:focus {
@@ -48,10 +55,11 @@ const GlobalStyles = createGlobalStyle`
   .ant-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
 
     .ant-card-head {
-      border-bottom-color: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ant-card-head-title {
@@ -61,14 +69,14 @@ const GlobalStyles = createGlobalStyle`
 
   .ant-modal {
     .ant-modal-content {
-      background: #1A1A1A;
-      border-radius: 16px;
+      background: #141414;
+      border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ant-modal-header {
       background: transparent;
-      border-bottom-color: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ant-modal-title {

@@ -7,11 +7,12 @@ import styled from 'styled-components';
 const { Header } = Layout;
 
 const StyledHeader = styled(Header)`
-  background: white;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   position: fixed;
   width: 100%;
   z-index: 1000;
@@ -35,12 +36,21 @@ const LogoImage = styled.img`
 `;
 
 const StyledMenu = styled(Menu)`
-  flex: 1;
-  border-bottom: none;
-  
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+
   .ant-menu-item {
-    padding: 0 20px;
-    margin: 0 4px;
+    color: rgba(255, 255, 255, 0.8);
+    
+    &:hover {
+      color: white;
+    }
+    
+    &.ant-menu-item-selected {
+      color: white;
+      background: rgba(255, 255, 255, 0.05);
+    }
   }
 `;
 
@@ -53,6 +63,30 @@ const AuthContainer = styled.div`
 
 const StyledLink = styled(Link)`
   text-decoration: none;
+`;
+
+const NavButton = styled(Button)`
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  padding: 4px 16px;
+  height: 36px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  &.primary {
+    background: white;
+    color: #0A0A0A;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+  }
 `;
 
 const Navbar = () => {
