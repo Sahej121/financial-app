@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../../utils/api';
 
 export const uploadDocument = createAsyncThunk(
   'documents/upload',
@@ -7,7 +7,7 @@ export const uploadDocument = createAsyncThunk(
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await axios.post('/api/documents/upload', formData, {
+    const response = await api.post('/api/documents/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const CA = sequelize.define('CA', {
     name: {
       type: DataTypes.STRING,
@@ -20,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING
     }
   });
+
+  CA.associate = (models) => {
+    // Add any associations if needed
+  };
 
   return CA;
 }; 

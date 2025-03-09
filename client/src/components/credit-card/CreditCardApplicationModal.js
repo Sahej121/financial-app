@@ -11,10 +11,21 @@ const CreditCardApplicationModal = ({ visible, onCancel, card }) => {
   const { applicationLoading } = useSelector((state) => state.creditCard);
   const { user } = useSelector((state) => state.user);
 
+  // Initialize form with empty values if user is not available
+  React.useEffect(() => {
+    if (visible) {
+      form.setFieldsValue({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+      });
+    }
+  }, [visible, user, form]);
+
   const onFinish = async (values) => {
     try {
       await dispatch(submitCardApplication({
-        cardId: card.id,
+        cardId: card?.id,
         ...values
       })).unwrap();
       
@@ -28,7 +39,7 @@ const CreditCardApplicationModal = ({ visible, onCancel, card }) => {
 
   return (
     <Modal
-      title={`Apply for ${card.name}`}
+      title={`Apply for ${card?.name || 'Credit Card'}`}
       visible={visible}
       onCancel={onCancel}
       footer={null}
@@ -38,10 +49,6 @@ const CreditCardApplicationModal = ({ visible, onCancel, card }) => {
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        initialValues={{
-          name: user?.name || '',
-          email: user?.email || '',
-        }}
       >
         <Form.Item
           name="name"

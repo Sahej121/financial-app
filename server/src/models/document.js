@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Document = sequelize.define('Document', {
     fileName: {
       type: DataTypes.STRING,
@@ -16,6 +18,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     }
   });
+
+  Document.associate = (models) => {
+    Document.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user'
+    });
+  };
 
   return Document;
 }; 

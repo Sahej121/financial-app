@@ -2,10 +2,17 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 export const submitCreditCardForm = createAsyncThunk(
-  'creditCard/submit',
-  async (formData) => {
-    const response = await axios.post('/api/credit-cards/recommend', formData);
-    return response.data;
+  'creditCard/submitForm',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/credit-card/submit', formData);
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue('An error occurred while submitting the form');
+    }
   }
 );
 
@@ -17,20 +24,25 @@ export const submitCardApplication = createAsyncThunk(
   }
 );
 
+const initialState = {
+  loading: false,
+  error: null,
+  success: false,
+  formData: null
+};
+
 const creditCardSlice = createSlice({
   name: 'creditCard',
-  initialState: {
-    recommendations: [],
-    loading: false,
-    error: null,
-    formSubmitted: false,
-    applicationLoading: false,
-    applicationError: null
-  },
+  initialState,
   reducers: {
-    clearRecommendations: (state) => {
-      state.recommendations = [];
-      state.formSubmitted = false;
+    clearError: (state) => {
+      state.error = null;
+    },
+    clearSuccess: (state) => {
+      state.success = false;
+    },
+    resetForm: (state) => {
+      return initialState;
     }
   },
   extraReducers: (builder) => {
@@ -38,17 +50,18 @@ const creditCardSlice = createSlice({
       .addCase(submitCreditCardForm.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(submitCreditCardForm.fulfilled, (state, action) => {
         state.loading = false;
-        state.recommendations = action.payload;
+        state.success = true;
+        state.formData = action.payload;
         state.error = null;
-        state.formSubmitted = true;
       })
       .addCase(submitCreditCardForm.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
-        state.formSubmitted = false;
+        state.error = action.payload || 'Something went wrong';
+        state.success = false;
       })
       .addCase(submitCardApplication.pending, (state) => {
         state.applicationLoading = true;
@@ -65,5 +78,5 @@ const creditCardSlice = createSlice({
   }
 });
 
-export const { clearRecommendations } = creditCardSlice.actions;
+export const { clearError, clearSuccess, resetForm } = creditCardSlice.actions;
 export default creditCardSlice.reducer; 

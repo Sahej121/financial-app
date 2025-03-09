@@ -1,24 +1,29 @@
-const CreditCard = require('../models/CreditCard');
+const { CreditCard, CreditCardApplication } = require('../models');
+const { Op } = require('sequelize');
 
 exports.getRecommendations = async (req, res) => {
   try {
     const { annualIncome, cardType, purpose, name, age, email, phone } = req.query;
 
-    let query = {};
+    let whereClause = {};
 
     // Filter by minimum income
     if (annualIncome) {
-      query.minIncomeRequired = { $lte: Number(annualIncome) };
+      whereClause.minIncomeRequired = {
+        [Op.lte]: Number(annualIncome)
+      };
     }
 
     // Filter by card type
     if (cardType) {
-      query.type = cardType;
+      whereClause.type = cardType;
     }
 
-    const cards = await CreditCard.find(query)
-      .sort({ rating: -1 })
-      .limit(10);
+    const cards = await CreditCard.findAll({
+      where: whereClause,
+      order: [['rating', 'DESC']],
+      limit: 10
+    });
 
     // Store user details for future reference
     const userDetails = {

@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const path = require('path');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const apiLimiter = require('./middleware/rateLimiter');
+const { sequelize } = require('./models');
 require('dotenv').config();
 
 const app = express();
@@ -13,13 +14,21 @@ app.use(cors());
 app.use(express.json());
 app.use(apiLimiter);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Connect to PostgreSQL with Sequelize
+sequelize.authenticate()
+  .then(() => {
+    console.log('Connected to PostgreSQL database');
+    return sequelize.sync({ alter: true }); // Update tables based on models (use with caution in production)
+  })
+  .then(() => {
+    console.log('Database synchronized');
+  })
+  .catch(err => {
+    console.error('Database connection error:', err);
+  });
 
 // Routes
 app.use('/api', routes);

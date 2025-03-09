@@ -5,23 +5,32 @@ import { Layout, Spin } from 'antd';
 import { getProfile } from './redux/slices/userSlice';
 import { setupAxiosDefaults } from './services/authService';
 import PrivateRoute from './components/auth/PrivateRoute';
-import Navbar from './components/Navbar';
+import Navbar from './components/common/Navbar';
 import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
-import CASelection from './pages/CASelection';
 import CreditCard from './pages/CreditCard';
 import Contact from './pages/Contact';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './pages/Profile';
 import CARegister from './components/auth/CARegister';
-import FinancialPlanning from './pages/FInancialPlanning'; // Added import
+import FinancialPlanning from './pages/FInancialPlanning';
+import CASelectionPage from './pages/CASelectionPage';
+import styled from 'styled-components';
 
 const { Content } = Layout;
 
 // Initialize axios defaults
 setupAxiosDefaults();
+
+const StyledLayout = styled(Layout)`
+  min-height: 100vh;
+`;
+
+const MainContent = styled(Content)`
+  padding-top: 64px; // Height of the fixed navbar
+`;
 
 function App() {
   const dispatch = useDispatch();
@@ -47,9 +56,9 @@ function App() {
 
   return (
     <Router>
-      <Layout className="layout">
+      <StyledLayout>
         <Navbar />
-        <Content>
+        <MainContent>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -58,16 +67,13 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/ca-register" element={<CARegister />} />
             
-            {/* Protected Routes */}
-            <Route
-              path="/ca-selection"
-              element={
-                <PrivateRoute>
-                  <CASelection />
-                </PrivateRoute>
-              }
-            />
+            {/* Public Routes */}
+            <Route path="/ca-selection" element={<CASelectionPage />} />
             <Route path="/credit-card" element={<CreditCard />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/planning" element={<FinancialPlanning />} />
+
+            {/* Protected Routes */}
             <Route
               path="/profile"
               element={
@@ -76,13 +82,9 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/contact" element={<Contact />} />
-
-            {/* New Financial Planning Route */}
-            <Route path="/planning" element={<FinancialPlanning />} />
           </Routes>
-        </Content>
-      </Layout>
+        </MainContent>
+      </StyledLayout>
     </Router>
   );
 }

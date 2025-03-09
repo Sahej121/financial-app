@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Row, Col, Tag, Button, Rate, List, Typography } from 'antd';
+import { Card, Row, Col, Tag, Button, Rate, List, Typography, Tooltip } from 'antd';
 import { CheckCircleOutlined, CreditCardOutlined } from '@ant-design/icons';
 import CreditCardApplicationModal from './CreditCardApplicationModal';
 
@@ -16,6 +16,12 @@ const CreditCardRecommendations = ({ recommendations }) => {
     setSelectedCard(null);
   };
 
+  const getRatingColor = (rating) => {
+    if (rating >= 8) return '#52c41a'; // Green for high ratings
+    if (rating >= 6) return '#faad14'; // Yellow for medium ratings
+    return '#ff4d4f'; // Red for low ratings
+  };
+
   return (
     <div style={{ marginTop: 40 }}>
       <Title level={3} style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -23,8 +29,8 @@ const CreditCardRecommendations = ({ recommendations }) => {
       </Title>
 
       <Row gutter={[24, 24]}>
-        {recommendations.map((card) => (
-          <Col xs={24} md={12} key={card.id}>
+        {recommendations.map((card, index) => (
+          <Col xs={24} md={12} key={index}>
             <Card 
               hoverable
               className="credit-card-recommendation"
@@ -37,49 +43,93 @@ const CreditCardRecommendations = ({ recommendations }) => {
               <div className="card-header">
                 <CreditCardOutlined style={{ fontSize: 24 }} />
                 <Title level={4}>{card.name}</Title>
-                <Tag color="blue">{card.type}</Tag>
-              </div>
-
-              <div className="card-rating">
-                <Rate disabled defaultValue={card.rating} />
-                <Text type="secondary">({card.reviewCount} reviews)</Text>
+                <Tag color="blue">{card.special_remarks}</Tag>
               </div>
 
               <Paragraph className="card-highlights">
+                <Text strong>Annual Charges:</Text> {card.annual_charges}
+                <br />
                 <Text strong>Key Benefits:</Text>
-                <List
-                  size="small"
-                  dataSource={card.benefits}
-                  renderItem={benefit => (
-                    <List.Item>
-                      <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                      {benefit}
-                    </List.Item>
-                  )}
-                />
+                <br />
+                {card.key_benefits}
               </Paragraph>
 
-              <div className="card-details">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Text type="secondary">Annual Fee</Text>
-                    <br />
-                    <Text strong>{card.annualFee === 0 ? 'Free' : `₹${card.annualFee}`}</Text>
+              <div className="card-ratings" style={{ marginTop: 16 }}>
+                <Row gutter={[16, 16]}>
+                  <Col span={8}>
+                    <Tooltip title="Shopping Rating">
+                      <div>
+                        <Text type="secondary">Shopping</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.shopping) }}>
+                          {card.ratings.shopping}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
                   </Col>
-                  <Col span={12}>
-                    <Text type="secondary">Reward Rate</Text>
-                    <br />
-                    <Text strong>{card.rewardRate}</Text>
+                  <Col span={8}>
+                    <Tooltip title="Travel Rating">
+                      <div>
+                        <Text type="secondary">Travel</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.travel) }}>
+                          {card.ratings.travel}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
+                  </Col>
+                  <Col span={8}>
+                    <Tooltip title="Dining & Entertainment Rating">
+                      <div>
+                        <Text type="secondary">Dining</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.dining_entertainment) }}>
+                          {card.ratings.dining_entertainment}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
+                  </Col>
+                  <Col span={8}>
+                    <Tooltip title="Fuel Rating">
+                      <div>
+                        <Text type="secondary">Fuel</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.fuel) }}>
+                          {card.ratings.fuel}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
+                  </Col>
+                  <Col span={8}>
+                    <Tooltip title="Rewards Rating">
+                      <div>
+                        <Text type="secondary">Rewards</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.rewards) }}>
+                          {card.ratings.rewards}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
+                  </Col>
+                  <Col span={8}>
+                    <Tooltip title="Charges Rating">
+                      <div>
+                        <Text type="secondary">Charges</Text>
+                        <br />
+                        <Text strong style={{ color: getRatingColor(card.ratings.charges) }}>
+                          {card.ratings.charges}/10
+                        </Text>
+                      </div>
+                    </Tooltip>
                   </Col>
                 </Row>
               </div>
 
-              {card.welcomeOffer && (
-                <div className="welcome-offer">
-                  <Tag color="gold">Welcome Offer</Tag>
-                  <Text>{card.welcomeOffer}</Text>
-                </div>
-              )}
+              <div style={{ marginTop: 16 }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Hidden Charges: {card.hidden_charges}
+                </Text>
+              </div>
             </Card>
           </Col>
         ))}

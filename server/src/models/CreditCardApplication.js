@@ -1,54 +1,60 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
 
-const applicationSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  cardId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'CreditCard',
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: true
-  },
-  phone: {
-    type: String,
-    required: true
-  },
-  pan: {
-    type: String,
-    required: true
-  },
-  dob: {
-    type: Date,
-    required: true
-  },
-  address: {
-    type: String,
-    required: true
-  },
-  city: {
-    type: String,
-    required: true
-  },
-  pincode: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  }
-}, {
-  timestamps: true
-});
+module.exports = (sequelize) => {
+  const CreditCardApplication = sequelize.define('CreditCardApplication', {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEmail: true
+      }
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    pan: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    dob: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    address: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    pincode: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      defaultValue: 'pending'
+    }
+  }, {
+    timestamps: true
+  });
 
-module.exports = mongoose.model('CreditCardApplication', applicationSchema); 
+  CreditCardApplication.associate = (models) => {
+    CreditCardApplication.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user'
+    });
+    CreditCardApplication.belongsTo(models.CreditCard, {
+      foreignKey: 'cardId',
+      as: 'creditCard'
+    });
+  };
+
+  return CreditCardApplication;
+}; 
