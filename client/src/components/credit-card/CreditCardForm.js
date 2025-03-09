@@ -289,5 +289,58 @@ const CreditCardForm = () => {
     </FormContainer>
   );
 };
+// In CreditCardForm.js
+
+const getBestCreditCard = (userPreferences) => {
+  let bestCard = null;
+  let highestScore = 0;
+
+  creditCards.forEach(card => {
+    let score = 0;
+
+    // Example scoring logic based on user preferences
+    if (userPreferences.cardType?.some(type => card.special_remarks.toLowerCase().includes(type.toLowerCase()))) {
+      score += 10;
+    }
+
+    userPreferences.spendingCategories?.forEach(category => {
+      const categoryMapping = {
+        groceries: 'shopping',
+        dining: 'dining_entertainment',
+        travel: 'travel',
+        shopping: 'shopping',
+        entertainment: 'dining_entertainment',
+        fuel: 'fuel',
+        bills: 'charges'
+      };
+      if (card.ratings[categoryMapping[category]] >= 7) {
+        score += card.ratings[categoryMapping[category]];
+      }
+    });
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestCard = card;
+    }
+  });
+
+  return bestCard;
+};
+
+const onFinish = async (values) => {
+  try {
+    await dispatch(submitCreditCardForm({
+      ...values,
+      annualIncome: parseFloat(values.annualIncome),
+    })).unwrap();
+
+    const bestCard = getBestCreditCard(values);
+    setRecommendations([bestCard]); // Set the best card as the recommendation
+
+    message.success('Form submitted successfully!');
+  } catch (error) {
+    message.error('Failed to submit form. Please try again.');
+  }
+};
 
 export default CreditCardForm;

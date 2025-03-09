@@ -16,6 +16,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './pages/Profile';
 import CARegister from './components/auth/CARegister';
+import FinancialPlanning from './pages/FInancialPlanning'; // Added import
 
 const { Content } = Layout;
 
@@ -76,6 +77,9 @@ function App() {
               }
             />
             <Route path="/contact" element={<Contact />} />
+
+            {/* New Financial Planning Route */}
+            <Route path="/planning" element={<FinancialPlanning />} />
           </Routes>
         </Content>
       </Layout>
@@ -83,4 +87,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

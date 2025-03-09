@@ -47,10 +47,13 @@ const Navbar = () => {
         <Menu.Item key="/credit-card">
           <Link to="/credit-card">Credit Card</Link>
         </Menu.Item>
+        <Menu.Item key="/planning">  {/* Added Planning option */}
+          <Link to="/planning">Planning</Link>
+        </Menu.Item>
         <Menu.Item key="/contact">
           <Link to="/contact">Contact</Link>
         </Menu.Item>
-        
+
         {user ? (
           <Menu.Item key="user" style={{ marginLeft: 'auto' }}>
             <Dropdown overlay={userMenu} placement="bottomRight">
@@ -74,4 +77,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;
