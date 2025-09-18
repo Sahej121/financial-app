@@ -77,6 +77,7 @@ const FinancialPlanning = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showMeeting, setShowMeeting] = useState(false);
+  const [consultationData, setConsultationData] = useState(null);
 
   // Mock analyst schedule - Replace with API call
   const availableSlots = [
