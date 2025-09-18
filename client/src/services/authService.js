@@ -27,5 +27,5 @@ axios.interceptors.response.use(
 );
 
 export const setupAxiosDefaults = () => {
-  axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 }; 

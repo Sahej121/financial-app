@@ -17,10 +17,10 @@ app.use(apiLimiter);
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Connect to PostgreSQL with Sequelize
+// Connect to SQLite with Sequelize
 sequelize.authenticate()
   .then(() => {
-    console.log('Connected to PostgreSQL database');
+    console.log('Connected to SQLite database');
     return sequelize.sync({ alter: true }); // Update tables based on models (use with caution in production)
   })
   .then(() => {
