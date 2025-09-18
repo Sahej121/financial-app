@@ -6,6 +6,7 @@ const documentController = require('../controllers/documentController');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const creditCardController = require('../controllers/creditCardController');
+const meetingsRouter = require('./meetings');
 
 // Auth routes
 router.post('/auth/register', authController.register);
@@ -17,6 +18,17 @@ router.get('/cas', caController.getCAs);
 
 // Document routes - temporarily remove auth middleware for testing
 router.post('/documents/upload', upload.single('file'), documentController.uploadDocument);
+
+// Meeting routes
+router.use('/meetings', meetingsRouter);
+
+// Document routes (enhanced)
+const documentsRouter = require('./documents');
+router.use('/documents', documentsRouter);
+
+// Analytics routes
+const analyticsRouter = require('./analytics');
+router.use('/analytics', analyticsRouter);
 
 // Credit Card routes
 // Check if controller functions exist before using them

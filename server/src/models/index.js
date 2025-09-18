@@ -9,6 +9,7 @@ const sequelize = new Sequelize(config);
 const User = require('./user');
 const CA = require('./ca');
 const Document = require('./document');
+const Meeting = require('./meeting');
 const CreditCard = require('./CreditCard');
 const CreditCardApplication = require('./CreditCardApplication');
 
@@ -17,6 +18,7 @@ const models = {
   User: User(sequelize),
   CA: CA(sequelize),
   Document: Document(sequelize),
+  Meeting: Meeting(sequelize),
   CreditCard: CreditCard(sequelize),
   CreditCardApplication: CreditCardApplication(sequelize)
 };

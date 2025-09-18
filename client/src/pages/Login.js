@@ -70,11 +70,14 @@ const Login = () => {
       
       // Redirect based on user role
       switch (response.user.role) {
-        case 'analyst':
-          navigate('/analyst-dashboard');
-          break;
         case 'ca':
           navigate('/ca-dashboard');
+          break;
+        case 'financial_planner':
+          navigate('/financial-planner-dashboard');
+          break;
+        case 'admin':
+          navigate('/dashboard'); // Admins use user dashboard for now
           break;
         default:
           navigate('/dashboard');

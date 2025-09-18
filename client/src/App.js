@@ -5,6 +5,10 @@ import { Layout, Spin } from 'antd';
 import { getProfile } from './redux/slices/userSlice';
 import { setupAxiosDefaults } from './services/authService';
 import PrivateRoute from './components/auth/PrivateRoute';
+import RoleBasedRoute from './components/auth/RoleBasedRoute';
+import UserDashboard from './components/dashboards/UserDashboard';
+import CADashboard from './components/dashboards/CADashboard';
+import FinancialPlannerDashboard from './components/dashboards/FinancialPlannerDashboard';
 import Navbar from './components/common/Navbar';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -72,6 +76,32 @@ function App() {
             <Route path="/credit-card" element={<CreditCard />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/planning" element={<FinancialPlanning />} />
+
+            {/* Dashboard Routes - Role-based */}
+            <Route
+              path="/dashboard"
+              element={
+                <RoleBasedRoute allowedRoles={['user', 'admin']}>
+                  <UserDashboard />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/ca-dashboard"
+              element={
+                <RoleBasedRoute allowedRoles={['ca']}>
+                  <CADashboard />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/financial-planner-dashboard"
+              element={
+                <RoleBasedRoute allowedRoles={['financial_planner']}>
+                  <FinancialPlannerDashboard />
+                </RoleBasedRoute>
+              }
+            />
 
             {/* Protected Routes */}
             <Route
