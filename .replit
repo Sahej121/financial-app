@@ -37,3 +37,8 @@ externalPort = 80
 [[ports]]
 localPort = 35437
 externalPort = 3000
+
+[deployment]
+deploymentTarget = "vm"
+run = ["bash", "-c", "concurrently \"cd server && npm start\" \"cd client && npm run build && npx serve -s build -p 5000\""]
+build = ["npm", "run", "install-all"]
