@@ -53,4 +53,13 @@ if (creditCardController && creditCardController.applyForCard) {
   });
 }
 
+// Add credit card feedback route if it exists
+if (creditCardController && creditCardController.submitCardFeedback) {
+  router.post('/creditCard/feedback', creditCardController.submitCardFeedback);
+}
+
+// Feedback routes
+const feedbackRoutes = require('./feedback');
+router.use('/feedback', feedbackRoutes);
+
 module.exports = router; 
