@@ -28,8 +28,11 @@ const Register = () => {
 
   const onFinish = async (values) => {
     try {
-      await dispatch(register(values)).unwrap();
-      navigate('/');
+      // Remove confirmPassword from the data sent to server
+      const { confirmPassword, ...userData } = values;
+      const result = await dispatch(register(userData)).unwrap();
+      // Navigate to user dashboard after registration
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       // Error is handled by Redux
     }

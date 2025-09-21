@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Input, Button, Card, Alert } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { registerCA } from '../../redux/slices/authSlice';
+import { register } from '../../redux/slices/userSlice';
 import styled from 'styled-components';
 
 const RegisterContainer = styled.div`
@@ -15,12 +15,16 @@ const CARegister = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error } = useSelector((state) => state.user);
 
   const onFinish = async (values) => {
     try {
-      await dispatch(registerCA(values)).unwrap();
-      navigate('/');
+      // Remove confirmPassword from the data sent to server
+      const { confirmPassword, ...userData } = values;
+      // Add role as 'ca' for CA registration
+      const result = await dispatch(register({ ...userData, role: 'ca' })).unwrap();
+      // Navigate to CA dashboard after registration
+      navigate('/ca-dashboard', { replace: true });
     } catch (error) {
       // Error is handled by Redux
     }
