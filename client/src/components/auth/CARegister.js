@@ -116,76 +116,76 @@ const CARegister = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return (
+  return (
           <>
-            <Form.Item
-              name="name"
-              label="Full Name"
-              rules={[{ required: true, message: 'Please enter your full name' }]}
-            >
+          <Form.Item
+            name="name"
+            label="Full Name"
+            rules={[{ required: true, message: 'Please enter your full name' }]}
+          >
               <Input size="large" />
-            </Form.Item>
+          </Form.Item>
 
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: 'Please enter your email' },
-                { type: 'email', message: 'Please enter a valid email' }
-              ]}
-            >
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please enter your email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
               <Input size="large" />
-            </Form.Item>
+          </Form.Item>
 
-            <Form.Item
-              name="caNumber"
-              label="CA Registration Number"
-              rules={[
-                { required: true, message: 'Please enter your CA registration number' },
-                { pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit CA number' }
-              ]}
-            >
+          <Form.Item
+            name="caNumber"
+            label="CA Registration Number"
+            rules={[
+              { required: true, message: 'Please enter your CA registration number' },
+              { pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit CA number' }
+            ]}
+          >
               <Input placeholder="Enter your 6-digit CA registration number" size="large" />
-            </Form.Item>
+          </Form.Item>
 
-            <Form.Item
-              name="phone"
-              label="Phone Number"
-              rules={[
-                { required: true, message: 'Please enter your phone number' },
-                { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
-              ]}
-            >
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[
+              { required: true, message: 'Please enter your phone number' },
+              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+            ]}
+          >
               <Input addonBefore="+91" size="large" />
-            </Form.Item>
+          </Form.Item>
 
-            <Form.Item
-              name="password"
-              label="Password"
-              rules={[
-                { required: true, message: 'Please enter your password' },
-                { min: 6, message: 'Password must be at least 6 characters' }
-              ]}
-            >
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[
+              { required: true, message: 'Please enter your password' },
+              { min: 6, message: 'Password must be at least 6 characters' }
+            ]}
+          >
               <Input.Password size="large" />
-            </Form.Item>
+          </Form.Item>
 
-            <Form.Item
-              name="confirmPassword"
-              label="Confirm Password"
-              dependencies={['password']}
-              rules={[
-                { required: true, message: 'Please confirm your password' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('password') === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error('Passwords do not match'));
-                  },
-                }),
-              ]}
-            >
+          <Form.Item
+            name="confirmPassword"
+            label="Confirm Password"
+            dependencies={['password']}
+            rules={[
+              { required: true, message: 'Please confirm your password' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Passwords do not match'));
+                },
+              }),
+            ]}
+          >
               <Input.Password size="large" />
             </Form.Item>
           </>
@@ -277,7 +277,7 @@ const CARegister = () => {
                   <Option key={spec} value={spec}>{spec}</Option>
                 ))}
               </Select>
-            </Form.Item>
+          </Form.Item>
 
             <Form.Item
               name="availability"
@@ -330,14 +330,14 @@ const CARegister = () => {
               </Button>
             )}
             {currentStep === steps.length - 1 && (
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={loading}
-                size="large"
-              >
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={loading}
+              size="large"
+            >
                 Complete Registration
-              </Button>
+            </Button>
             )}
           </div>
         </Form>

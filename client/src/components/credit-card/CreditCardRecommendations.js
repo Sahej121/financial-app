@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Row, Col, Tag, Button, Rate, List, Typography, Tooltip, Progress, Alert, Modal, Form, Input, message } from 'antd';
-import { CheckCircleOutlined, CreditCardOutlined, ExternalLinkOutlined, InfoCircleOutlined, StarOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CreditCardOutlined, LinkOutlined, InfoCircleOutlined, StarOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -86,7 +86,7 @@ const CreditCardRecommendations = ({ recommendations }) => {
                 <Button 
                   type="primary" 
                   block 
-                  icon={<ExternalLinkOutlined />}
+                  icon={<LinkOutlined />}
                   onClick={() => handleApplyNow(card)}
                   size="large"
                 >
