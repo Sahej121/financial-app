@@ -5,6 +5,17 @@ const creditCards = [
     hidden_charges: "Late payment fee: Up to ₹1,000; Cash withdrawal fee: 2.5% of the amount (min ₹500)",
     key_benefits: "5% cashback on Amazon, Flipkart, and other online platforms; 1% cashback on all other spends",
     special_remarks: "Best for online shoppers.",
+    application_url: "https://www.hdfcbank.com/personal/pay/cards/credit-cards/millennia-credit-card",
+    bank: "HDFC Bank",
+    card_type: "Cashback",
+    eligibility: {
+      min_age: 21,
+      max_age: 60,
+      min_income: 300000,
+      employment_type: ["Salaried", "Self-employed"],
+      credit_score_min: 650,
+      documents_required: ["Income Proof", "Identity Proof", "Address Proof", "Bank Statements"]
+    },
     ratings: {
       shopping: 9,
       travel: 5,
@@ -20,6 +31,17 @@ const creditCards = [
     hidden_charges: "Late payment fee: Up to ₹1,000; Cash withdrawal fee: 2.5% of the amount (min ₹500)",
     key_benefits: "4 reward points per ₹150 spent; complimentary airport lounge access; discounts on dining and travel",
     special_remarks: "Ideal for frequent travelers.",
+    application_url: "https://www.hdfcbank.com/personal/pay/cards/credit-cards/regalia-credit-card",
+    bank: "HDFC Bank",
+    card_type: "Travel",
+    eligibility: {
+      min_age: 21,
+      max_age: 60,
+      min_income: 600000,
+      employment_type: ["Salaried", "Self-employed"],
+      credit_score_min: 700,
+      documents_required: ["Income Proof", "Identity Proof", "Address Proof", "Bank Statements", "ITR"]
+    },
     ratings: {
       shopping: 7,
       travel: 9,
@@ -35,6 +57,17 @@ const creditCards = [
     hidden_charges: "Late payment fee: Up to ₹1,000; Cash withdrawal fee: 2.5% of the amount (min ₹500)",
     key_benefits: "5x reward points on dining and travel; unlimited airport lounge access; exclusive golf benefits",
     special_remarks: "Best for high-net-worth individuals.",
+    application_url: "https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-credit-card",
+    bank: "HDFC Bank",
+    card_type: "Premium",
+    eligibility: {
+      min_age: 21,
+      max_age: 65,
+      min_income: 2000000,
+      employment_type: ["Salaried", "Self-employed", "Professional"],
+      credit_score_min: 750,
+      documents_required: ["Income Proof", "Identity Proof", "Address Proof", "Bank Statements", "ITR", "Salary Slips"]
+    },
     ratings: {
       shopping: 6,
       travel: 10,

@@ -19,4 +19,14 @@ router.post('/apply',
 
 router.get('/recommendations', creditCardController.getRecommendations);
 
+// Card feedback/request endpoint
+router.post('/feedback',
+  [
+    body('cardName').trim().notEmpty().withMessage('Card name is required'),
+    body('bankName').trim().notEmpty().withMessage('Bank name is required'),
+    validate
+  ],
+  creditCardController.submitCardFeedback
+);
+
 module.exports = router; 

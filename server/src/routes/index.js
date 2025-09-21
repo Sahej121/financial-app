@@ -15,6 +15,7 @@ router.get('/auth/profile', authController.getProfile);
 
 // CA routes
 router.get('/cas', caController.getCAs);
+router.post('/cas', caController.createCA);
 
 // Document routes - temporarily remove auth middleware for testing
 router.post('/documents/upload', upload.single('file'), documentController.uploadDocument);

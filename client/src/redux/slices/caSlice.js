@@ -8,19 +8,21 @@ const initialState = {
   filters: {
     experience: 'all',
     priceRange: [0, 5000],
-    specialization: 'all'
+    specialization: 'all',
+    sortBy: 'rating'
   }
 };
 
 export const fetchCAs = createAsyncThunk(
   'ca/fetchCAs',
-  async ({ experience, priceRange, specialization }) => {
+  async ({ experience, priceRange, specialization, sortBy }) => {
     const response = await axios.get('/api/cas', {
       params: {
         experience,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
-        specialization
+        specialization,
+        sortBy
       }
     });
     return response.data;

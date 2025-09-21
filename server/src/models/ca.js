@@ -6,20 +6,56 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    caNumber: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     experience: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    fee: {
+    consultationFee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false
     },
     rating: {
       type: DataTypes.DECIMAL(3, 2),
-      defaultValue: 0
+      defaultValue: 4.5
     },
-    specialization: {
-      type: DataTypes.STRING
+    specializations: {
+      type: DataTypes.JSON,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    qualifications: {
+      type: DataTypes.JSON,
+      allowNull: false
+    },
+    languages: {
+      type: DataTypes.JSON,
+      allowNull: false
+    },
+    availability: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Available Now'
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
     }
   });
 
