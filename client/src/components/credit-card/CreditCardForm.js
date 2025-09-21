@@ -373,6 +373,69 @@ const CreditCardForm = () => {
       )
     },
     {
+      title: 'Eligibility Info',
+      content: (
+        <FormContainerStyled>
+          <Form.Item
+            name="age"
+            label="🎂 Your Age"
+            rules={[{ required: true, message: 'Please enter your age' }]}
+          >
+            <InputNumber 
+              min={18} 
+              max={80} 
+              style={{ width: '100%' }}
+              placeholder="Enter your age"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="annualIncome"
+            label="💰 Annual Income (₹)"
+            rules={[{ required: true, message: 'Please enter your annual income' }]}
+          >
+            <Select placeholder="Select your annual income range">
+              <Option value="200000">Below ₹2 Lakh</Option>
+              <Option value="300000">₹2-3 Lakh</Option>
+              <Option value="500000">₹3-5 Lakh</Option>
+              <Option value="800000">₹5-8 Lakh</Option>
+              <Option value="1200000">₹8-12 Lakh</Option>
+              <Option value="2000000">₹12-20 Lakh</Option>
+              <Option value="3000000">₹20-30 Lakh</Option>
+              <Option value="5000000">Above ₹30 Lakh</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="employmentType"
+            label="👔 Employment Type"
+            rules={[{ required: true, message: 'Please select your employment type' }]}
+          >
+            <Select placeholder="Select your employment type">
+              <Option value="Salaried">💼 Salaried Employee</Option>
+              <Option value="Self-employed">🏢 Self-employed/Business Owner</Option>
+              <Option value="Professional">👨‍💼 Professional (Doctor, CA, etc.)</Option>
+              <Option value="Freelancer">💻 Freelancer</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="creditScore"
+            label="📊 Credit Score (if known)"
+            tooltip="Your CIBIL score. If you don't know, we'll estimate based on your profile."
+          >
+            <Select placeholder="Select your approximate credit score" allowClear>
+              <Option value="300">Poor (300-549)</Option>
+              <Option value="600">Fair (550-649)</Option>
+              <Option value="700">Good (650-749)</Option>
+              <Option value="800">Excellent (750+)</Option>
+              <Option value="">I don't know my credit score</Option>
+            </Select>
+          </Form.Item>
+        </FormContainerStyled>
+      )
+    },
+    {
       title: 'Preferences',
       content: (
         <FormContainerStyled>
@@ -475,11 +538,48 @@ const CreditCardForm = () => {
   ];
 
   const getRecommendations = (userPreferences) => {
-    // Create a scoring system for each card
+    // Enhanced scoring system with multiple factors
     const scoredCards = creditCards.map(card => {
       let score = 0;
+      let eligibilityScore = 0;
+      let personalizedScore = 0;
       
-      // Score based on spending categories
+      // 1. ELIGIBILITY SCORING (40% weight)
+      if (card.eligibility) {
+        const age = parseInt(userPreferences.age) || 25;
+        const income = parseFloat(userPreferences.annualIncome) || 300000;
+        const creditScore = parseInt(userPreferences.creditScore) || 650;
+        
+        // Age eligibility
+        if (age >= card.eligibility.min_age && age <= card.eligibility.max_age) {
+          eligibilityScore += 25;
+        }
+        
+        // Income eligibility with bonus for higher income
+        if (income >= card.eligibility.min_income) {
+          eligibilityScore += 25;
+          if (income > card.eligibility.min_income * 1.5) {
+            eligibilityScore += 10; // Bonus for well-qualified applicants
+          }
+        }
+        
+        // Credit score matching
+        if (creditScore >= card.eligibility.credit_score_min) {
+          eligibilityScore += 20;
+          if (creditScore > card.eligibility.credit_score_min + 50) {
+            eligibilityScore += 10; // Bonus for excellent credit
+          }
+        }
+        
+        // Employment type matching
+        if (userPreferences.employmentType && 
+            card.eligibility.employment_type.includes(userPreferences.employmentType)) {
+          eligibilityScore += 10;
+        }
+      }
+      
+      // 2. PERSONALIZED PREFERENCE SCORING (35% weight)
+      // Spending category matching with weighted importance
       userPreferences.spendingCategories?.forEach(category => {
         const categoryMapping = {
           groceries: 'shopping',
@@ -493,54 +593,95 @@ const CreditCardForm = () => {
         
         const mappedCategory = categoryMapping[category];
         if (card.ratings[mappedCategory]) {
-          score += card.ratings[mappedCategory] * 2; // Give more weight to preferred spending categories
+          personalizedScore += card.ratings[mappedCategory] * 3; // Higher weight for category match
         }
       });
 
-      // Score based on card type preferences
+      // Card type preference matching
       userPreferences.cardType?.forEach(type => {
-        if (card.special_remarks.toLowerCase().includes(type.toLowerCase())) {
-          score += 15; // Give significant weight to matching card types
+        if (card.card_type?.toLowerCase() === type.toLowerCase() || 
+            card.special_remarks.toLowerCase().includes(type.toLowerCase())) {
+          personalizedScore += 20;
         }
       });
 
-      // Score based on bank preferences
+      // Bank preference matching
       if (userPreferences.bankPreference) {
         userPreferences.bankPreference.forEach(bank => {
-          if (card.name.toLowerCase().includes(bank.toLowerCase())) {
-            score += 10; // Bonus points for preferred banks
+          if (card.bank?.toLowerCase().includes(bank.toLowerCase()) ||
+              card.name.toLowerCase().includes(bank.toLowerCase())) {
+            personalizedScore += 15;
           }
         });
       }
 
-      // Adjust score based on monthly spend
+      // 3. SPENDING PATTERN ANALYSIS (15% weight)
       const monthlySpend = parseFloat(userPreferences.monthlySpend || 0);
+      let spendingScore = 0;
+      
+      // Match card tier to spending level
       if (monthlySpend > 100000) { // High spender
-        if (card.annual_charges.includes('10,000') || card.special_remarks.toLowerCase().includes('premium')) {
-          score += 10;
+        if (card.card_type === 'Premium' || card.annual_charges.includes('10,000')) {
+          spendingScore += 25;
         }
-      } else if (monthlySpend < 25000) { // Low spender
-        if (card.annual_charges.includes('0') || card.annual_charges.includes('500')) {
-          score += 10;
+      } else if (monthlySpend > 50000) { // Medium spender
+        if (card.card_type === 'Travel' || card.card_type === 'Rewards') {
+          spendingScore += 20;
+        }
+      } else { // Low spender
+        if (card.card_type === 'Cashback' || card.annual_charges.includes('0')) {
+          spendingScore += 20;
         }
       }
 
-      // Additional features score
+      // 4. FEATURE MATCHING (10% weight)
+      let featureScore = 0;
       if (userPreferences.additionalFeatures) {
         userPreferences.additionalFeatures.forEach(feature => {
           if (card.key_benefits.toLowerCase().includes(feature.toLowerCase())) {
-            score += 5;
+            featureScore += 8;
           }
         });
       }
 
-      return {
-        ...card,
-        score
+      // Calculate weighted total score
+      const totalScore = (eligibilityScore * 0.4) + (personalizedScore * 0.35) + 
+                        (spendingScore * 0.15) + (featureScore * 0.1);
+      
+      // Calculate approval probability based on eligibility
+      let approvalChance = 0;
+      if (card.eligibility) {
+        const age = parseInt(userPreferences.age) || 25;
+        const income = parseFloat(userPreferences.annualIncome) || 300000;
+        const creditScore = parseInt(userPreferences.creditScore) || 650;
+        
+        if (age >= card.eligibility.min_age && age <= card.eligibility.max_age) approvalChance += 25;
+        if (income >= card.eligibility.min_income) {
+          approvalChance += 35;
+          if (income > card.eligibility.min_income * 2) approvalChance += 10;
+        }
+        if (creditScore >= card.eligibility.credit_score_min) {
+          approvalChance += 30;
+          if (creditScore > card.eligibility.credit_score_min + 100) approvalChance += 10;
+        }
+        if (userPreferences.employmentType && 
+            card.eligibility.employment_type.includes(userPreferences.employmentType)) {
+          approvalChance += 10;
+        }
+      } else {
+        approvalChance = 70; // Default for cards without eligibility data
+      }
+
+      return { 
+        ...card, 
+        score: totalScore, 
+        matchPercentage: Math.min(Math.round(totalScore), 100),
+        approvalChance: Math.min(Math.round(approvalChance), 95), // Cap at 95%
+        eligibilityMet: eligibilityScore >= 50 // At least 50% eligibility criteria met
       };
     });
 
-    // Sort cards by score and return top 6 recommendations
+    // Sort by score and return top recommendations
     return scoredCards
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);

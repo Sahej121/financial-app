@@ -13,6 +13,7 @@ import {
   Alert,
   Modal
 } from 'antd';
+import { useSelector } from 'react-redux';
 import { UploadOutlined, FilePdfOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import moment from 'moment';
@@ -23,6 +24,7 @@ import AuthGuard from '../components/auth/AuthGuard';
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
 const { Option } = Select;
+const { TextArea } = Input;
 
 const PageContainer = styled.div`
   max-width: 900px;
@@ -278,6 +280,10 @@ const FinancialPlanning = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showMeeting, setShowMeeting] = useState(false);
   const [consultationData, setConsultationData] = useState(null);
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
+  
+  const { user, token } = useSelector((state) => state.user);
+  const isAuthenticated = user && token;
 
   // Mock analyst schedule - Replace with API call
   const availableSlots = [
@@ -375,9 +381,32 @@ const FinancialPlanning = () => {
       )
     },
     {
-      title: 'Document Upload',
+      title: 'Business & Documents',
       content: (
         <>
+          <Form.Item
+            name="businessDescription"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>🏢 Business Description</span>}
+            rules={[
+              { required: true, message: 'Please describe your business' },
+              { max: 200, message: 'Description must be under 200 words' }
+            ]}
+          >
+            <TextArea
+              placeholder="Please describe your business including location, market size, industry type, current challenges, and goals (under 200 words)"
+              rows={4}
+              showCount
+              maxLength={200}
+              style={{
+                borderRadius: '12px',
+                border: '2px solid #e8f2ff',
+                padding: '12px 16px',
+                fontSize: '16px',
+                transition: 'all 0.3s ease'
+              }}
+            />
+          </Form.Item>
+
           <RequiredDocs>
             <Title level={5} style={{ color: '#1890ff', marginBottom: '20px' }}>📋 Required Documents:</Title>
             <ul>
@@ -389,6 +418,9 @@ const FinancialPlanning = () => {
               </li>
               <li>
                 <FilePdfOutlined style={{ color: '#ff4d4f' }} /> Income Proof (If applicable)
+              </li>
+              <li>
+                <FilePdfOutlined style={{ color: '#fa8c16' }} /> Creditors/Debtors Statement (Required)
               </li>
             </ul>
           </RequiredDocs>
@@ -490,12 +522,77 @@ const FinancialPlanning = () => {
           )}
         </>
       )
+    },
+    {
+      title: 'Confirmation',
+      content: (
+        <>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <Title level={3} style={{ 
+              color: '#52c41a', 
+              marginBottom: '16px',
+              background: 'linear-gradient(135deg, #52c41a, #389e0d)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              🎉 Ready to Schedule Your Consultation!
+            </Title>
+            <Paragraph style={{ fontSize: '16px', color: '#666', marginBottom: '24px' }}>
+              Please review your information before proceeding to payment
+            </Paragraph>
+          </div>
+          
+          <div style={{ 
+            background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
+            padding: '24px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            border: '1px solid rgba(82, 196, 26, 0.2)'
+          }}>
+            <Title level={4} style={{ color: '#333', marginBottom: '16px' }}>📋 Summary</Title>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <div><strong>Name:</strong> {form.getFieldValue('name')}</div>
+              <div><strong>Email:</strong> {form.getFieldValue('email')}</div>
+              <div><strong>Phone:</strong> {form.getFieldValue('phone')}</div>
+              <div><strong>Planning Type:</strong> {form.getFieldValue('planningType')}</div>
+              <div><strong>Documents Uploaded:</strong> {fileList.length} files</div>
+              {selectedSlot && (
+                <>
+                  <div><strong>Consultation Date:</strong> {moment(selectedSlot.date).format('MMMM DD, YYYY')}</div>
+                  <div><strong>Time:</strong> {selectedSlot.time}</div>
+                  <div><strong>Analyst:</strong> {selectedSlot.analyst}</div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
+            padding: '20px',
+            borderRadius: '12px',
+            border: '1px solid #ffd666',
+            textAlign: 'center'
+          }}>
+            <Title level={4} style={{ color: '#fa8c16', marginBottom: '8px' }}>💳 Consultation Fee: ₹499</Title>
+            <Text style={{ color: '#666' }}>
+              Includes 1-hour consultation with financial expert and personalized report
+            </Text>
+          </div>
+        </>
+      )
     }
   ];
 
   const next = async () => {
     try {
       await form.validateFields();
+      
+      // Special handling for the schedule step
+      if (currentStep === 2 && !selectedSlot) {
+        message.error('Please select a consultation slot');
+        return;
+      }
+      
       setCurrentStep(currentStep + 1);
     } catch (error) {
       message.error('Please fill in all required fields');
@@ -662,24 +759,65 @@ const FinancialPlanning = () => {
 
       // Show success modal with receipt download
       Modal.success({
-        title: 'Payment Successful',
+        title: '🎉 Payment Successful!',
+        width: 500,
         content: (
-          <div>
-            <p>Your consultation has been booked successfully!</p>
-            <p>Receipt Number: {verificationResult.receipt.number}</p>
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={() => window.open(`/api/payments/receipt/${verificationResult.receipt.url}`, '_blank')}
-              style={{ marginTop: '16px' }}
-            >
-              Download Receipt
-            </Button>
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
+              padding: '24px',
+              borderRadius: '16px',
+              marginBottom: '20px',
+              border: '1px solid rgba(82, 196, 26, 0.2)'
+            }}>
+              <Title level={4} style={{ color: '#52c41a', marginBottom: '16px' }}>
+                ✅ Consultation Successfully Booked!
+              </Title>
+              <div style={{ display: 'grid', gap: '8px', textAlign: 'left' }}>
+                <div><strong>Date:</strong> {moment(selectedSlot?.date).format('MMMM DD, YYYY')}</div>
+                <div><strong>Time:</strong> {selectedSlot?.time}</div>
+                <div><strong>Analyst:</strong> {selectedSlot?.analyst}</div>
+                <div><strong>Payment ID:</strong> {response.razorpay_payment_id}</div>
+              </div>
+            </div>
+            
+            <div style={{
+              background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #ffd666',
+              marginBottom: '20px'
+            }}>
+              <Text style={{ color: '#fa8c16', fontWeight: '600' }}>
+                📧 Confirmation email sent to {form.getFieldValue('email')}
+              </Text>
+            </div>
+
+            {verificationResult?.receipt && (
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={() => window.open(`/api/payments/receipt/${verificationResult.receipt.url}`, '_blank')}
+                style={{
+                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  height: '40px',
+                  fontWeight: '600'
+                }}
+              >
+                Download Receipt
+              </Button>
+            )}
           </div>
         ),
         onOk: () => {
+          // Reset form and go back to start
           form.resetFields();
+          setFileList([]);
+          setSelectedSlot(null);
           setCurrentStep(0);
+          setConsultationData(null);
         }
       });
     } catch (error) {
@@ -834,17 +972,31 @@ const FinancialPlanning = () => {
               )}
               
               {currentStep === steps.length - 1 && (
-                <AuthGuard>
-                  <PaymentButton
-                    type="primary"
-                    onClick={initializePayment}
-                    loading={paymentProcessing}
-                    block
-                    size="large"
-                  >
-                    💳 Pay ₹499 & Schedule Consultation
-                  </PaymentButton>
-                </AuthGuard>
+                <>
+                  {!isAuthenticated ? (
+                    <AuthGuard>
+                      <PaymentButton
+                        type="primary"
+                        onClick={initializePayment}
+                        loading={paymentProcessing}
+                        block
+                        size="large"
+                      >
+                        💳 Pay ₹499 & Schedule Consultation
+                      </PaymentButton>
+                    </AuthGuard>
+                  ) : (
+                    <PaymentButton
+                      type="primary"
+                      onClick={initializePayment}
+                      loading={paymentProcessing}
+                      block
+                      size="large"
+                    >
+                      💳 Pay ₹499 & Schedule Consultation
+                    </PaymentButton>
+                  )}
+                </>
               )}
             </div>
           </div>

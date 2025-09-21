@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, Button, Avatar, Tag, Rate, Typography, message, Input, Select } from 'antd';
-import { UserOutlined, CheckCircleOutlined, ClockCircleOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Button, Avatar, Tag, Rate, Typography, message, Input, Select, Spin } from 'antd';
+import { UserOutlined, CheckCircleOutlined, ClockCircleOutlined, SearchOutlined, FilterOutlined, SortAscendingOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import axios from 'axios';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -151,6 +152,35 @@ const CASelectionList = ({ onStartConsultation }) => {
   const [selectedCA, setSelectedCA] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSpecialization, setFilterSpecialization] = useState('');
+  const [sortBy, setSortBy] = useState('rating');
+  const [cas, setCAs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCAs();
+  }, [sortBy, filterSpecialization]);
+
+  const fetchCAs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/cas', {
+        params: {
+          specialization: filterSpecialization,
+          sortBy: sortBy
+        }
+      });
+      setCAs(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching CAs:', err);
+      setError('Failed to load CAs. Please try again.');
+      // Fallback to mock data if API fails
+      setCAs(mockCAs);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCASelect = (ca) => {
     setSelectedCA(ca);
@@ -164,24 +194,21 @@ const CASelectionList = ({ onStartConsultation }) => {
     onStartConsultation(selectedCA);
   };
 
-  const filteredCAs = mockCAs.filter(ca => {
+  const filteredCAs = cas.filter(ca => {
     const matchesSearch = ca.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ca.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesSpecialization = !filterSpecialization ||
-      ca.specializations.some(spec => spec.toLowerCase().includes(filterSpecialization.toLowerCase()));
-
-    return matchesSearch && matchesSpecialization;
+    return matchesSearch;
   });
 
   // Get unique specializations for filter dropdown
-  const allSpecializations = [...new Set(mockCAs.flatMap(ca => ca.specializations))];
+  const allSpecializations = [...new Set(cas.flatMap(ca => ca.specializations || []))];
 
   return (
     <div style={{ padding: '24px' }}>
       <FilterContainer>
         <Row gutter={16}>
-          <Col xs={24} md={12}>
+          <Col xs={24} md={8}>
             <Input
               placeholder="Search by name or expertise..."
               prefix={<SearchOutlined />}
@@ -189,24 +216,51 @@ const CASelectionList = ({ onStartConsultation }) => {
               size="large"
             />
           </Col>
-          <Col xs={24} md={12}>
+          <Col xs={24} md={8}>
             <Select
               placeholder="Filter by specialization"
               style={{ width: '100%' }}
               onChange={value => setFilterSpecialization(value)}
               allowClear
               size="large"
+              prefix={<FilterOutlined />}
             >
               {allSpecializations.map(spec => (
                 <Option key={spec} value={spec}>{spec}</Option>
               ))}
             </Select>
           </Col>
+          <Col xs={24} md={8}>
+            <Select
+              placeholder="Sort by"
+              style={{ width: '100%' }}
+              value={sortBy}
+              onChange={value => setSortBy(value)}
+              size="large"
+              prefix={<SortAscendingOutlined />}
+            >
+              <Option value="rating">Rating (Highest)</Option>
+              <Option value="experience">Experience (Most)</Option>
+              <Option value="fee-low">Fee (Lowest)</Option>
+              <Option value="fee-high">Fee (Highest)</Option>
+              <Option value="name">Name (A-Z)</Option>
+            </Select>
+          </Col>
         </Row>
       </FilterContainer>
 
-      <Row gutter={[24, 24]}>
-        {filteredCAs.map((ca) => (
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: '16px' }}>Loading CAs...</div>
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Text type="danger">{error}</Text>
+        </div>
+      ) : (
+        <Row gutter={[24, 24]}>
+          {filteredCAs.map((ca) => (
           <Col xs={24} md={12} lg={8} key={ca.id}>
             <CACard 
               className={selectedCA?.id === ca.id ? 'selected' : ''}
@@ -266,21 +320,41 @@ const CASelectionList = ({ onStartConsultation }) => {
                   </Tag>
                 ))}
               </div>
+
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartConsultation(ca);
+                  }}
+                  style={{ 
+                    background: selectedCA?.id === ca.id ? '#52c41a' : '#1890ff',
+                    borderColor: selectedCA?.id === ca.id ? '#52c41a' : '#1890ff'
+                  }}
+                >
+                  {selectedCA?.id === ca.id ? 'Selected - Start Now' : 'Start Consultation'}
+                </Button>
+              </div>
             </CACard>
           </Col>
-        ))}
-      </Row>
+          ))}
+        </Row>
+      )}
 
-      <div style={{ textAlign: 'center', marginTop: '32px' }}>
-        <Button 
-          type="primary" 
-          size="large"
-          disabled={!selectedCA}
-          onClick={handleStartConsultation}
-        >
-          Start Consultation with {selectedCA ? selectedCA.name : 'Selected CA'}
-        </Button>
-      </div>
+      {!loading && !error && (
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          <Button 
+            type="primary" 
+            size="large"
+            disabled={!selectedCA}
+            onClick={handleStartConsultation}
+          >
+            Start Consultation with {selectedCA ? selectedCA.name : 'Selected CA'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

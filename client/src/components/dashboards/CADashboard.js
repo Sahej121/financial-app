@@ -18,7 +18,10 @@ import {
   Input,
   Select,
   Statistic,
-  Alert
+  Alert,
+  Calendar,
+  TimePicker,
+  Switch
 } from 'antd';
 import {
   CalendarOutlined,
@@ -29,7 +32,9 @@ import {
   ClockCircleOutlined,
   ExclamationCircleOutlined,
   EyeOutlined,
-  EditOutlined
+  EditOutlined,
+  PlusOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import styled from 'styled-components';
 import moment from 'moment';
@@ -72,6 +77,11 @@ const CADashboard = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [reviewForm] = Form.useForm();
   const [statistics, setStatistics] = useState({});
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
+  const [scheduleForm] = Form.useForm();
+  const [availabilityForm] = Form.useForm();
+  const [availability, setAvailability] = useState({});
 
   useEffect(() => {
     loadDashboardData();
@@ -81,13 +91,15 @@ const CADashboard = () => {
     try {
       setLoading(true);
       
-      const [meetingsRes, documentsRes] = await Promise.all([
+      const [meetingsRes, documentsRes, availabilityRes] = await Promise.all([
         api.get('/meetings/professional?role=ca&upcoming=true'),
-        api.get('/documents/pending?role=ca')
+        api.get('/documents/pending?role=ca'),
+        api.get('/cas/availability').catch(() => ({ data: {} })) // Fallback if not implemented
       ]);
       
       setUpcomingMeetings(meetingsRes.data.meetings || []);
       setPendingDocuments(documentsRes.data.documents || []);
+      setAvailability(availabilityRes.data || {});
       
       // Calculate statistics
       const stats = {
@@ -159,6 +171,37 @@ const CADashboard = () => {
       loadDashboardData();
     } catch (error) {
       message.error('Failed to update document review');
+    }
+  };
+
+  const handleScheduleMeeting = async (values) => {
+    try {
+      const meetingData = {
+        ...values,
+        professionalId: JSON.parse(localStorage.getItem('user') || '{}').id,
+        professionalRole: 'ca',
+        status: 'scheduled'
+      };
+      
+      await api.post('/meetings', meetingData);
+      message.success('Meeting scheduled successfully');
+      setScheduleModalVisible(false);
+      scheduleForm.resetFields();
+      loadDashboardData();
+    } catch (error) {
+      message.error('Failed to schedule meeting');
+    }
+  };
+
+  const handleUpdateAvailability = async (values) => {
+    try {
+      await api.patch('/cas/availability', values);
+      message.success('Availability updated successfully');
+      setAvailabilityModalVisible(false);
+      availabilityForm.resetFields();
+      loadDashboardData();
+    } catch (error) {
+      message.error('Failed to update availability');
     }
   };
 
@@ -428,6 +471,38 @@ const CADashboard = () => {
         />
       )}
 
+      {/* Quick Actions */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col span={24}>
+          <StyledCard title="Quick Actions">
+            <Space size="middle">
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />}
+                onClick={() => setScheduleModalVisible(true)}
+                size="large"
+              >
+                Schedule New Meeting
+              </Button>
+              <Button 
+                icon={<SettingOutlined />}
+                onClick={() => setAvailabilityModalVisible(true)}
+                size="large"
+              >
+                Update Availability
+              </Button>
+              <Button 
+                icon={<CalendarOutlined />}
+                onClick={() => message.info('Calendar view coming soon!')}
+                size="large"
+              >
+                Calendar View
+              </Button>
+            </Space>
+          </StyledCard>
+        </Col>
+      </Row>
+
       <Row gutter={[16, 16]}>
         {/* Upcoming Meetings */}
         <Col span={24}>
@@ -530,6 +605,176 @@ const CADashboard = () => {
             </Form>
           </>
         )}
+      </Modal>
+
+      {/* Schedule Meeting Modal */}
+      <Modal
+        title="Schedule New Meeting"
+        open={scheduleModalVisible}
+        onCancel={() => setScheduleModalVisible(false)}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={scheduleForm}
+          layout="vertical"
+          onFinish={handleScheduleMeeting}
+        >
+          <Form.Item
+            name="clientId"
+            label="Client"
+            rules={[{ required: true, message: 'Please select a client' }]}
+          >
+            <Select placeholder="Select client">
+              <Option value="1">John Doe</Option>
+              <Option value="2">Jane Smith</Option>
+              {/* These would be populated from API */}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="title"
+            label="Meeting Title"
+            rules={[{ required: true, message: 'Please enter meeting title' }]}
+          >
+            <Input placeholder="e.g., Tax Planning Consultation" />
+          </Form.Item>
+
+          <Form.Item
+            name="planningType"
+            label="Consultation Type"
+            rules={[{ required: true, message: 'Please select consultation type' }]}
+          >
+            <Select placeholder="Select consultation type">
+              <Option value="business">Business Expansion</Option>
+              <Option value="loan">Loan Protection</Option>
+              <Option value="investment">Investment Planning</Option>
+              <Option value="tax">Tax Planning</Option>
+              <Option value="audit">Audit Services</Option>
+            </Select>
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="startsAt"
+                label="Start Date & Time"
+                rules={[{ required: true, message: 'Please select start time' }]}
+              >
+                <TimePicker.RangePicker 
+                  showTime
+                  format="YYYY-MM-DD HH:mm"
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duration"
+                label="Duration (minutes)"
+                rules={[{ required: true, message: 'Please enter duration' }]}
+              >
+                <Select placeholder="Select duration">
+                  <Option value={30}>30 minutes</Option>
+                  <Option value={60}>1 hour</Option>
+                  <Option value={90}>1.5 hours</Option>
+                  <Option value={120}>2 hours</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="description"
+            label="Meeting Description"
+          >
+            <Input.TextArea 
+              rows={3} 
+              placeholder="Add any additional notes about the meeting..."
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Schedule Meeting
+              </Button>
+              <Button onClick={() => setScheduleModalVisible(false)}>
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Availability Settings Modal */}
+      <Modal
+        title="Update Availability Settings"
+        open={availabilityModalVisible}
+        onCancel={() => setAvailabilityModalVisible(false)}
+        footer={null}
+        width={500}
+      >
+        <Form
+          form={availabilityForm}
+          layout="vertical"
+          onFinish={handleUpdateAvailability}
+          initialValues={availability}
+        >
+          <Form.Item
+            name="status"
+            label="Current Status"
+            rules={[{ required: true, message: 'Please select your availability status' }]}
+          >
+            <Select placeholder="Select availability status">
+              <Option value="Available Now">Available Now</Option>
+              <Option value="Available in 30 mins">Available in 30 mins</Option>
+              <Option value="Available in 1 hour">Available in 1 hour</Option>
+              <Option value="Available in 2 hours">Available in 2 hours</Option>
+              <Option value="Available tomorrow">Available tomorrow</Option>
+              <Option value="Busy">Currently Busy</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="acceptingNewClients"
+            label="Accepting New Clients"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+
+          <Form.Item
+            name="workingHours"
+            label="Working Hours"
+          >
+            <TimePicker.RangePicker 
+              format="HH:mm"
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="notes"
+            label="Availability Notes"
+          >
+            <Input.TextArea 
+              rows={3} 
+              placeholder="Add any notes about your current availability..."
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Update Availability
+              </Button>
+              <Button onClick={() => setAvailabilityModalVisible(false)}>
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
     </DashboardContainer>
   );

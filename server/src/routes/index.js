@@ -15,6 +15,7 @@ router.get('/auth/profile', authController.getProfile);
 
 // CA routes
 router.get('/cas', caController.getCAs);
+router.post('/cas', caController.createCA);
 
 // Document routes - temporarily remove auth middleware for testing
 router.post('/documents/upload', upload.single('file'), documentController.uploadDocument);
@@ -51,5 +52,14 @@ if (creditCardController && creditCardController.applyForCard) {
     res.status(501).json({ error: 'Not implemented yet' });
   });
 }
+
+// Add credit card feedback route if it exists
+if (creditCardController && creditCardController.submitCardFeedback) {
+  router.post('/creditCard/feedback', creditCardController.submitCardFeedback);
+}
+
+// Feedback routes
+const feedbackRoutes = require('./feedback');
+router.use('/feedback', feedbackRoutes);
 
 module.exports = router; 

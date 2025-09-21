@@ -16,6 +16,7 @@ import About from './pages/About';
 import Services from './pages/Services';
 import CreditCard from './pages/CreditCard';
 import Contact from './pages/Contact';
+import FAQ from './pages/FAQ';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './pages/Profile';
@@ -78,6 +79,7 @@ function App() {
             <Route path="/ca-selection" element={<CASelectionPage />} />
             <Route path="/credit-card" element={<CreditCard />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/planning" element={<FinancialPlanning />} />
 
             {/* Dashboard Routes - Role-based */}
