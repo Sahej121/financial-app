@@ -12,10 +12,14 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    } catch (error) {
+      console.warn('Failed to load theme preference:', error);
+      return false;
+    }
   });
-
   useEffect(() => {
     try {
       localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
