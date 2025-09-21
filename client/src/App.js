@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout, Spin } from 'antd';
 import { getProfile } from './redux/slices/userSlice';
 import { setupAxiosDefaults } from './services/authService';
+import { ThemeProvider } from './contexts/ThemeContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 import RoleBasedRoute from './components/auth/RoleBasedRoute';
 import UserDashboard from './components/dashboards/UserDashboard';
@@ -18,6 +19,7 @@ import Contact from './pages/Contact';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import CARegister from './components/auth/CARegister';
 import FinancialPlanning from './pages/FInancialPlanning';
 import CASelectionPage from './pages/CASelectionPage';
@@ -59,10 +61,11 @@ function App() {
   }
 
   return (
-    <Router>
-      <StyledLayout>
-        <Navbar />
-        <MainContent>
+    <ThemeProvider>
+      <Router>
+        <StyledLayout>
+          <Navbar />
+          <MainContent>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -112,10 +115,19 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/settings"
+              element={
+                <PrivateRoute>
+                  <Settings />
+                </PrivateRoute>
+              }
+            />
           </Routes>
-        </MainContent>
-      </StyledLayout>
-    </Router>
+          </MainContent>
+        </StyledLayout>
+      </Router>
+    </ThemeProvider>
   );
 }
 

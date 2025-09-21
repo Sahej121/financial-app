@@ -14,12 +14,23 @@ const Login = () => {
 
   const onFinish = async (values) => {
     try {
-      await dispatch(login(values)).unwrap();
-      // Navigate to the protected page they tried to visit or home
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const result = await dispatch(login(values)).unwrap();
+      // Navigate to appropriate dashboard based on user role
+      const dashboardPath = getDashboardPath(result.user.role);
+      navigate(dashboardPath, { replace: true });
     } catch (err) {
       // Error is handled by Redux
+    }
+  };
+
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case 'ca':
+        return '/ca-dashboard';
+      case 'financial_planner':
+        return '/financial-planner-dashboard';
+      default:
+        return '/dashboard';
     }
   };
 

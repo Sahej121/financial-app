@@ -18,55 +18,255 @@ import styled from 'styled-components';
 import moment from 'moment';
 import { loadScript } from '../utils/loadScript';
 import ZoomMeeting from '../components/consultation/ZoomMeeting';
+import AuthGuard from '../components/auth/AuthGuard';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
 const { Option } = Select;
 
 const PageContainer = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+    pointer-events: none;
+  }
 `;
 
 const StyledCard = styled(Card)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
   margin-bottom: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  }
+
+  .ant-card-body {
+    padding: 40px;
+  }
 `;
 
 const RequiredDocs = styled.div`
-  margin: 16px 0;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  margin: 20px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+  border-radius: 16px;
+  border-left: 4px solid #1890ff;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(45deg, rgba(24, 144, 255, 0.1), transparent);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    
+    li {
+      margin: 12px 0;
+      font-weight: 500;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #1890ff;
+        transform: translateX(5px);
+      }
+    }
+  }
 `;
 
 const AnalystSchedule = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
 `;
 
 const TimeSlot = styled(Button)`
   text-align: center;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: ${props => props.selected ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
+  padding: 20px 16px;
+  border: 2px solid ${props => props.selected ? '#1890ff' : '#e8f2ff'};
+  background: ${props => props.selected 
+    ? 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)' 
+    : 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)'};
+  color: ${props => props.selected ? 'white' : '#333'};
+  border-radius: 16px;
+  height: auto;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(24, 144, 255, 0.3);
+    border-color: #1890ff;
+    background: ${props => props.selected 
+      ? 'linear-gradient(135deg, #096dd9 0%, #1890ff 100%)' 
+      : 'linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%)'};
+  }
+
+  div {
+    font-weight: 500;
+    
+    &:first-child {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    &:last-child {
+      font-size: 12px;
+      opacity: 0.8;
+    }
   }
 `;
 
 const PaymentButton = styled(Button)`
-  background: linear-gradient(90deg, #1890ff 0%, #096dd9 100%);
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   border: none;
+  border-radius: 12px;
+  height: 60px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 8px 25px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
   &:hover {
-    background: linear-gradient(90deg, #096dd9 0%, #1890ff 100%);
+    background: linear-gradient(135deg, #096dd9 0%, #1890ff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(24, 144, 255, 0.4);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const FormSection = styled.div`
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin: 24px 0;
+  border: 1px solid rgba(24, 144, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1890ff, #096dd9, #1890ff);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+`;
+
+const StepIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+  
+  .ant-steps {
+    .ant-steps-item {
+      .ant-steps-item-icon {
+        background: linear-gradient(135deg, #1890ff, #096dd9);
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(24, 144, 255, 0.3);
+      }
+      
+      .ant-steps-item-title {
+        font-weight: 600;
+        color: #333;
+      }
+      
+      &.ant-steps-item-active {
+        .ant-steps-item-icon {
+          background: linear-gradient(135deg, #52c41a, #389e0d);
+          animation: pulse 2s infinite;
+        }
+      }
+      
+      &.ant-steps-item-finish {
+        .ant-steps-item-icon {
+          background: linear-gradient(135deg, #52c41a, #389e0d);
+        }
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(82, 196, 26, 0.5); }
+    100% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
   }
 `;
 
@@ -91,49 +291,87 @@ const FinancialPlanning = () => {
     {
       title: 'Basic Information',
       content: (
-        <>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <Form.Item
             name="name"
-            label="Full Name"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Full Name</span>}
             rules={[{ required: true, message: 'Please enter your name' }]}
           >
-            <Input placeholder="Enter your full name" />
+            <Input 
+              placeholder="Enter your full name" 
+              size="large"
+              style={{
+                borderRadius: '12px',
+                border: '2px solid #e8f2ff',
+                padding: '12px 16px',
+                fontSize: '16px',
+                transition: 'all 0.3s ease'
+              }}
+            />
           </Form.Item>
 
           <Form.Item
             name="email"
-            label="Email"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Email Address</span>}
             rules={[
               { required: true, message: 'Please enter your email' },
               { type: 'email', message: 'Please enter a valid email' }
             ]}
           >
-            <Input placeholder="Enter your email address" />
+            <Input 
+              placeholder="Enter your email address" 
+              size="large"
+              style={{
+                borderRadius: '12px',
+                border: '2px solid #e8f2ff',
+                padding: '12px 16px',
+                fontSize: '16px',
+                transition: 'all 0.3s ease'
+              }}
+            />
           </Form.Item>
 
           <Form.Item
             name="phone"
-            label="Phone Number"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Phone Number</span>}
             rules={[
               { required: true, message: 'Please enter your phone number' },
               { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit number' }
             ]}
           >
-            <Input placeholder="Enter your phone number" />
+            <Input 
+              placeholder="Enter your phone number" 
+              size="large"
+              style={{
+                borderRadius: '12px',
+                border: '2px solid #e8f2ff',
+                padding: '12px 16px',
+                fontSize: '16px',
+                transition: 'all 0.3s ease'
+              }}
+            />
           </Form.Item>
 
           <Form.Item
             name="planningType"
-            label="Planning Type"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Planning Type</span>}
             rules={[{ required: true, message: 'Please select planning type' }]}
           >
-            <Select placeholder="Select planning type">
-              <Option value="business">Business Expansion</Option>
-              <Option value="loan">Loan Protection</Option>
-              <Option value="investment">Investment Planning</Option>
+            <Select 
+              placeholder="Select planning type"
+              size="large"
+              style={{
+                borderRadius: '12px',
+                border: '2px solid #e8f2ff',
+                fontSize: '16px'
+              }}
+            >
+              <Option value="business">🏢 Business Expansion</Option>
+              <Option value="loan">🛡️ Loan Protection</Option>
+              <Option value="investment">📈 Investment Planning</Option>
             </Select>
           </Form.Item>
-        </>
+        </div>
       )
     },
     {
@@ -141,23 +379,23 @@ const FinancialPlanning = () => {
       content: (
         <>
           <RequiredDocs>
-            <Title level={5}>Required Documents:</Title>
+            <Title level={5} style={{ color: '#1890ff', marginBottom: '20px' }}>📋 Required Documents:</Title>
             <ul>
               <li>
-                <FilePdfOutlined /> Bank Statements (Last 1 Month)
+                <FilePdfOutlined style={{ color: '#ff4d4f' }} /> Bank Statements (Last 1 Month)
               </li>
               <li>
-                <FileExcelOutlined /> Transaction History
+                <FileExcelOutlined style={{ color: '#52c41a' }} /> Transaction History
               </li>
               <li>
-                <FilePdfOutlined /> Income Proof (If applicable)
+                <FilePdfOutlined style={{ color: '#ff4d4f' }} /> Income Proof (If applicable)
               </li>
             </ul>
           </RequiredDocs>
 
           <Form.Item
             name="documents"
-            label="Upload Documents"
+            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>📁 Upload Documents</span>}
             rules={[{ required: true, message: 'Please upload required documents' }]}
           >
             <Upload
@@ -165,8 +403,31 @@ const FinancialPlanning = () => {
               onChange={({ fileList }) => setFileList(fileList)}
               beforeUpload={() => false}
               multiple
+              style={{
+                border: '2px dashed #d9d9d9',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center',
+                background: 'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)',
+                transition: 'all 0.3s ease'
+              }}
             >
-              <Button icon={<UploadOutlined />}>Select Files</Button>
+              <Button 
+                icon={<UploadOutlined />} 
+                size="large"
+                style={{
+                  borderRadius: '12px',
+                  height: '48px',
+                  padding: '0 24px',
+                  fontWeight: '600',
+                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
+                  border: 'none',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
+                }}
+              >
+                📤 Select Files to Upload
+              </Button>
             </Upload>
           </Form.Item>
         </>
@@ -176,9 +437,14 @@ const FinancialPlanning = () => {
       title: 'Schedule Consultation',
       content: (
         <>
-          <Paragraph>
-            Select your preferred consultation slot with our financial analyst:
-          </Paragraph>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <Title level={4} style={{ color: '#333', marginBottom: '8px' }}>
+              📅 Select Your Preferred Time Slot
+            </Title>
+            <Paragraph style={{ fontSize: '16px', color: '#666' }}>
+              Choose a convenient time to meet with our financial analyst
+            </Paragraph>
+          </div>
           
           <AnalystSchedule>
             {availableSlots.map(slot => (
@@ -187,20 +453,39 @@ const FinancialPlanning = () => {
                 selected={selectedSlot?.id === slot.id}
                 onClick={() => setSelectedSlot(slot)}
               >
-                <div>{moment(slot.date).format('MMM DD, YYYY')}</div>
-                <div>{slot.time}</div>
-                <div>Analyst: {slot.analyst}</div>
+                <div>📅 {moment(slot.date).format('MMM DD, YYYY')}</div>
+                <div>🕐 {slot.time}</div>
+                <div>👨‍💼 {slot.analyst}</div>
               </TimeSlot>
             ))}
           </AnalystSchedule>
 
           {selectedSlot && (
             <Alert
-              style={{ marginTop: '16px' }}
-              message="Selected Slot"
-              description={`${moment(selectedSlot.date).format('MMMM DD, YYYY')} at ${selectedSlot.time} with ${selectedSlot.analyst}`}
+              style={{ 
+                marginTop: '24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
+                borderLeft: '4px solid #52c41a'
+              }}
+              message={
+                <span style={{ fontWeight: '600', color: '#52c41a' }}>
+                  ✅ Time Slot Selected
+                </span>
+              }
+              description={
+                <div style={{ marginTop: '8px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>
+                    📅 {moment(selectedSlot.date).format('MMMM DD, YYYY')}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    🕐 {selectedSlot.time} with {selectedSlot.analyst}
+                  </div>
+                </div>
+              }
               type="success"
-              showIcon
+              showIcon={false}
             />
           )}
         </>
@@ -473,48 +758,96 @@ const FinancialPlanning = () => {
   return (
     <PageContainer>
       <StyledCard>
-        <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <Title level={2} style={{ 
+          textAlign: 'center', 
+          marginBottom: '40px',
+          background: 'linear-gradient(135deg, #1890ff, #096dd9)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontSize: '32px',
+          fontWeight: '700'
+        }}>
           Financial Planning Consultation
-          </Title>
+        </Title>
 
-        <Steps current={currentStep} style={{ marginBottom: '32px' }}>
-          {steps.map(item => (
-            <Step key={item.title} title={item.title} />
-          ))}
-        </Steps>
+        <StepIndicator>
+          <Steps current={currentStep}>
+            {steps.map(item => (
+              <Step key={item.title} title={item.title} />
+            ))}
+          </Steps>
+        </StepIndicator>
 
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
         >
-          {steps[currentStep].content}
+          <FormSection>
+            {steps[currentStep].content}
+          </FormSection>
 
-          <div style={{ marginTop: '24px', textAlign: 'right' }}>
-            {currentStep > 0 && (
-              <Button style={{ marginRight: '8px' }} onClick={prev}>
-                Previous
-              </Button>
-            )}
+          <div style={{ 
+            marginTop: '32px', 
+            textAlign: 'right',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              {currentStep > 0 && (
+                <Button 
+                  size="large"
+                  onClick={prev}
+                  style={{
+                    borderRadius: '12px',
+                    height: '48px',
+                    padding: '0 24px',
+                    fontWeight: '600',
+                    border: '2px solid #d9d9d9',
+                    background: 'white'
+                  }}
+                >
+                  ← Previous
+                </Button>
+              )}
+            </div>
             
-            {currentStep < steps.length - 1 && (
-              <Button type="primary" onClick={next}>
-                Next
-              </Button>
-            )}
-            
-            {currentStep === steps.length - 1 && (
-              <PaymentButton
-                type="primary"
-                onClick={initializePayment}
-                loading={paymentProcessing}
-                block
-                size="large"
-              >
-                Pay ₹499 & Schedule Consultation
-              </PaymentButton>
-            )}
-      </div>
+            <div>
+              {currentStep < steps.length - 1 && (
+                <Button 
+                  type="primary" 
+                  size="large"
+                  onClick={next}
+                  style={{
+                    borderRadius: '12px',
+                    height: '48px',
+                    padding: '0 32px',
+                    fontWeight: '600',
+                    background: 'linear-gradient(135deg, #1890ff, #096dd9)',
+                    border: 'none',
+                    boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
+                  }}
+                >
+                  Next →
+                </Button>
+              )}
+              
+              {currentStep === steps.length - 1 && (
+                <AuthGuard>
+                  <PaymentButton
+                    type="primary"
+                    onClick={initializePayment}
+                    loading={paymentProcessing}
+                    block
+                    size="large"
+                  >
+                    💳 Pay ₹499 & Schedule Consultation
+                  </PaymentButton>
+                </AuthGuard>
+              )}
+            </div>
+          </div>
         </Form>
       </StyledCard>
     </PageContainer>

@@ -1,29 +1,39 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../../services/api';
 
 export const register = createAsyncThunk(
   'user/register',
   async (userData) => {
-    const response = await axios.post('/api/auth/register', userData);
-    localStorage.setItem('token', response.data.token);
+    const response = await api.post('/auth/register', userData);
+    if (response.data?.token) {
+      try {
+        localStorage.setItem('token', response.data.token);
+      } catch (error) {
+        console.error('Failed to store token:', error);
+      }
+    }
     return response.data;
   }
 );
-
 export const login = createAsyncThunk(
   'user/login',
   async (credentials) => {
-    const response = await axios.post('/api/auth/login', credentials);
-    localStorage.setItem('token', response.data.token);
+    const response = await api.post('/auth/login', credentials);
+    if (response.data?.token) {
+      try {
+        localStorage.setItem('token', response.data.token);
+      } catch (error) {
+        console.error('Failed to store token:', error);
+      }
+    }
     return response.data;
   }
 );
-
 export const getProfile = createAsyncThunk(
   'user/getProfile',
   async (_, { getState }) => {
     const { token } = getState().user;
-    const response = await axios.get('/api/auth/profile', {
+    const response = await api.get('/auth/profile', {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -33,16 +43,22 @@ export const getProfile = createAsyncThunk(
 const userSlice = createSlice({
   name: 'user',
   initialState: {
-    user: null,
+    user: (() => {
+      try {
+        return JSON.parse(localStorage.getItem('user') || 'null');
+      } catch {
+        return null;
+      }
+    })(),
     token: localStorage.getItem('token'),
     loading: false,
     error: null
-  },
-  reducers: {
+  },  reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
   },
   extraReducers: (builder) => {
@@ -55,6 +71,8 @@ const userSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -68,6 +86,8 @@ const userSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -75,6 +95,8 @@ const userSlice = createSlice({
       })
       .addCase(getProfile.fulfilled, (state, action) => {
         state.user = action.payload.user;
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       });
   }
 });

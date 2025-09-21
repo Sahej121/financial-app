@@ -41,8 +41,13 @@ exports.auth = async (req, res, next) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
+    const { name, email, password, role = 'user' } = req.body;
+    
+    // Validate role is allowed
+    const allowedRoles = ['user', 'premium']; // Define your allowed roles
+    if (role && !allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role specified' });
+    }
     // Validation
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -69,7 +74,8 @@ exports.register = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role
     });
 
     // Generate token
