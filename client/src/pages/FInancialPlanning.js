@@ -610,25 +610,30 @@ const FinancialPlanning = () => {
     }
 
     try {
-      // Create form data for file upload
-      const formData = new FormData();
-      fileList.forEach(file => {
-        formData.append('documents', file.originFileObj);
+      // Prepare data for submission
+      const submissionData = {
+        ...values,
+        consultationSlot: selectedSlot,
+        preferredMeetingType: 'video' // default to video call
+      };
+
+      // Submit to financial planning API
+      const response = await fetch('/api/financial-planning/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(submissionData)
       });
 
-      // Add other form values
-      Object.keys(values).forEach(key => {
-        if (key !== 'documents') {
-          formData.append(key, values[key]);
-        }
-      });
+      const data = await response.json();
 
-      // Add selected slot
-      formData.append('consultationSlot', JSON.stringify(selectedSlot));
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit form');
+      }
 
-      // TODO: Replace with your API endpoint
-      // await axios.post('/api/financial-planning', formData);
-
+      console.log('Financial planning form submitted:', data);
       message.success('Your consultation has been scheduled successfully!');
       
       // Show confirmation

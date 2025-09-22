@@ -742,10 +742,33 @@ const CreditCardForm = () => {
       // Set recommendations first
       setRecommendations(recommendations);
 
-      // Then try to submit the form
+      // Submit form data to backend with recommendations
       try {
-        await dispatch(submitCreditCardForm(formValues)).unwrap();
-        message.success('Form submitted successfully! Here are your recommended cards.');
+        const submissionData = {
+          ...formValues,
+          recommendedCards: recommendations,
+          recommendationScore: recommendations.length > 0 ? 
+            (recommendations.reduce((sum, card) => sum + (card.overallRating || 7), 0) / recommendations.length).toFixed(2) : 
+            null
+        };
+
+        const response = await fetch('/api/credit-card-submissions/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(submissionData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log('Credit card form submitted:', data);
+          message.success('Form submitted successfully! Here are your recommended cards.');
+        } else {
+          throw new Error(data.error || 'Failed to submit form');
+        }
       } catch (submitError) {
         console.error('Form submission error:', submitError);
         // Even if submission fails, still show recommendations

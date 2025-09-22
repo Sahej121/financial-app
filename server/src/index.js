@@ -21,7 +21,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 sequelize.authenticate()
   .then(() => {
     console.log('Connected to SQLite database');
-    return sequelize.sync({ alter: true }); // Update tables based on models (use with caution in production)
+    return sequelize.sync({ force: false, alter: true }); // Create/update tables based on models
   })
   .then(() => {
     console.log('Database synchronized');

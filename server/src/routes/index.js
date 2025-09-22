@@ -17,13 +17,10 @@ router.get('/auth/profile', authController.getProfile);
 router.get('/cas', caController.getCAs);
 router.post('/cas', caController.createCA);
 
-// Document routes - temporarily remove auth middleware for testing
-router.post('/documents/upload', upload.single('file'), documentController.uploadDocument);
-
 // Meeting routes
 router.use('/meetings', meetingsRouter);
 
-// Document routes (enhanced)
+// Document routes (enhanced) - this must come BEFORE any specific document routes
 const documentsRouter = require('./documents');
 router.use('/documents', documentsRouter);
 
@@ -61,5 +58,13 @@ if (creditCardController && creditCardController.submitCardFeedback) {
 // Feedback routes
 const feedbackRoutes = require('./feedback');
 router.use('/feedback', feedbackRoutes);
+
+// Financial Planning routes
+const financialPlanningRoutes = require('./financialPlanning');
+router.use('/financial-planning', financialPlanningRoutes);
+
+// Credit Card Submissions routes
+const creditCardSubmissionRoutes = require('./creditCardSubmissions');
+router.use('/credit-card-submissions', creditCardSubmissionRoutes);
 
 module.exports = router; 

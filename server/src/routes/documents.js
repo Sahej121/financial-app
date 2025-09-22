@@ -15,7 +15,7 @@ const upload = multer({
 // Upload document (clients only)
 router.post('/upload', 
   auth, 
-  requireRole(['user']), 
+  requireRole(['user', 'premium']), 
   upload.single('file'), 
   documentController.uploadDocument
 );
@@ -23,7 +23,7 @@ router.post('/upload',
 // Get user's own documents (clients)
 router.get('/user', 
   auth, 
-  requireRole(['user']), 
+  requireRole(['user', 'premium']), 
   documentController.getUserDocuments
 );
 
