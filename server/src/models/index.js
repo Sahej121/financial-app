@@ -12,6 +12,8 @@ const Document = require('./document');
 const Meeting = require('./meeting');
 const CreditCard = require('./CreditCard');
 const CreditCardApplication = require('./CreditCardApplication');
+const FinancialPlanningSubmission = require('./FinancialPlanningSubmission');
+const CreditCardSubmission = require('./CreditCardSubmission');
 
 // Initialize models
 const models = {
@@ -20,7 +22,9 @@ const models = {
   Document: Document(sequelize),
   Meeting: Meeting(sequelize),
   CreditCard: CreditCard(sequelize),
-  CreditCardApplication: CreditCardApplication(sequelize)
+  CreditCardApplication: CreditCardApplication(sequelize),
+  FinancialPlanningSubmission: FinancialPlanningSubmission(sequelize),
+  CreditCardSubmission: CreditCardSubmission(sequelize)
 };
 
 // Set up associations
