@@ -1,0 +1,31 @@
+{
+  "name": "financial-app-database",
+  "version": "1.0.0",
+  "description": "Database layer for Financial App with multiple database support",
+  "main": "models/index.js",
+  "scripts": {
+    "init": "node init.js init",
+    "seed": "node init.js seed",
+    "test": "node init.js test",
+    "setup": "npm run init && npm run seed",
+    "cleanup": "node -e \"require('./models').db.metadataAnalytics.cleanupOldLogs(90)\""
+  },
+  "dependencies": {
+    "mysql2": "^3.6.5",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "database",
+    "mysql",
+    "financial-app",
+    "multi-database",
+    "authentication",
+    "analytics"
+  ],
+  "author": "Financial App Team",
+  "license": "MIT"
+}
