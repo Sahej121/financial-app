@@ -1,596 +1,473 @@
-import React, { useState, useEffect } from 'react';
-import { Typography, Layout, Button, Row, Col, Card, Space, Statistic, Progress, Badge } from 'antd';
+import React from 'react';
+import { Typography, Layout, Button, Row, Col, Space } from 'antd';
 import { Link } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import {
-  BankOutlined,
+  RocketOutlined,
   LineChartOutlined,
   SafetyOutlined,
   ArrowRightOutlined,
-  CheckCircleOutlined,
-  RocketOutlined,
-  StarOutlined,
   TrophyOutlined,
   TeamOutlined,
-  ThunderboltOutlined,
   GlobalOutlined,
-  HeartOutlined
+  CheckCircleOutlined
 } from '@ant-design/icons';
+import useScrollReveal from '../hooks/useScrollReveal';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 const { Content } = Layout;
 
-// Animations
+// --- Animations ---
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-20px); }
 `;
 
-const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-`;
-
-const gradient = keyframes`
+const gradientFlow = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 `;
 
-const ModernLayout = styled(Layout)`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+// --- Styled Components ---
+const PageLayout = styled(Layout)`
+  background: #000000;
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 `;
 
 const HeroSection = styled.div`
   position: relative;
-  padding: 120px 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
+  padding: 0 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-size: 400% 400%;
-  animation: ${gradient} 15s ease infinite;
   
+  /* Mesh Gradient Background */
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(0, 176, 240, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(242, 200, 17, 0.05) 0%, transparent 50%),
+    linear-gradient(0deg, #050505 0%, #000000 100%);
+
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Cdefs%3E%3Cpattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"%3E%3Ccircle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100" height="100" fill="url(%23grain)"/%3E%3C/svg%3E');    opacity: 0.3;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+    pointer-events: none;
   }
 `;
 
-const FloatingElements = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-`;
-
-const FloatingIcon = styled.div`
-  position: absolute;
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.1);
-  animation: ${float} 6s ease-in-out infinite;
-  animation-delay: ${props => props.delay || '0s'};
-  left: ${props => props.left || '10%'};
-  top: ${props => props.top || '20%'};
-`;
-
-const MainTitle = styled(Title)`
-  color: white !important;
-  margin-bottom: 32px !important;
-  font-size: 3.5rem !important;
-  font-weight: 700 !important;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  animation: ${fadeInUp} 1s ease-out;
+const HeroContent = styled.div`
   position: relative;
   z-index: 2;
-  
-  @media (max-width: 768px) {
-    font-size: 2.5rem !important;
-  }
+  max-width: 1000px;
 `;
 
-const SubText = styled(Paragraph)`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 20px;
-  max-width: 800px;
-  margin: 0 auto 48px !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  animation: ${fadeInUp} 1s ease-out 0.2s both;
-  position: relative;
-  z-index: 2;
-`;
-
-const ModernButton = styled(Button)`
-  height: 56px;
-  padding: 0 40px;
-  border-radius: 28px;
-  font-size: 18px;
+const Badge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  background: rgba(0, 176, 240, 0.1);
+  border: 1px solid rgba(0, 176, 240, 0.2);
+  border-radius: 30px;
+  color: #00B0F0;
   font-weight: 600;
-  margin: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 2;
-  animation: ${fadeInUp} 1s ease-out 0.4s both;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  animation: ${fadeInUp} 0.8s ease-out;
+  backdrop-filter: blur(10px);
+
+  span {
+    width: 6px;
+    height: 6px;
+    background: #00B0F0;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 10px #00B0F0;
+  }
+`;
+
+const HeroTitle = styled.h1`
+  font-size: clamp(3rem, 6vw, 6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  animation: ${fadeInUp} 0.8s ease-out 0.1s backwards;
+  
+  background: linear-gradient(135deg, #FFFFFF 0%, #E0E0E0 50%, #A0A0A0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  span.highlight {
+    background: linear-gradient(90deg, #00B0F0, #0077F0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+`;
+
+const HeroSubtitle = styled(Paragraph)`
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--text-secondary) !important;
+  max-width: 680px;
+  margin: 0 auto 48px !important;
+  line-height: 1.6;
+  animation: ${fadeInUp} 0.8s ease-out 0.2s backwards;
+`;
+
+const CTAButton = styled(Button)`
+  height: 64px;
+  padding: 0 48px;
+  border-radius: 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  background: white;
+  color: black;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: ${fadeInUp} 0.8s ease-out 0.3s backwards;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
+    background: white;
+    color: black;
   }
-
-  &.primary {
-    background: linear-gradient(45deg, #ff6b6b, #feca57);
-    border: none;
-    
-    &:hover {
-      background: linear-gradient(45deg, #ff5252, #ffb74d);
-      transform: translateY(-3px) scale(1.02);
-    }
-  }
-
-  .anticon {
-    margin-left: 8px;
+  
+  svg {
     transition: transform 0.3s ease;
   }
-
-  &:hover .anticon {
+  &:hover svg {
     transform: translateX(4px);
   }
 `;
 
-const FeatureSection = styled.div`
-  padding: 100px 24px;
+const OutlineButton = styled(Button)`
+  height: 64px;
+  padding: 0 48px;
+  border-radius: 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: all 0.3s ease;
+  animation: ${fadeInUp} 0.8s ease-out 0.4s backwards;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+    color: white;
+  }
+`;
+
+const FloatingElement = styled.div`
+  position: absolute;
+  padding: 16px 24px;
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  animation: ${float} 6s ease-in-out infinite;
+  animation-delay: ${props => props.delay || '0s'};
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05) translateY(-20px);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const StatSection = styled.div`
+  background: #050505;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 100px 0;
+`;
+
+const FeatureGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 40px;
   max-width: 1400px;
   margin: 0 auto;
-  background: white;
-  position: relative;
+  padding: 120px 24px;
 `;
 
-const SectionTitle = styled(Title)`
-  text-align: center;
-  margin-bottom: 60px !important;
-  font-size: 2.5rem !important;
-  font-weight: 700 !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-`;
-
-const ModernCard = styled(Card)`
-  height: 100%;
-  background: white;
-  border: none;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+const FeatureCard = styled.div`
+  background: linear-gradient(145deg, rgba(20, 20, 20, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 48px;
+  border-radius: 32px;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  
+  ${props => props.isVisible && css`
+    opacity: 1;
+    transform: translateY(0);
+  `}
 
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.03), transparent 40%);
+    opacity: 0;
+    transition: opacity 0.3s;
   }
 
   &:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  h3 {
+    margin: 24px 0 16px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  &:hover .icon-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
   }
 `;
 
-const IconWrapper = styled.div`
-  font-size: 48px;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: ${pulse} 2s ease-in-out infinite;
-`;
-
-const StatsSection = styled.div`
-  padding: 80px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
-`;
-
-const StatCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 32px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.15);
-  }
-`;
-
-const WhyChooseSection = styled.div`
-  padding: 100px 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  position: relative;
-`;
-
-const TestimonialSection = styled.div`
-  padding: 100px 24px;
-  background: white;
-  text-align: center;
-`;
-
-const TestimonialCard = styled(Card)`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  margin: 20px;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '"';
-    position: absolute;
-    top: -20px;
-    left: 20px;
-    font-size: 120px;
-    color: rgba(255, 255, 255, 0.1);
-    font-family: serif;
-  }
-`;
+const Reveal = ({ children, width = '100%', delay = 0 }) => {
+  const [ref, isVisible] = useScrollReveal();
+  return (
+    <div ref={ref} style={{ width, transitionDelay: `${delay}ms` }} className={isVisible ? 'visible' : ''}>
+      {React.Children.map(children, child =>
+        React.cloneElement(child, { isVisible })
+      )}
+    </div>
+  );
+};
 
 const Home = () => {
-  const [stats, setStats] = useState({
-    clients: 0,
-    savings: 0,
-    satisfaction: 0
-  });
-
-  useEffect(() => {
-    // Animate stats on load
-    const animateStats = () => {
-      setStats({
-        clients: 1000,
-        savings: 50000000,
-        satisfaction: 98
-      });
-    };
-    
-    setTimeout(animateStats, 1000);
-  }, []);
-
-  const features = [
-    {
-      icon: <RocketOutlined />,
-      title: 'AI-Powered Financial Planning',
-      description: 'Leverage cutting-edge artificial intelligence to create personalized financial strategies that adapt to your goals and market conditions.',
-      color: '#ff6b6b'
-    },
-    {
-      icon: <ThunderboltOutlined />,
-      title: 'Real-Time Market Analysis',
-      description: 'Get instant insights with our advanced analytics platform that monitors market trends and provides actionable recommendations.',
-      color: '#4ecdc4'
-    },
-    {
-      icon: <GlobalOutlined />,
-      title: 'Global Investment Opportunities',
-      description: 'Access international markets and diversify your portfolio with our comprehensive global investment platform.',
-      color: '#45b7d1'
-    },
-    {
-      icon: <TeamOutlined />,
-      title: 'Expert CA Network',
-      description: 'Connect with certified Chartered Accountants who provide personalized guidance and strategic financial advice.',
-      color: '#96ceb4'
-    },
-    {
-      icon: <HeartOutlined />,
-      title: 'Sustainable Investing',
-      description: 'Build wealth while making a positive impact with our ESG-focused investment strategies and sustainable finance options.',
-      color: '#feca57'
-    },
-    {
-      icon: <TrophyOutlined />,
-      title: 'Achievement Tracking',
-      description: 'Monitor your financial progress with gamified milestones and celebrate your wealth-building achievements.',
-      color: '#ff9ff3'
-    }
-  ];
-
-  const whyChooseUs = [
-    {
-      icon: <StarOutlined />,
-      title: 'Innovation First',
-      description: 'We use the latest technology and financial tools to give you a competitive edge in wealth building.'
-    },
-    {
-      icon: <SafetyOutlined />,
-      title: 'Bank-Level Security',
-      description: 'Your financial data is protected with enterprise-grade encryption and security protocols.'
-    },
-    {
-      icon: <LineChartOutlined />,
-      title: 'Data-Driven Decisions',
-      description: 'Make informed choices with comprehensive analytics and predictive financial modeling.'
-    },
-    {
-      icon: <BankOutlined />,
-      title: 'Regulatory Compliance',
-      description: 'Stay compliant with all financial regulations through our automated compliance monitoring.'
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Entrepreneur',
-      content: 'Credit Leliya transformed my financial planning. The AI insights helped me increase my savings by 40% in just 6 months!',
-      rating: 5
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Tech Professional',
-      content: 'The real-time market analysis is incredible. I can make informed investment decisions with confidence.',
-      rating: 5
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Small Business Owner',
-      content: 'The CA network connected me with the perfect advisor. My business financials have never been more organized.',
-      rating: 5
-    }
-  ];
-
   return (
-    <ModernLayout>
+    <PageLayout>
       <Content>
+        {/* Hero Section */}
         <HeroSection>
-          <FloatingElements>
-            <FloatingIcon delay="0s" left="10%" top="20%">
-              <BankOutlined />
-            </FloatingIcon>
-            <FloatingIcon delay="2s" left="80%" top="30%">
-              <LineChartOutlined />
-            </FloatingIcon>
-            <FloatingIcon delay="4s" left="20%" top="70%">
-              <RocketOutlined />
-            </FloatingIcon>
-            <FloatingIcon delay="1s" left="70%" top="60%">
-              <TrophyOutlined />
-            </FloatingIcon>
-            <FloatingIcon delay="3s" left="50%" top="10%">
-              <StarOutlined />
-            </FloatingIcon>
-          </FloatingElements>
-          
-          <MainTitle level={1}>
-            Welcome to the Future of Finance
-          </MainTitle>
-          <SubText>
-            Experience next-generation financial planning powered by AI, real-time analytics, and expert guidance. 
-            Transform your wealth-building journey with cutting-edge technology and personalized strategies.
-          </SubText>
-          <Space size="large">
-            <Link to="/register">
-              <ModernButton type="primary" className="primary" size="large">
-                Start Your Journey
-                <ArrowRightOutlined />
-              </ModernButton>
-            </Link>
-            <Link to="/planning">
-              <ModernButton size="large">
-                Explore Features
-                <LineChartOutlined />
-              </ModernButton>
-            </Link>
-          </Space>
+          {/* Decorative Floaters */}
+          <FloatingElement style={{ top: '25%', left: '8%' }} delay="0s">
+            <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg, #00B0F0, #0077F0)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LineChartOutlined style={{ color: 'white', fontSize: 24 }} />
+            </div>
+            <div>
+              <Text strong style={{ color: 'white', display: 'block', fontSize: 16 }}>Portfolio Yield</Text>
+              <Text style={{ color: '#00B0F0', fontSize: 14 }}>+24.5% APY</Text>
+            </div>
+          </FloatingElement>
+
+          <FloatingElement style={{ bottom: '25%', right: '8%' }} delay="2s">
+            <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg, #52c41a, #389e0d)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircleOutlined style={{ color: 'white', fontSize: 24 }} />
+            </div>
+            <div>
+              <Text strong style={{ color: 'white', display: 'block', fontSize: 16 }}>Goal Met</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Retirement Fund</Text>
+            </div>
+          </FloatingElement>
+
+          <HeroContent>
+            <Badge>
+              <span /> Series A Funding Secured
+            </Badge>
+            <HeroTitle>
+              Wealth Management <br />
+              <span className="highlight">Reimagined</span>
+            </HeroTitle>
+            <HeroSubtitle>
+              The first AI-native financial platform that combines institutional-grade analytics with human expertise. Your future, engineered for growth.
+            </HeroSubtitle>
+            <Space size="middle" wrap style={{ justifyContent: 'center' }}>
+              <Link to="/register">
+                <CTAButton>
+                  Start Investing <ArrowRightOutlined />
+                </CTAButton>
+              </Link>
+              <Link to="/planning">
+                <OutlineButton>
+                  Book Consultation
+                </OutlineButton>
+              </Link>
+            </Space>
+          </HeroContent>
         </HeroSection>
 
-        <StatsSection>
-          <Title level={2} style={{ color: 'white', marginBottom: '60px' }}>
-            Trusted by Thousands
-          </Title>
-          <Row gutter={[32, 32]}>
-            <Col xs={24} md={8}>
-              <StatCard>
-                <Statistic
-                  title="Active Clients"
-                  value={stats.clients}
-                  suffix="+"
-                  valueStyle={{ color: 'white', fontSize: '2.5rem' }}
-                />
-              </StatCard>
-            </Col>
-            <Col xs={24} md={8}>
-              <StatCard>
-                <Statistic
-                  title="Total Savings Generated"
-                  value={stats.savings}
-                  prefix="₹"
-                  valueStyle={{ color: 'white', fontSize: '2.5rem' }}
-                />
-              </StatCard>
-            </Col>
-            <Col xs={24} md={8}>
-              <StatCard>
-                <Statistic
-                  title="Client Satisfaction"
-                  value={stats.satisfaction}
-                  suffix="%"
-                  valueStyle={{ color: 'white', fontSize: '2.5rem' }}
-                />
-              </StatCard>
-            </Col>
-          </Row>
-        </StatsSection>
-
-        <FeatureSection>
-          <SectionTitle level={2}>
-            Revolutionary Features
-          </SectionTitle>
-          <Row gutter={[32, 32]}>
-            {features.map((feature, index) => (
-              <Col xs={24} md={12} lg={8} key={index}>
-                <ModernCard>
-                  <div style={{ textAlign: 'center', padding: '20px' }}>
-                    <IconWrapper style={{ color: feature.color }}>
-                      {feature.icon}
-                    </IconWrapper>
-                    <Title level={3} style={{ marginBottom: '16px' }}>
-                      {feature.title}
-                    </Title>
-                    <Paragraph style={{ fontSize: '16px', lineHeight: '1.6' }}>
-                      {feature.description}
-                    </Paragraph>
-                  </div>
-                </ModernCard>
-              </Col>
-            ))}
-          </Row>
-        </FeatureSection>
-
-        <WhyChooseSection>
-          <SectionTitle level={2}>
-            Why Choose Credit Leliya?
-          </SectionTitle>
-          <Row gutter={[32, 32]} style={{ maxWidth: 1200, margin: '0 auto' }}>
-            {whyChooseUs.map((item, index) => (
-              <Col xs={24} sm={12} key={index}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start', 
-                  gap: '20px',
-                  padding: '24px',
-                  background: 'white',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <div style={{ 
-                    fontSize: '32px', 
-                    color: '#667eea',
-                    marginTop: '8px'
-                  }}>
-                    {item.icon}
-                  </div>
-                  <div>
-                    <Title level={4} style={{ marginTop: 0, marginBottom: '12px' }}>
-                      {item.title}
-                    </Title>
-                    <Paragraph style={{ margin: 0, fontSize: '16px' }}>
-                      {item.description}
-                    </Paragraph>
-                  </div>
+        {/* Stats Section */}
+        <StatSection>
+          <Row justify="center" gutter={[48, 48]} style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+            {[
+              { value: '₹50Cr+', label: 'Assets Managed' },
+              { value: '2k+', label: 'Active Investors' },
+              { value: '98%', label: 'Client Retention' }
+            ].map((stat, i) => (
+              <Col key={i} xs={24} md={8} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '4rem', fontWeight: 800, color: 'white', lineHeight: 1, marginBottom: 12, letterSpacing: '-2px' }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>
+                  {stat.label}
                 </div>
               </Col>
             ))}
           </Row>
-        </WhyChooseSection>
+        </StatSection>
 
-        <TestimonialSection>
-          <SectionTitle level={2}>
-            What Our Clients Say
-          </SectionTitle>
-          <Row gutter={[24, 24]} style={{ maxWidth: 1200, margin: '0 auto' }}>
-            {testimonials.map((testimonial, index) => (
-              <Col xs={24} md={8} key={index}>
-                <TestimonialCard>
-                  <div style={{ padding: '32px', position: 'relative', zIndex: 2 }}>
-                    <div style={{ marginBottom: '20px' }}>
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <StarOutlined key={i} style={{ color: '#ffd700', marginRight: '4px' }} />
-                      ))}
-                    </div>
-                    <Paragraph style={{ 
-                      color: 'white', 
-                      fontSize: '18px', 
-                      fontStyle: 'italic',
-                      marginBottom: '20px'
-                    }}>
-                      "{testimonial.content}"
-                    </Paragraph>
-                    <div>
-                      <Title level={5} style={{ color: 'white', margin: 0 }}>
-                        {testimonial.name}
-                      </Title>
-                      <Paragraph style={{ color: 'rgba(255,255,255,0.8)', margin: 0 }}>
-                        {testimonial.role}
-                      </Paragraph>
-                    </div>
-                  </div>
-                </TestimonialCard>
-              </Col>
-            ))}
-          </Row>
-        </TestimonialSection>
+        {/* Features Grid */}
+        <FeatureGrid>
+          <Reveal>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <RocketOutlined style={{ color: '#00B0F0' }} />
+              </div>
+              <h3>AI-Driven Strategy</h3>
+              <p>Our autonomous algorithms analyze millions of data points to construct a portfolio that evolves with the market.</p>
+            </FeatureCard>
+          </Reveal>
 
-        <FeatureSection style={{ textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          <Title level={2} style={{ color: 'white', marginBottom: '32px' }}>
-            Ready to Transform Your Financial Future?
-          </Title>
-          <Paragraph style={{ 
-            color: 'rgba(255,255,255,0.9)', 
-            fontSize: '20px', 
-            marginBottom: '48px',
-            maxWidth: '600px',
-            margin: '0 auto 48px'
-          }}>
-            Join thousands of satisfied clients who have already started their journey to financial freedom. 
-            Your future self will thank you.
-          </Paragraph>
-          <Space size="large">
+          <Reveal delay={100}>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <TeamOutlined style={{ color: '#F2C811' }} />
+              </div>
+              <h3>Expert Access</h3>
+              <p>Direct line to India's top Chartered Accountants and Financial Analysts for complex tax and estate planning.</p>
+            </FeatureCard>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <SafetyOutlined style={{ color: '#52c41a' }} />
+              </div>
+              <h3>Bank-Grade Security</h3>
+              <p>Your assets are protected by military-grade encryption and insured custodial partners.</p>
+            </FeatureCard>
+          </Reveal>
+
+          <Reveal delay={300}>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <GlobalOutlined style={{ color: '#ff4d4f' }} />
+              </div>
+              <h3>Global Access</h3>
+              <p>Diversify beyond borders. Frictionless investing in US stocks, ETFs, and international bonds.</p>
+            </FeatureCard>
+          </Reveal>
+
+          <Reveal delay={400}>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <LineChartOutlined style={{ color: '#fff' }} />
+              </div>
+              <h3>Real-Time Analytics</h3>
+              <p>Visualize your wealth with our proprietary dashboard engine. Track net worth, XIRR, and projections instantly.</p>
+            </FeatureCard>
+          </Reveal>
+
+          <Reveal delay={500}>
+            <FeatureCard>
+              <div className="icon-wrapper">
+                <TrophyOutlined style={{ color: '#722ed1' }} />
+              </div>
+              <h3>Goal Tracking</h3>
+              <p>Turn dreams into deadlines. Our goal engine reverse-engineers your required savings rate to hit life's milestones.</p>
+            </FeatureCard>
+          </Reveal>
+        </FeatureGrid>
+
+        {/* Big CTA */}
+        <div style={{
+          padding: '160px 24px',
+          background: 'linear-gradient(180deg, #000 0%, #111 100%)',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <Title level={2} style={{ color: 'white', fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: 32, letterSpacing: '-1px' }}>
+              Ready to Upgrade Your Life?
+            </Title>
             <Link to="/register">
-              <ModernButton type="primary" className="primary" size="large">
-                Get Started Now
-                <RocketOutlined />
-              </ModernButton>
+              <CTAButton style={{ height: 80, fontSize: '1.4rem', padding: '0 64px' }}>
+                Create Free Account
+              </CTAButton>
             </Link>
-            <Link to="/ca-selection">
-              <ModernButton size="large" style={{ background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.3)' }}>
-                Find Your CA
-                <TeamOutlined />
-              </ModernButton>
-            </Link>
-          </Space>
-        </FeatureSection>
+          </div>
+
+          {/* Background Glow */}
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '600px', height: '600px',
+            background: 'radial-gradient(circle, rgba(0,176,240,0.1) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }} />
+        </div>
+
       </Content>
-    </ModernLayout>
+    </PageLayout>
   );
 };
 
-export default Home; 
+export default Home;

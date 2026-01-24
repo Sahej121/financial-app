@@ -22,8 +22,44 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     role: {
-      type: DataTypes.ENUM('user', 'ca', 'financial_planner', 'admin'),
+      type: DataTypes.ENUM('user', 'ca', 'financial_planner', 'admin', 'premium'),
       defaultValue: 'user'
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    caNumber: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    twoFactorAuth: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    emailNotifications: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    pushNotifications: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    marketingEmails: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    darkTheme: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    resetPasswordToken: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    resetPasswordExpire: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   });
 

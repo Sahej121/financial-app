@@ -16,42 +16,51 @@ const CardContainer = styled.div`
 `;
 
 const CreditCard = styled(Card)`
-  background: linear-gradient(45deg, #1a1f71, #0a4296);
-  border-radius: 15px;
-  padding: 25px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 32px;
   color: white;
   position: relative;
-  height: 200px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  height: 220px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   backface-visibility: hidden;
+  font-family: 'Inter', sans-serif;
 
   .card-number {
-    font-size: 22px;
-    letter-spacing: 2px;
-    margin: 20px 0;
-    font-family: monospace;
+    font-size: 20px;
+    letter-spacing: 3px;
+    margin: 32px 0;
+    font-weight: 500;
   }
 
   .card-name {
-    font-size: 18px;
+    font-size: 14px;
     text-transform: uppercase;
     position: absolute;
-    bottom: 50px;
+    bottom: 32px;
+    left: 32px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0.8;
   }
 
   .card-expiry {
     position: absolute;
-    bottom: 25px;
-    right: 25px;
-    font-size: 16px;
+    bottom: 32px;
+    right: 32px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.8;
   }
 
   .card-chip {
-    width: 50px;
-    height: 40px;
-    background: #ffd700;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    width: 44px;
+    height: 32px;
+    background: linear-gradient(135deg, #e6e6e6, #999);
+    border-radius: 6px;
+    margin-bottom: 0;
   }
 `;
 

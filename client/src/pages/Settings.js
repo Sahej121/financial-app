@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Card, Typography, Space, Button, Divider, Switch, Form, Input } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Typography, Space, Button, Divider, Switch, Form, Input, message, Spin } from 'antd';
 import { UserOutlined, SafetyOutlined, NotificationOutlined, SettingOutlined, BellOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateProfile } from '../redux/slices/userSlice';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -9,11 +11,11 @@ const SettingsContainer = styled.div`
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000;
   min-height: 100vh;
-  border-radius: 20px;
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 
   &::before {
     content: '';
@@ -29,34 +31,33 @@ const SettingsContainer = styled.div`
 `;
 
 const SettingsCard = styled(Card)`
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   margin-bottom: 24px;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .ant-card-head {
-    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    background: transparent;
     border: none;
-    border-radius: 24px 24px 0 0;
-    padding: 24px 32px;
+    padding: 32px 32px 0 32px;
 
     .ant-card-head-title {
       color: white;
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 12px;
+      letter-spacing: -0.5px;
     }
   }
 
@@ -69,16 +70,16 @@ const SettingItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-  border-radius: 16px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 18px;
   margin-bottom: 16px;
-  border: 1px solid rgba(24, 144, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 
   &:hover {
-    background: linear-gradient(135deg, #e6f7ff 0%, #f0f8ff 100%);
-    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
   }
 `;
 
@@ -87,42 +88,45 @@ const SettingInfo = styled.div`
 `;
 
 const SettingTitle = styled(Title)`
-  margin: 0 0 8px 0 !important;
+  margin: 0 0 4px 0 !important;
   font-size: 16px !important;
-  color: #333 !important;
+  color: white !important;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  font-weight: 600 !important;
 `;
 
 const SettingDescription = styled(Text)`
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   display: block;
-  margin-top: 4px;
 `;
 
 const ActionButton = styled(Button)`
-  height: 40px;
-  border-radius: 12px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  background: white;
   border: none;
-  color: white;
-  box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3);
+  color: black;
   transition: all 0.3s ease;
   padding: 0 24px;
 
   &:hover {
-    background: linear-gradient(135deg, #389e0d 0%, #52c41a 100%);
+    background: #e6e6e6 !important;
+    color: black !important;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(82, 196, 26, 0.4);
   }
 `;
 
 const SwitchStyled = styled(Switch)`
   &.ant-switch-checked {
-    background-color: #52c41a;
+    background-color: white;
+    .ant-switch-handle::before {
+        background-color: black;
+    }
   }
 
   &:hover {
@@ -134,28 +138,33 @@ const SwitchStyled = styled(Switch)`
 
 const FormContainer = styled.div`
   .ant-form-item-label > label {
-    font-weight: 600;
-    color: #333;
-    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
   }
 
   .ant-input {
-    border-radius: 12px;
-    border: 2px solid #e8f2ff;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 12px 16px;
     font-size: 16px;
-    height: 48px;
+    height: 52px;
+    color: white;
     transition: all 0.3s ease;
 
     &:focus, &:hover {
-      border-color: #52c41a;
-      box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.1);
+      border-color: white;
+      background: rgba(255, 255, 255, 0.08);
     }
   }
 `;
 
 const Settings = () => {
   const [form] = Form.useForm();
+  const { user, loading } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
   const [settings, setSettings] = useState({
     twoFactorAuth: false,
     emailNotifications: true,
@@ -164,19 +173,53 @@ const Settings = () => {
     darkTheme: false
   });
 
+  useEffect(() => {
+    if (user) {
+      setSettings({
+        twoFactorAuth: user.twoFactorAuth || false,
+        emailNotifications: user.emailNotifications !== undefined ? user.emailNotifications : true,
+        pushNotifications: user.pushNotifications || false,
+        marketingEmails: user.marketingEmails || false,
+        darkTheme: user.darkTheme || false
+      });
+      form.setFieldsValue({
+        fullName: user.name,
+        email: user.email
+      });
+    }
+  }, [user, form]);
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSettingChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
-    // You can add API call here to save settings to backend
-    console.log(`Setting ${key} changed to:`, value);
   };
 
-  const handleSaveSettings = () => {
-    // Save all settings to backend
-    console.log('Saving settings:', settings);
-    // Add API call here
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/auth/update-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(settings)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        message.success('Settings saved successfully!');
+        // Update user state if necessary or just keep local settings
+      } else {
+        message.error(data.error || 'Failed to save settings');
+      }
+    } catch (err) {
+      message.error('An error occurred. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditProfile = () => {
@@ -193,12 +236,27 @@ const Settings = () => {
     // or navigate to a password change page
   };
 
-  const handleSaveProfileChanges = (values) => {
-    console.log('Save profile changes clicked:', values);
-    setIsEditingProfile(false);
-    // Add API call to save profile changes
-    // You can add success/error messages here
-    alert('Profile changes saved successfully!');
+  const handleSaveProfileChanges = async (values) => {
+    try {
+      const response = await fetch('/api/auth/update-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ name: values.fullName, email: values.email })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        message.success('Profile updated successfully!');
+        setIsEditingProfile(false);
+        dispatch(updateProfile(data.user));
+      } else {
+        message.error(data.error || 'Failed to update profile');
+      }
+    } catch (err) {
+      message.error('An error occurred. Please try again.');
+    }
   };
 
   const handleCancelEdit = () => {
@@ -209,20 +267,19 @@ const Settings = () => {
   return (
     <SettingsContainer>
       <div style={{ padding: '40px 0' }}>
-        <Title level={2} style={{ 
-          textAlign: 'center', 
+        <Title level={2} style={{
+          textAlign: 'center',
           marginBottom: '40px',
-          background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          color: 'white',
           fontSize: '32px',
-          fontWeight: '700'
+          fontWeight: '800',
+          letterSpacing: '-1px'
         }}>
-          ⚙️ Settings
+          Settings
         </Title>
-      
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <SettingsCard title="👤 Profile Settings">
+
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <SettingsCard title="Profile Settings">
             <SettingItem>
               <SettingInfo>
                 <SettingTitle>
@@ -233,55 +290,56 @@ const Settings = () => {
                 </SettingDescription>
               </SettingInfo>
               <ActionButton onClick={handleEditProfile}>
-                ✏️ Edit Profile
+                Edit Profile
               </ActionButton>
             </SettingItem>
 
             {isEditingProfile && (
               <FormContainer>
-                <Form 
-                  form={form} 
+                <Form
+                  form={form}
                   layout="vertical"
                   onFinish={handleSaveProfileChanges}
                 >
-                  <Form.Item 
-                    label="Full Name" 
+                  <Form.Item
+                    label="Full Name"
                     name="fullName"
                     rules={[{ required: true, message: 'Please enter your full name' }]}
                   >
-                    <Input 
-                      placeholder="Enter your full name" 
-                      prefix={<UserOutlined style={{ color: '#52c41a' }} />}
+                    <Input
+                      placeholder="Enter your full name"
+                      prefix={<UserOutlined style={{ color: 'white' }} />}
                     />
                   </Form.Item>
-                  <Form.Item 
-                    label="Email Address" 
+                  <Form.Item
+                    label="Email Address"
                     name="email"
                     rules={[
                       { required: true, message: 'Please enter your email' },
                       { type: 'email', message: 'Please enter a valid email' }
                     ]}
                   >
-                    <Input 
-                      placeholder="Enter your email" 
-                      prefix={<MailOutlined style={{ color: '#52c41a' }} />}
+                    <Input
+                      placeholder="Enter your email"
+                      prefix={<MailOutlined style={{ color: 'white' }} />}
                     />
                   </Form.Item>
                   <Form.Item>
                     <div style={{ display: 'flex', gap: '12px' }}>
-                      <ActionButton 
+                      <ActionButton
                         htmlType="submit"
                       >
-                        💾 Save Changes
+                        Save Changes
                       </ActionButton>
-                      <ActionButton 
+                      <ActionButton
                         onClick={handleCancelEdit}
-                        style={{ 
-                          background: 'linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%)',
-                          border: 'none'
+                        style={{
+                          background: 'rgba(255, 77, 79, 0.1)',
+                          border: '1px solid rgba(255, 77, 79, 0.2)',
+                          color: '#ff4d4f'
                         }}
                       >
-                        ❌ Cancel
+                        Cancel
                       </ActionButton>
                     </div>
                   </Form.Item>
@@ -290,7 +348,7 @@ const Settings = () => {
             )}
           </SettingsCard>
 
-          <SettingsCard title="🔒 Security Settings">
+          <SettingsCard title="Security Settings">
             <SettingItem>
               <SettingInfo>
                 <SettingTitle>
@@ -301,34 +359,35 @@ const Settings = () => {
                 </SettingDescription>
               </SettingInfo>
               <ActionButton onClick={handleChangePassword}>
-                🔑 Change Password
+                Change Password
               </ActionButton>
             </SettingItem>
 
             {isChangingPassword && (
-              <div style={{ 
-                padding: '20px', 
+              <div style={{
+                padding: '20px',
                 background: 'linear-gradient(135deg, #fff2e8 0%, #ffe7ba 100%)',
                 borderRadius: '12px',
                 border: '1px solid #ffd591',
                 marginTop: '16px'
               }}>
-                <Text style={{ color: '#d46b08', fontWeight: '600' }}>
-                  🔒 Password change functionality coming soon!
+                <Text style={{ color: 'white', fontWeight: '600' }}>
+                  Password change functionality coming soon!
                 </Text>
                 <br />
                 <Text style={{ color: '#8c4a00', fontSize: '14px' }}>
                   This feature will allow you to securely change your password.
                 </Text>
                 <div style={{ marginTop: '12px' }}>
-                  <ActionButton 
+                  <ActionButton
                     onClick={() => setIsChangingPassword(false)}
-                    style={{ 
-                      background: 'linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%)',
-                      border: 'none'
+                    style={{
+                      background: 'rgba(255, 77, 79, 0.1)',
+                      border: '1px solid rgba(255, 77, 79, 0.2)',
+                      color: '#ff4d4f'
                     }}
                   >
-                    ❌ Close
+                    Close
                   </ActionButton>
                 </div>
               </div>
@@ -343,14 +402,14 @@ const Settings = () => {
                   Add an extra layer of security to your account
                 </SettingDescription>
               </SettingInfo>
-              <SwitchStyled 
+              <SwitchStyled
                 checked={settings.twoFactorAuth}
                 onChange={(checked) => handleSettingChange('twoFactorAuth', checked)}
               />
             </SettingItem>
           </SettingsCard>
 
-          <SettingsCard title="🔔 Notification Settings">
+          <SettingsCard title="Notification Settings">
             <SettingItem>
               <SettingInfo>
                 <SettingTitle>
@@ -360,7 +419,7 @@ const Settings = () => {
                   Receive updates about meetings and important events
                 </SettingDescription>
               </SettingInfo>
-              <SwitchStyled 
+              <SwitchStyled
                 checked={settings.emailNotifications}
                 onChange={(checked) => handleSettingChange('emailNotifications', checked)}
               />
@@ -375,7 +434,7 @@ const Settings = () => {
                   Get instant notifications on your device
                 </SettingDescription>
               </SettingInfo>
-              <SwitchStyled 
+              <SwitchStyled
                 checked={settings.pushNotifications}
                 onChange={(checked) => handleSettingChange('pushNotifications', checked)}
               />
@@ -390,14 +449,14 @@ const Settings = () => {
                   Receive promotional content and updates
                 </SettingDescription>
               </SettingInfo>
-              <SwitchStyled 
+              <SwitchStyled
                 checked={settings.marketingEmails}
                 onChange={(checked) => handleSettingChange('marketingEmails', checked)}
               />
             </SettingItem>
           </SettingsCard>
 
-          <SettingsCard title="🎨 Appearance Settings">
+          <SettingsCard title="Appearance Settings">
             <SettingItem>
               <SettingInfo>
                 <SettingTitle>
@@ -407,25 +466,25 @@ const Settings = () => {
                   Choose between light and dark mode
                 </SettingDescription>
               </SettingInfo>
-              <SwitchStyled 
+              <SwitchStyled
                 checked={settings.darkTheme}
                 onChange={(checked) => handleSettingChange('darkTheme', checked)}
               />
             </SettingItem>
           </SettingsCard>
-          </Space>
+        </Space>
 
         {/* Save Settings Button */}
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '40px',
-          padding: '24px',
-          background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
-          borderRadius: '16px',
-          border: '1px solid rgba(82, 196, 26, 0.1)'
+          padding: '32px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.05)'
         }}>
-          <ActionButton onClick={handleSaveSettings}>
-            💾 Save All Settings
+          <ActionButton onClick={handleSaveSettings} loading={isSaving} style={{ height: '56px', borderRadius: '16px', padding: '0 48px', fontSize: '16px' }}>
+            Save All Settings
           </ActionButton>
         </div>
       </div>

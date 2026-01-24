@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, sequelize } = require('../models');
+const { Op } = require('sequelize');
 const validator = require('validator');
 
 const generateToken = (user) => {
@@ -21,16 +23,16 @@ exports.auth = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    
+
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find user
     const user = await User.findByPk(decoded.id);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
-    
+
     // Attach user to request
     req.user = user;
     next();
@@ -42,9 +44,10 @@ exports.auth = async (req, res, next) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role = 'user' } = req.body;
-    
+    console.log('Register Payload:', JSON.stringify(req.body, null, 2));
+
     // Validate role is allowed
-    const allowedRoles = ['user', 'premium']; // Define your allowed roles
+    const allowedRoles = ['user', 'premium', 'ca', 'financial_planner', 'admin'];
     if (role && !allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role specified' });
     }
@@ -75,7 +78,9 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      phone: req.body.phone,
+      caNumber: req.body.caNumber
     });
 
     // Generate token
@@ -124,9 +129,84 @@ exports.login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        twoFactorAuth: user.twoFactorAuth,
+        emailNotifications: user.emailNotifications,
+        pushNotifications: user.pushNotifications,
+        marketingEmails: user.marketingEmails,
+        darkTheme: user.darkTheme
       },
       token
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found with this email' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and save to database
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    await user.save();
+
+    // Ideally, send email here. For now, we return the token for testing.
+    // In production, you would use nodemailer to send currentUrl + /reset-password/ + resetToken
+
+    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+    console.log(`Reset Token: ${resetToken}`);
+    console.log(`Reset URL: ${resetUrl}`);
+
+    res.status(200).json({
+      success: true,
+      data: 'Email sent (Mocked: Check server console for link)',
+      resetUrl // Including this for easier testing by the user
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const resetPasswordToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
+
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken,
+        resetPasswordExpire: { [Op.gt]: Date.now() }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    // Set new password
+    user.password = await bcrypt.hash(req.body.password, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpire = null;
+
+    await user.save();
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      token,
+      message: 'Password updated successfully'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -140,10 +220,76 @@ exports.getProfile = async (req, res) => {
         id: req.user.id,
         name: req.user.name,
         email: req.user.email,
-        role: req.user.role
+        role: req.user.role,
+        twoFactorAuth: req.user.twoFactorAuth,
+        emailNotifications: req.user.emailNotifications,
+        pushNotifications: req.user.pushNotifications,
+        marketingEmails: req.user.marketingEmails,
+        darkTheme: req.user.darkTheme
       }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}; 
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const user = req.user;
+
+    if (name) user.name = name;
+    if (email) {
+      if (!validator.isEmail(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+      const existingUser = await User.findOne({ where: { email, id: { [Op.ne]: user.id } } });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+      user.email = email;
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateSettings = async (req, res) => {
+  try {
+    const { twoFactorAuth, emailNotifications, pushNotifications, marketingEmails, darkTheme } = req.body;
+    const user = req.user;
+
+    if (twoFactorAuth !== undefined) user.twoFactorAuth = twoFactorAuth;
+    if (emailNotifications !== undefined) user.emailNotifications = emailNotifications;
+    if (pushNotifications !== undefined) user.pushNotifications = pushNotifications;
+    if (marketingEmails !== undefined) user.marketingEmails = marketingEmails;
+    if (darkTheme !== undefined) user.darkTheme = darkTheme;
+
+    await user.save();
+
+    res.json({
+      message: 'Settings updated successfully',
+      settings: {
+        twoFactorAuth: user.twoFactorAuth,
+        emailNotifications: user.emailNotifications,
+        pushNotifications: user.pushNotifications,
+        marketingEmails: user.marketingEmails,
+        darkTheme: user.darkTheme
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -7,13 +7,24 @@ const RoleBasedRoute = ({ children, allowedRoles, requireAuth = true }) => {
   const { user, token } = useSelector((state) => state.user);
   const location = useLocation();
 
+  console.log('RoleBasedRoute Check:', {
+    path: location.pathname,
+    requireAuth,
+    hasUser: !!user,
+    hasToken: !!token,
+    userRole: user?.role,
+    allowedRoles
+  });
+
   // Check authentication
   if (requireAuth && (!user || !token)) {
+    console.warn('RoleBasedRoute: Access denied - No user/token. Redirecting to login.');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check role authorization
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    console.warn(`RoleBasedRoute: Access denied - Role mismatch. User: ${user.role}, Allowed: ${allowedRoles}`);
     return (
       <Result
         status="403"

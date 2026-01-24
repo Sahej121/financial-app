@@ -1,291 +1,215 @@
 import React, { useState } from 'react';
-import { 
-  Form, 
-  Input, 
-  Button, 
-  Upload, 
-  Select, 
-  DatePicker, 
-  Card, 
-  message, 
-  Steps, 
+import {
+  Form,
+  Input,
+  Button,
+  Upload,
+  Select,
   Typography,
+  message,
+  Steps,
   Alert,
-  Modal
+  Modal,
+  Row,
+  Col
 } from 'antd';
-import { useSelector } from 'react-redux';
-import { UploadOutlined, FilePdfOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
+import { UploadOutlined, FilePdfOutlined, FileExcelOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import styled, { keyframes } from 'styled-components';
 import moment from 'moment';
-import { loadScript } from '../utils/loadScript';
-import ZoomMeeting from '../components/consultation/ZoomMeeting';
-import AuthGuard from '../components/auth/AuthGuard';
 
-const { Title, Text, Paragraph } = Typography;
-const { Step } = Steps;
 const { Option } = Select;
 const { TextArea } = Input;
 
+// --- Animations ---
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
 const PageContainer = styled.div`
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 0 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  border-radius: 20px;
+  padding: 100px 24px;
+  background: #000;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-    pointer-events: none;
+  /* Mesh Background */
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(0, 176, 240, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 50%, rgba(242, 200, 17, 0.05) 0%, transparent 40%);
+`;
+
+const WizardCard = styled.div`
+  max-width: 900px;
+  margin: 0 auto;
+  background: rgba(20, 20, 20, 0.5);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  padding: 60px;
+  
+  @media (max-width: 768px) {
+    padding: 30px;
   }
 `;
 
-const StyledCard = styled(Card)`
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-  }
-
-  .ant-card-body {
-    padding: 40px;
-  }
-`;
-
-const RequiredDocs = styled.div`
-  margin: 20px 0;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-  border-radius: 16px;
-  border-left: 4px solid #1890ff;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(45deg, rgba(24, 144, 255, 0.1), transparent);
-    border-radius: 50%;
-    transform: translate(30px, -30px);
-  }
-
-  ul {
-    margin: 0;
-    padding-left: 20px;
-    
-    li {
-      margin: 12px 0;
-      font-weight: 500;
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-
-      &:hover {
-        color: #1890ff;
-        transform: translateX(5px);
-      }
-    }
-  }
-`;
-
-const AnalystSchedule = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-`;
-
-const TimeSlot = styled(Button)`
+const Header = styled.div`
   text-align: center;
-  padding: 20px 16px;
-  border: 2px solid ${props => props.selected ? '#1890ff' : '#e8f2ff'};
-  background: ${props => props.selected 
-    ? 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)' 
-    : 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)'};
-  color: ${props => props.selected ? 'white' : '#333'};
-  border-radius: 16px;
-  height: auto;
-  min-height: 100px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 60px;
+  animation: ${slideUp} 0.8s ease-out;
 
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(24, 144, 255, 0.3);
-    border-color: #1890ff;
-    background: ${props => props.selected 
-      ? 'linear-gradient(135deg, #096dd9 0%, #1890ff 100%)' 
-      : 'linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%)'};
+  h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  div {
-    font-weight: 500;
-    
-    &:first-child {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    &:last-child {
-      font-size: 12px;
-      opacity: 0.8;
-    }
+  p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
   }
 `;
 
-const PaymentButton = styled(Button)`
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-  border: none;
-  border-radius: 12px;
-  height: 60px;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 8px 25px rgba(24, 144, 255, 0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
+const CustomSteps = styled(Steps)`
+  margin-bottom: 60px;
+  
+  .ant-steps-item-process .ant-steps-item-icon {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
   }
-
-  &:hover {
-    background: linear-gradient(135deg, #096dd9 0%, #1890ff 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(24, 144, 255, 0.4);
-
-    &::before {
-      left: 100%;
-    }
+  
+  .ant-steps-item-finish .ant-steps-item-icon {
+    background: transparent;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
   }
-
-  &:active {
-    transform: translateY(0);
+  
+  .ant-steps-item-title {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 500;
+  }
+  
+  .ant-steps-item-active .ant-steps-item-title {
+    color: white !important;
+    font-weight: 700;
   }
 `;
 
 const FormSection = styled.div`
-  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  animation: ${slideUp} 0.6s ease-out;
+`;
+
+const StyledInput = styled(Input)`
+  height: 60px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 32px;
-  margin: 24px 0;
-  border: 1px solid rgba(24, 144, 255, 0.1);
-  position: relative;
-  overflow: hidden;
+  color: white;
+  font-size: 1.1rem;
+  padding: 0 24px;
+  transition: all 0.3s;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #1890ff, #096dd9, #1890ff);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  &:hover, &:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--primary-color);
   }
 `;
 
-const StepIndicator = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
+const StyledSelect = styled(Select)`
+  height: 60px;
+  width: 100%;
   
-  .ant-steps {
-    .ant-steps-item {
-      .ant-steps-item-icon {
-        background: linear-gradient(135deg, #1890ff, #096dd9);
-        border: none;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        box-shadow: 0 4px 15px rgba(24, 144, 255, 0.3);
-      }
-      
-      .ant-steps-item-title {
-        font-weight: 600;
-        color: #333;
-      }
-      
-      &.ant-steps-item-active {
-        .ant-steps-item-icon {
-          background: linear-gradient(135deg, #52c41a, #389e0d);
-          animation: pulse 2s infinite;
-        }
-      }
-      
-      &.ant-steps-item-finish {
-        .ant-steps-item-icon {
-          background: linear-gradient(135deg, #52c41a, #389e0d);
-        }
-      }
-    }
+  .ant-select-selector {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 24px !important;
+  }
+  
+  .ant-select-selection-item {
+    color: white !important;
+    font-size: 1.1rem;
+  }
+  
+  .ant-select-selection-placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1.1rem;
+  }
+`;
+
+const TimeSlotCard = styled.div`
+  background: ${props => props.selected ? 'rgba(0, 176, 240, 0.1)' : 'rgba(255, 255, 255, 0.03)'};
+  border: 1px solid ${props => props.selected ? '#00B0F0' : 'rgba(255, 255, 255, 0.1)'};
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba(0, 176, 240, 0.05);
+    border-color: #00B0F0;
+    transform: translateY(-4px);
   }
 
-  @keyframes pulse {
-    0% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
-    50% { box-shadow: 0 4px 25px rgba(82, 196, 26, 0.5); }
-    100% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
+  h4 {
+    color: white;
+    font-size: 1.2rem;
+    margin: 0 0 8px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  
+  .icon {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    color: ${props => props.selected ? '#00B0F0' : 'rgba(255, 255, 255, 0.1)'};
+  }
+`;
+
+const NextButton = styled(Button)`
+  height: 60px;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0 48px;
+  background: var(--primary-color);
+  border: none;
+  color: black;
+  box-shadow: 0 8px 25px rgba(0, 176, 240, 0.3);
+  margin-top: 40px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    background: white;
+    color: black;
+    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
   }
 `;
 
 const FinancialPlanning = () => {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
-  const [fileList, setFileList] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [showMeeting, setShowMeeting] = useState(false);
-  const [consultationData, setConsultationData] = useState(null);
-  const [showAuthRequired, setShowAuthRequired] = useState(false);
-  
-  const { user, token } = useSelector((state) => state.user);
-  const isAuthenticated = user && token;
 
-  // Mock analyst schedule - Replace with API call
+  // Mock data
   const availableSlots = [
     { id: 1, date: '2024-03-15', time: '10:00 AM', analyst: 'John Doe' },
     { id: 2, date: '2024-03-15', time: '2:00 PM', analyst: 'Jane Smith' },
@@ -295,290 +219,100 @@ const FinancialPlanning = () => {
 
   const steps = [
     {
-      title: 'Basic Information',
+      title: 'Profile',
       content: (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <Form.Item
-            name="name"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Full Name</span>}
-            rules={[{ required: true, message: 'Please enter your name' }]}
-          >
-            <Input 
-              placeholder="Enter your full name" 
-              size="large"
-              style={{
-                borderRadius: '12px',
-                border: '2px solid #e8f2ff',
-                padding: '12px 16px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Email Address</span>}
-            rules={[
-              { required: true, message: 'Please enter your email' },
-              { type: 'email', message: 'Please enter a valid email' }
-            ]}
-          >
-            <Input 
-              placeholder="Enter your email address" 
-              size="large"
-              style={{
-                borderRadius: '12px',
-                border: '2px solid #e8f2ff',
-                padding: '12px 16px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Phone Number</span>}
-            rules={[
-              { required: true, message: 'Please enter your phone number' },
-              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit number' }
-            ]}
-          >
-            <Input 
-              placeholder="Enter your phone number" 
-              size="large"
-              style={{
-                borderRadius: '12px',
-                border: '2px solid #e8f2ff',
-                padding: '12px 16px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="planningType"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>Planning Type</span>}
-            rules={[{ required: true, message: 'Please select planning type' }]}
-          >
-            <Select 
-              placeholder="Select planning type"
-              size="large"
-              style={{
-                borderRadius: '12px',
-                border: '2px solid #e8f2ff',
-                fontSize: '16px'
-              }}
-            >
-              <Option value="business">🏢 Business Expansion</Option>
-              <Option value="loan">🛡️ Loan Protection</Option>
-              <Option value="investment">📈 Investment Planning</Option>
-            </Select>
-          </Form.Item>
-        </div>
-      )
-    },
-    {
-      title: 'Business & Documents',
-      content: (
-        <>
-          <Form.Item
-            name="businessDescription"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>🏢 Business Description</span>}
-            rules={[
-              { required: true, message: 'Please describe your business' },
-              { max: 200, message: 'Description must be under 200 words' }
-            ]}
-          >
-            <TextArea
-              placeholder="Please describe your business including location, market size, industry type, current challenges, and goals (under 200 words)"
-              rows={4}
-              showCount
-              maxLength={200}
-              style={{
-                borderRadius: '12px',
-                border: '2px solid #e8f2ff',
-                padding: '12px 16px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Form.Item>
-
-          <RequiredDocs>
-            <Title level={5} style={{ color: '#1890ff', marginBottom: '20px' }}>📋 Required Documents:</Title>
-            <ul>
-              <li>
-                <FilePdfOutlined style={{ color: '#ff4d4f' }} /> Bank Statements (Last 1 Month)
-              </li>
-              <li>
-                <FileExcelOutlined style={{ color: '#52c41a' }} /> Transaction History
-              </li>
-              <li>
-                <FilePdfOutlined style={{ color: '#ff4d4f' }} /> Income Proof (If applicable)
-              </li>
-              <li>
-                <FilePdfOutlined style={{ color: '#fa8c16' }} /> Creditors/Debtors Statement (Required)
-              </li>
-            </ul>
-          </RequiredDocs>
-
-          <Form.Item
-            name="documents"
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>📁 Upload Documents</span>}
-            rules={[{ required: true, message: 'Please upload required documents' }]}
-          >
-            <Upload
-              fileList={fileList}
-              onChange={({ fileList }) => setFileList(fileList)}
-              beforeUpload={() => false}
-              multiple
-              style={{
-                border: '2px dashed #d9d9d9',
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
-                background: 'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <Button 
-                icon={<UploadOutlined />} 
-                size="large"
-                style={{
-                  borderRadius: '12px',
-                  height: '48px',
-                  padding: '0 24px',
-                  fontWeight: '600',
-                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-                  border: 'none',
-                  color: 'white',
-                  boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
-                }}
-              >
-                📤 Select Files to Upload
-              </Button>
-            </Upload>
-          </Form.Item>
-        </>
-      )
-    },
-    {
-      title: 'Schedule Consultation',
-      content: (
-        <>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <Title level={4} style={{ color: '#333', marginBottom: '8px' }}>
-              📅 Select Your Preferred Time Slot
-            </Title>
-            <Paragraph style={{ fontSize: '16px', color: '#666' }}>
-              Choose a convenient time to meet with our financial analyst
-            </Paragraph>
+        <FormSection>
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ color: 'white', marginBottom: 12 }}>Let's get to know you.</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>We need some basic details to tailor our financial strategy.</p>
           </div>
-          
-          <AnalystSchedule>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="name" rules={[{ required: true, message: 'Required' }]}>
+                <StyledInput placeholder="Full Name" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="phone" rules={[{ required: true, message: 'Required' }]}>
+                <StyledInput placeholder="Phone Number" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Valid email required' }]}>
+                <StyledInput placeholder="Email Address" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="planningType" rules={[{ required: true, message: 'Please select a goal' }]}>
+                <StyledSelect placeholder="What is your primary financial goal?">
+                  <Option value="business">Business Expansion</Option>
+                  <Option value="wealth">Wealth Creation</Option>
+                  <Option value="tax">Tax Optimization</Option>
+                  <Option value="retirement">Retirement Planning</Option>
+                </StyledSelect>
+              </Form.Item>
+            </Col>
+          </Row>
+        </FormSection>
+      )
+    },
+    {
+      title: 'Details',
+      content: (
+        <FormSection>
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ color: 'white', marginBottom: 12 }}>Deep Dive.</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Tell us more about your current situation and upload relevant docs.</p>
+          </div>
+
+          <Form.Item name="description">
+            <TextArea
+              rows={6}
+              placeholder="Describe your business or financial situation..."
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, color: 'white', fontSize: '1.1rem', padding: 24 }}
+            />
+          </Form.Item>
+
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: 24, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h4 style={{ color: 'white', marginBottom: 16 }}>Required Documents</h4>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+              <Button type="dashed" icon={<FilePdfOutlined />} ghost style={{ borderRadius: 12 }}>Bank Statements</Button>
+              <Button type="dashed" icon={<FileExcelOutlined />} ghost style={{ borderRadius: 12 }}>Transaction History</Button>
+            </div>
+
+            <Upload.Dragger style={{ background: 'transparent', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 16 }}>
+              <p className="ant-upload-drag-icon">
+                <UploadOutlined style={{ color: 'var(--primary-color)', fontSize: 32 }} />
+              </p>
+              <p className="ant-upload-text" style={{ color: 'var(--text-secondary)' }}>Click or drag file to this area to upload</p>
+            </Upload.Dragger>
+          </div>
+        </FormSection>
+      )
+    },
+    {
+      title: 'Consultation',
+      content: (
+        <FormSection>
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
+            <h2 style={{ color: 'white', marginBottom: 12 }}>Book Your Expert.</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Select a time slot for your 1:1 strategy session.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
             {availableSlots.map(slot => (
-              <TimeSlot
+              <TimeSlotCard
                 key={slot.id}
                 selected={selectedSlot?.id === slot.id}
                 onClick={() => setSelectedSlot(slot)}
               >
-                <div>📅 {moment(slot.date).format('MMM DD, YYYY')}</div>
-                <div>🕐 {slot.time}</div>
-                <div>👨‍💼 {slot.analyst}</div>
-              </TimeSlot>
+                <div className="icon"><ClockCircleOutlined /></div>
+                <h4>{moment(slot.date).format('MMM DD')} • {slot.time}</h4>
+                <p>with {slot.analyst}</p>
+              </TimeSlotCard>
             ))}
-          </AnalystSchedule>
-
-          {selectedSlot && (
-            <Alert
-              style={{ 
-                marginTop: '24px',
-                borderRadius: '12px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
-                borderLeft: '4px solid #52c41a'
-              }}
-              message={
-                <span style={{ fontWeight: '600', color: '#52c41a' }}>
-                  ✅ Time Slot Selected
-                </span>
-              }
-              description={
-                <div style={{ marginTop: '8px' }}>
-                  <div style={{ fontSize: '16px', fontWeight: '500' }}>
-                    📅 {moment(selectedSlot.date).format('MMMM DD, YYYY')}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    🕐 {selectedSlot.time} with {selectedSlot.analyst}
-                  </div>
-                </div>
-              }
-              type="success"
-              showIcon={false}
-            />
-          )}
-        </>
-      )
-    },
-    {
-      title: 'Confirmation',
-      content: (
-        <>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <Title level={3} style={{ 
-              color: '#52c41a', 
-              marginBottom: '16px',
-              background: 'linear-gradient(135deg, #52c41a, #389e0d)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
-              🎉 Ready to Schedule Your Consultation!
-            </Title>
-            <Paragraph style={{ fontSize: '16px', color: '#666', marginBottom: '24px' }}>
-              Please review your information before proceeding to payment
-            </Paragraph>
           </div>
-          
-          <div style={{ 
-            background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
-            padding: '24px',
-            borderRadius: '16px',
-            marginBottom: '24px',
-            border: '1px solid rgba(82, 196, 26, 0.2)'
-          }}>
-            <Title level={4} style={{ color: '#333', marginBottom: '16px' }}>📋 Summary</Title>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              <div><strong>Name:</strong> {form.getFieldValue('name')}</div>
-              <div><strong>Email:</strong> {form.getFieldValue('email')}</div>
-              <div><strong>Phone:</strong> {form.getFieldValue('phone')}</div>
-              <div><strong>Planning Type:</strong> {form.getFieldValue('planningType')}</div>
-              <div><strong>Documents Uploaded:</strong> {fileList.length} files</div>
-              {selectedSlot && (
-                <>
-                  <div><strong>Consultation Date:</strong> {moment(selectedSlot.date).format('MMMM DD, YYYY')}</div>
-                  <div><strong>Time:</strong> {selectedSlot.time}</div>
-                  <div><strong>Analyst:</strong> {selectedSlot.analyst}</div>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div style={{
-            background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '1px solid #ffd666',
-            textAlign: 'center'
-          }}>
-            <Title level={4} style={{ color: '#fa8c16', marginBottom: '8px' }}>💳 Consultation Fee: ₹499</Title>
-            <Text style={{ color: '#666' }}>
-              Includes 1-hour consultation with financial expert and personalized report
-            </Text>
-          </div>
-        </>
+        </FormSection>
       )
     }
   ];
@@ -586,427 +320,57 @@ const FinancialPlanning = () => {
   const next = async () => {
     try {
       await form.validateFields();
-      
-      // Special handling for the schedule step
       if (currentStep === 2 && !selectedSlot) {
-        message.error('Please select a consultation slot');
+        message.warning('Please select a time slot');
         return;
       }
-      
-      setCurrentStep(currentStep + 1);
-    } catch (error) {
-      message.error('Please fill in all required fields');
-    }
-  };
-
-  const prev = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
-  const handleSubmit = async (values) => {
-    if (!selectedSlot) {
-      message.error('Please select a consultation slot');
-      return;
-    }
-
-    try {
-      // Prepare data for submission
-      const submissionData = {
-        ...values,
-        consultationSlot: selectedSlot,
-        preferredMeetingType: 'video' // default to video call
-      };
-
-      // Submit to financial planning API
-      const response = await fetch('/api/financial-planning/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(submissionData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit form');
+      if (currentStep === steps.length - 1) {
+        Modal.success({
+          title: 'All Set!',
+          content: 'Your consultation request has been received. We will contact you shortly.',
+          centered: true,
+          okButtonProps: { style: { background: '#52c41a', border: 'none', borderRadius: 20, padding: '0 30px' } }
+        });
+      } else {
+        setCurrentStep(currentStep + 1);
       }
-
-      console.log('Financial planning form submitted:', data);
-      message.success('Your consultation has been scheduled successfully!');
-      
-      // Show confirmation
-      Modal.success({
-        title: 'Consultation Scheduled',
-        content: (
-          <div>
-            <p>Your consultation has been scheduled for:</p>
-            <p><strong>{moment(selectedSlot.date).format('MMMM DD, YYYY')}</strong></p>
-            <p><strong>Time: {selectedSlot.time}</strong></p>
-            <p><strong>Analyst: {selectedSlot.analyst}</strong></p>
-            <p>You will receive a confirmation email with further details.</p>
-          </div>
-        ),
-        onOk: () => {
-          form.resetFields();
-          setFileList([]);
-          setSelectedSlot(null);
-          setCurrentStep(0);
-        }
-      });
-    } catch (error) {
-      message.error('Failed to schedule consultation. Please try again.');
+    } catch (err) {
+      console.log('Validation Failed:', err);
     }
   };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
-
-  const createOrder = async () => {
-    try {
-      const response = await fetch('/api/payments/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-      
-      return data.order;
-    } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
-    }
-  };
-
-  const verifyPayment = async (paymentData) => {
-    try {
-      const response = await fetch('/api/payments/verify-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentData)
-      });
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error verifying payment:', error);
-      throw error;
-    }
-  };
-
-  const handleConsultationBooking = async (paymentId) => {
-    try {
-      const formData = form.getFieldsValue();
-      const consultationData = {
-        ...formData,
-        paymentId,
-        // Add other necessary consultation data
-      };
-
-      const response = await fetch('/api/consultations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(consultationData)
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-
-      message.success('Consultation booked successfully!');
-      // Handle successful booking (e.g., redirect to confirmation page)
-    } catch (error) {
-      console.error('Error booking consultation:', error);
-      message.error('Failed to book consultation. Please contact support.');
-    }
-  };
-
-  const handlePaymentSuccess = async (response, consultationData) => {
-    try {
-      // Verify payment
-      const verificationResult = await verifyPayment({
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
-        consultationData // Add consultation data for receipt generation
-      });
-
-      // Book consultation
-      await handleConsultationBooking(response.razorpay_payment_id);
-
-      // Show success modal with receipt download
-      Modal.success({
-        title: '🎉 Payment Successful!',
-        width: 500,
-        content: (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
-              padding: '24px',
-              borderRadius: '16px',
-              marginBottom: '20px',
-              border: '1px solid rgba(82, 196, 26, 0.2)'
-            }}>
-              <Title level={4} style={{ color: '#52c41a', marginBottom: '16px' }}>
-                ✅ Consultation Successfully Booked!
-              </Title>
-              <div style={{ display: 'grid', gap: '8px', textAlign: 'left' }}>
-                <div><strong>Date:</strong> {moment(selectedSlot?.date).format('MMMM DD, YYYY')}</div>
-                <div><strong>Time:</strong> {selectedSlot?.time}</div>
-                <div><strong>Analyst:</strong> {selectedSlot?.analyst}</div>
-                <div><strong>Payment ID:</strong> {response.razorpay_payment_id}</div>
-              </div>
-            </div>
-            
-            <div style={{
-              background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid #ffd666',
-              marginBottom: '20px'
-            }}>
-              <Text style={{ color: '#fa8c16', fontWeight: '600' }}>
-                📧 Confirmation email sent to {form.getFieldValue('email')}
-              </Text>
-            </div>
-
-            {verificationResult?.receipt && (
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                onClick={() => window.open(`/api/payments/receipt/${verificationResult.receipt.url}`, '_blank')}
-                style={{
-                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  height: '40px',
-                  fontWeight: '600'
-                }}
-              >
-                Download Receipt
-              </Button>
-            )}
-          </div>
-        ),
-        onOk: () => {
-          // Reset form and go back to start
-          form.resetFields();
-          setFileList([]);
-          setSelectedSlot(null);
-          setCurrentStep(0);
-          setConsultationData(null);
-        }
-      });
-    } catch (error) {
-      message.error('Payment verification failed. Please contact support.');
-    } finally {
-      setPaymentProcessing(false);
-    }
-  };
-
-  const initializePayment = async () => {
-    try {
-      setPaymentProcessing(true);
-
-      // Validate form first
-      await form.validateFields();
-
-      // Load Razorpay script
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        throw new Error('Razorpay SDK failed to load');
-      }
-
-      // Create order
-      const order = await createOrder();
-
-      // Get form data for prefill
-      const formData = form.getFieldsValue();
-
-      // Configure Razorpay options
-      const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Credit Leliya",
-        description: "Financial Consultation Booking",
-        order_id: order.id,
-        prefill: {
-          name: formData.name,
-          email: formData.email,
-          contact: formData.phone
-        },
-        theme: {
-          color: "#1890ff"
-        },
-        modal: {
-          ondismiss: function() {
-            setPaymentProcessing(false);
-          }
-        },
-        handler: async function(response) {
-          const formData = form.getFieldsValue();
-          await handlePaymentSuccess(response, formData);
-        }
-      };
-
-      // Initialize Razorpay
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-
-    } catch (error) {
-      console.error('Payment initialization error:', error);
-      message.error(error.message || 'Failed to initialize payment');
-      setPaymentProcessing(false);
-    }
-  };
-
-  if (showMeeting) {
-    return (
-      <ZoomMeeting
-        consultationId={consultationData?.id}
-        onMeetingEnd={() => setShowMeeting(false)}
-      />
-    );
-  }
 
   return (
     <PageContainer>
-      <StyledCard>
-        <Title level={2} style={{ 
-          textAlign: 'center', 
-          marginBottom: '40px',
-          background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontSize: '32px',
-          fontWeight: '700'
-        }}>
-          Financial Planning Consultation
-        </Title>
+      <WizardCard>
+        <Header>
+          <h1>Financial Blueprint</h1>
+          <p>Architect your wealth with our guided strategic planning tool.</p>
+        </Header>
 
-        <StepIndicator>
-          <Steps current={currentStep}>
-            {steps.map(item => (
-              <Step key={item.title} title={item.title} />
-            ))}
-          </Steps>
-        </StepIndicator>
+        <CustomSteps current={currentStep}>
+          {steps.map(item => <Steps.Step key={item.title} title={item.title} />)}
+        </CustomSteps>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
-          <FormSection>
-            {steps[currentStep].content}
-          </FormSection>
+        <Form form={form} layout="vertical">
+          {steps[currentStep].content}
 
-          <div style={{ 
-            marginTop: '32px', 
-            textAlign: 'right',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              {currentStep > 0 && (
-                <Button 
-                  size="large"
-                  onClick={prev}
-                  style={{
-                    borderRadius: '12px',
-                    height: '48px',
-                    padding: '0 24px',
-                    fontWeight: '600',
-                    border: '2px solid #d9d9d9',
-                    background: 'white'
-                  }}
-                >
-                  ← Previous
-                </Button>
-              )}
-            </div>
-            
-            <div>
-              {currentStep < steps.length - 1 && (
-                <Button 
-                  type="primary" 
-                  size="large"
-                  onClick={next}
-                  style={{
-                    borderRadius: '12px',
-                    height: '48px',
-                    padding: '0 32px',
-                    fontWeight: '600',
-                    background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-                    border: 'none',
-                    boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
-                  }}
-                >
-                  Next →
-                </Button>
-              )}
-              
-              {currentStep === steps.length - 1 && (
-                <>
-                  {!isAuthenticated ? (
-                    <AuthGuard>
-                      <PaymentButton
-                        type="primary"
-                        onClick={initializePayment}
-                        loading={paymentProcessing}
-                        block
-                        size="large"
-                      >
-                        💳 Pay ₹499 & Schedule Consultation
-                      </PaymentButton>
-                    </AuthGuard>
-                  ) : (
-                    <PaymentButton
-                      type="primary"
-                      onClick={initializePayment}
-                      loading={paymentProcessing}
-                      block
-                      size="large"
-                    >
-                      💳 Pay ₹499 & Schedule Consultation
-                    </PaymentButton>
-                  )}
-                </>
-              )}
-            </div>
+          <div style={{ textAlign: 'center' }}>
+            {currentStep > 0 && (
+              <Button
+                size="large"
+                type="text"
+                style={{ color: 'rgba(255,255,255,0.5)', marginRight: 24, borderRadius: 30, height: 60, fontWeight: 600 }}
+                onClick={() => setCurrentStep(currentStep - 1)}
+              >
+                Back
+              </Button>
+            )}
+            <NextButton onClick={next}>
+              {currentStep === steps.length - 1 ? 'Confirm Booking' : 'Continue'}
+            </NextButton>
           </div>
         </Form>
-      </StyledCard>
+      </WizardCard>
     </PageContainer>
   );
 };

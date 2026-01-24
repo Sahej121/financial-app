@@ -13,32 +13,32 @@ exports.submitFinancialPlan = async (req, res) => {
       age,
       occupation,
       monthlyIncome,
-      
+
       // Financial Goals
       planningType,
       goalDescription,
       targetAmount,
       timeframe,
       riskTolerance,
-      
+
       // Business-specific fields
       businessType,
       currentRevenue,
       expansionGoal,
-      
+
       // Loan-specific fields
       loanType,
       loanAmount,
       currentEMI,
-      
+
       // Investment preferences
       investmentExperience,
       preferredInvestments,
-      
+
       // Additional information
       existingInvestments,
       specialRequirements,
-      
+
       // Consultation details
       consultationSlot,
       preferredMeetingType
@@ -83,6 +83,29 @@ exports.submitFinancialPlan = async (req, res) => {
 
     console.log('Financial planning submission created:', submission.id);
 
+    // Create a meeting/consultation based on selected slot
+    if (consultationSlot) {
+      const { Meeting: M } = require('../models');
+      const startsAt = new Date(consultationSlot.date);
+      const [hours, minutes] = (consultationSlot.time || '10:00').split(':');
+      startsAt.setHours(parseInt(hours), parseInt(minutes));
+
+      const endsAt = new Date(startsAt);
+      endsAt.setHours(endsAt.getHours() + 1);
+
+      await M.create({
+        clientId: userId,
+        professionalId: 1,
+        professionalRole: planningType === 'tax_planning' ? 'ca' : 'financial_planner',
+        title: `${planningType.toUpperCase()} Consultation`,
+        planningType: planningType,
+        startsAt,
+        endsAt,
+        status: 'scheduled',
+        submissionId: submission.id
+      }).catch(err => console.error('Auto-meeting error:', err));
+    }
+
     res.status(201).json({
       success: true,
       message: 'Financial planning form submitted successfully',
@@ -107,12 +130,12 @@ exports.submitFinancialPlan = async (req, res) => {
 exports.getUserSubmissions = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const submissions = await FinancialPlanningSubmission.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
       attributes: [
-        'id', 'planningType', 'goalDescription', 'targetAmount', 
+        'id', 'planningType', 'goalDescription', 'targetAmount',
         'timeframe', 'status', 'assignedAnalyst', 'createdAt', 'updatedAt'
       ]
     });
@@ -135,7 +158,7 @@ exports.getUserSubmissions = async (req, res) => {
 exports.getAllSubmissions = async (req, res) => {
   try {
     const { status, planningType, page = 1, limit = 10 } = req.query;
-    
+
     const whereClause = {};
     if (status) whereClause.status = status;
     if (planningType) whereClause.planningType = planningType;
@@ -181,7 +204,7 @@ exports.updateSubmissionStatus = async (req, res) => {
     const { status, assignedAnalyst, notes } = req.body;
 
     const submission = await FinancialPlanningSubmission.findByPk(id);
-    
+
     if (!submission) {
       return res.status(404).json({
         success: false,

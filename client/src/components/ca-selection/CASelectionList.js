@@ -8,32 +8,114 @@ const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
 const CACard = styled(Card)`
-  margin-bottom: 16px;
-  transition: all 0.3s;
+  margin-bottom: 24px;
+  background: rgba(30, 30, 30, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  border-radius: 20px !important;
+  overflow: hidden;
+  height: 100%;
+  
+  .ant-card-body {
+    padding: 32px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    transform: translateY(-8px);
+    border-color: var(--primary-color) !important;
+    background: rgba(30, 30, 30, 0.8) !important;
   }
   
   &.selected {
-    border: 2px solid #1890ff;
-    background-color: #e6f7ff;
+    border: 2px solid var(--primary-color) !important;
+    background: rgba(0, 176, 240, 0.05) !important;
+    box-shadow: 0 0 30px rgba(0, 176, 240, 0.15);
+  }
+
+  h4.ant-typography {
+    color: white !important;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+
+  .ant-typography {
+    color: var(--text-secondary);
   }
 `;
 
 const StyledAvatar = styled(Avatar)`
-  width: 64px;
-  height: 64px;
-  margin-bottom: 8px;
+  width: 90px;
+  height: 90px;
+  margin-bottom: 20px;
+  border: 4px solid rgba(255, 255, 255, 0.05);
+  background: #111;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 `;
 
 const FilterContainer = styled.div`
-  margin-bottom: 24px;
-  padding: 16px;
-  background: #f5f5f5;
-  border-radius: 8px;
+  margin-bottom: 48px;
+  padding: 32px;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+
+  .ant-select-selector {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    height: 50px !important;
+    display: flex;
+    align-items: center;
+    border-radius: 12px !important;
+  }
+
+  .ant-select-arrow {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .ant-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    height: 50px;
+    border-radius: 12px !important;
+    padding-left: 16px;
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+`;
+
+const PrimaryButton = styled(Button)`
+  height: 48px;
+  border-radius: 24px;
+  font-weight: 600;
+  border: none;
+  background: var(--primary-color);
+  color: black;
+  box-shadow: 0 4px 15px rgba(0, 176, 240, 0.2);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 176, 240, 0.3);
+    background: white !important;
+    color: black !important;
+  }
+  
+  &.selected-btn {
+    background: var(--success-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3);
+  }
 `;
 
 // Mock data - Replace with actual API data later
@@ -109,42 +191,6 @@ const mockCAs = [
     description: "Startup specialist helping new businesses with compliance and growth strategy.",
     qualifications: ["ACA", "CS"],
     languages: ["English", "Tamil", "Hindi"],
-  },
-  {
-    id: 7,
-    name: "CA Arjun Singh",
-    experience: 14,
-    rating: 4.8,
-    specializations: ["Real Estate", "Property Tax"],
-    consultationFee: 2200,
-    availability: "Available Now",
-    description: "Expert in real estate taxation and property investment advisory.",
-    qualifications: ["FCA"],
-    languages: ["English", "Hindi", "Punjabi"],
-  },
-  {
-    id: 8,
-    name: "CA Sarah Khan",
-    experience: 9,
-    rating: 4.7,
-    specializations: ["NRI Taxation", "FEMA Compliance"],
-    consultationFee: 2000,
-    availability: "Available in 30 mins",
-    description: "Specializes in NRI taxation and foreign exchange regulations.",
-    qualifications: ["FCA", "CMA"],
-    languages: ["English", "Hindi", "Urdu"],
-  },
-  {
-    id: 9,
-    name: "CA Deepak Menon",
-    experience: 16,
-    rating: 4.9,
-    specializations: ["Risk Advisory", "Internal Audit"],
-    consultationFee: 2800,
-    availability: "Available Now",
-    description: "Risk management expert with extensive experience in internal audit and controls.",
-    qualifications: ["FCA", "CIA"],
-    languages: ["English", "Malayalam", "Hindi"],
   }
 ];
 
@@ -164,20 +210,15 @@ const CASelectionList = ({ onStartConsultation }) => {
   const fetchCAs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/cas', {
-        params: {
-          specialization: filterSpecialization,
-          sortBy: sortBy
-        }
-      });
-      setCAs(response.data);
-      setError(null);
+      // Simulate API call
+      setTimeout(() => {
+        setCAs(mockCAs);
+        setLoading(false);
+      }, 500);
     } catch (err) {
       console.error('Error fetching CAs:', err);
       setError('Failed to load CAs. Please try again.');
-      // Fallback to mock data if API fails
       setCAs(mockCAs);
-    } finally {
       setLoading(false);
     }
   };
@@ -197,23 +238,29 @@ const CASelectionList = ({ onStartConsultation }) => {
   const filteredCAs = cas.filter(ca => {
     const matchesSearch = ca.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ca.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
+    // Additional filtering logic for specializations would go here
+    if (filterSpecialization && !ca.specializations.includes(filterSpecialization)) {
+      return false;
+    }
+
     return matchesSearch;
   });
 
-  // Get unique specializations for filter dropdown
   const allSpecializations = [...new Set(cas.flatMap(ca => ca.specializations || []))];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '0 24px' }}>
       <FilterContainer>
-        <Row gutter={16}>
+        <Row gutter={16} align="middle">
           <Col xs={24} md={8}>
             <Input
               placeholder="Search by name or expertise..."
-              prefix={<SearchOutlined />}
+              prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
               onChange={e => setSearchTerm(e.target.value)}
               size="large"
+              bordered={false}
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', borderRadius: 0 }}
             />
           </Col>
           <Col xs={24} md={8}>
@@ -223,10 +270,10 @@ const CASelectionList = ({ onStartConsultation }) => {
               onChange={value => setFilterSpecialization(value)}
               allowClear
               size="large"
-              prefix={<FilterOutlined />}
+              dropdownStyle={{ background: '#1f1f1f', color: 'white' }}
             >
               {allSpecializations.map(spec => (
-                <Option key={spec} value={spec}>{spec}</Option>
+                <Option key={spec} value={spec} style={{ color: 'white' }}>{spec}</Option>
               ))}
             </Select>
           </Col>
@@ -237,13 +284,11 @@ const CASelectionList = ({ onStartConsultation }) => {
               value={sortBy}
               onChange={value => setSortBy(value)}
               size="large"
-              prefix={<SortAscendingOutlined />}
+              dropdownStyle={{ background: '#1f1f1f', color: 'white' }}
             >
-              <Option value="rating">Rating (Highest)</Option>
-              <Option value="experience">Experience (Most)</Option>
-              <Option value="fee-low">Fee (Lowest)</Option>
-              <Option value="fee-high">Fee (Highest)</Option>
-              <Option value="name">Name (A-Z)</Option>
+              <Option value="rating" style={{ color: 'white' }}>Rating (Highest)</Option>
+              <Option value="experience" style={{ color: 'white' }}>Experience (Most)</Option>
+              <Option value="fee-low" style={{ color: 'white' }}>Fee (Lowest)</Option>
             </Select>
           </Col>
         </Row>
@@ -252,107 +297,77 @@ const CASelectionList = ({ onStartConsultation }) => {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px' }}>
           <Spin size="large" />
-          <div style={{ marginTop: '16px' }}>Loading CAs...</div>
-        </div>
-      ) : error ? (
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Text type="danger">{error}</Text>
+          <div style={{ marginTop: '16px', color: 'white' }}>Loading CAs...</div>
         </div>
       ) : (
         <Row gutter={[24, 24]}>
           {filteredCAs.map((ca) => (
-          <Col xs={24} md={12} lg={8} key={ca.id}>
-            <CACard 
-              className={selectedCA?.id === ca.id ? 'selected' : ''}
-              onClick={() => handleCASelect(ca)}
-              hoverable
-            >
-              <div style={{ textAlign: 'center' }}>
-                <StyledAvatar icon={<UserOutlined />} />
-                <Title level={4} style={{ margin: '8px 0' }}>{ca.name}</Title>
-                <Rate disabled defaultValue={ca.rating} style={{ fontSize: '14px' }} />
-                <Text type="secondary" style={{ display: 'block' }}>
-                  ({ca.rating}/5)
-                </Text>
-              </div>
+            <Col xs={24} md={12} lg={8} key={ca.id}>
+              <CACard
+                className={selectedCA?.id === ca.id ? 'selected' : ''}
+                onClick={() => handleCASelect(ca)}
+                hoverable
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <StyledAvatar icon={<UserOutlined style={{ fontSize: 32, color: 'rgba(255,255,255,0.8)' }} />} />
+                  <Title level={4} style={{ margin: '8px 0', fontSize: '1.25rem' }}>{ca.name}</Title>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Rate disabled defaultValue={ca.rating} style={{ fontSize: '14px', color: '#F2C811' }} />
+                    <Text type="secondary" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>({ca.rating})</Text>
+                  </div>
+                </div>
 
-              <Paragraph style={{ margin: '16px 0' }}>
-                <Text strong>Experience:</Text> {ca.experience} years
-              </Paragraph>
+                <div style={{ margin: '16px 0', display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {ca.specializations.slice(0, 2).map((spec, index) => (
+                    <Tag color="cyan" key={index} style={{ background: 'rgba(19, 194, 194, 0.1)', border: '1px solid rgba(19, 194, 194, 0.3)', color: '#13c2c2', margin: 0 }}>
+                      {spec}
+                    </Tag>
+                  ))}
+                </div>
 
-              <div style={{ margin: '8px 0' }}>
-                {ca.specializations.map((spec, index) => (
-                  <Tag color="blue" key={index} style={{ margin: '4px' }}>
-                    {spec}
-                  </Tag>
-                ))}
-              </div>
+                <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', textAlign: 'center', marginBottom: 20 }}>
+                  {ca.description}
+                </Paragraph>
 
-              <Paragraph>
-                <Text strong>Consultation Fee:</Text> ₹{ca.consultationFee}
-              </Paragraph>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16 }}>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>FEE</Text>
+                    <Text strong style={{ color: 'white', fontSize: '16px' }}>₹{ca.consultationFee}</Text>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>EXP</Text>
+                    <Text strong style={{ color: 'white', fontSize: '16px' }}>{ca.experience} yrs</Text>
+                  </div>
+                </div>
 
-              <div style={{ margin: '8px 0' }}>
-                <Tag 
-                  icon={ca.availability.includes('Now') ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-                  color={ca.availability.includes('Now') ? 'success' : 'warning'}
-                >
-                  {ca.availability}
-                </Tag>
-              </div>
-
-              <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
-                {ca.description}
-              </Paragraph>
-
-              <div style={{ marginTop: '8px' }}>
-                {ca.qualifications.map((qual, index) => (
-                  <Tag color="purple" key={index} style={{ margin: '4px' }}>
-                    {qual}
-                  </Tag>
-                ))}
-              </div>
-
-              <div style={{ marginTop: '8px' }}>
-                {ca.languages.map((lang, index) => (
-                  <Tag color="cyan" key={index} style={{ margin: '4px' }}>
-                    {lang}
-                  </Tag>
-                ))}
-              </div>
-
-              <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                <Button 
-                  type="primary" 
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartConsultation(ca);
-                  }}
-                  style={{ 
-                    background: selectedCA?.id === ca.id ? '#52c41a' : '#1890ff',
-                    borderColor: selectedCA?.id === ca.id ? '#52c41a' : '#1890ff'
-                  }}
-                >
-                  {selectedCA?.id === ca.id ? 'Selected - Start Now' : 'Start Consultation'}
-                </Button>
-              </div>
-            </CACard>
-          </Col>
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                  <PrimaryButton
+                    type="primary"
+                    block
+                    className={selectedCA?.id === ca.id ? 'selected-btn' : ''}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStartConsultation(ca);
+                    }}
+                  >
+                    {selectedCA?.id === ca.id ? 'Selected' : 'Book Now'}
+                  </PrimaryButton>
+                </div>
+              </CACard>
+            </Col>
           ))}
         </Row>
       )}
 
-      {!loading && !error && (
-        <div style={{ textAlign: 'center', marginTop: '32px' }}>
-          <Button 
-            type="primary" 
+      {!loading && !error && selectedCA && (
+        <div style={{ textAlign: 'center', marginTop: '40px', paddingBottom: '40px', position: 'sticky', bottom: 20, zIndex: 10 }}>
+          <PrimaryButton
             size="large"
-            disabled={!selectedCA}
+            style={{ height: '56px', padding: '0 48px', fontSize: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}
             onClick={handleStartConsultation}
           >
-            Start Consultation with {selectedCA ? selectedCA.name : 'Selected CA'}
-          </Button>
+            Start Session with {selectedCA.name}
+          </PrimaryButton>
         </div>
       )}
     </div>

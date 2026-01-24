@@ -11,7 +11,11 @@ const meetingsRouter = require('./meetings');
 // Auth routes
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
-router.get('/auth/profile', authController.getProfile);
+router.post('/auth/forgot-password', authController.forgotPassword);
+router.put('/auth/reset-password/:resetToken', authController.resetPassword);
+router.get('/auth/profile', authController.auth, authController.getProfile);
+router.put('/auth/update-profile', authController.auth, authController.updateProfile);
+router.put('/auth/update-settings', authController.auth, authController.updateSettings);
 
 // CA routes
 router.get('/cas', caController.getCAs);
@@ -29,16 +33,13 @@ const analyticsRouter = require('./analytics');
 router.use('/analytics', analyticsRouter);
 
 // Credit Card routes
-// Check if controller functions exist before using them
 if (creditCardController && creditCardController.getRecommendations) {
   router.post('/credit-cards/recommend', creditCardController.getRecommendations);
-} else {
-  console.error('Warning: creditCardController.getRecommendations is not properly defined');
-  // Provide a fallback
-  router.post('/credit-cards/recommend', (req, res) => {
-    res.status(501).json({ error: 'Not implemented yet' });
-  });
 }
+if (creditCardController && creditCardController.getCreditCardRecommendations) {
+  router.post('/credit-cards/recommend-enhanced', creditCardController.getCreditCardRecommendations);
+}
+// fallback logic...
 
 if (creditCardController && creditCardController.applyForCard) {
   router.post('/credit-cards/apply', creditCardController.applyForCard);
@@ -62,6 +63,11 @@ router.use('/feedback', feedbackRoutes);
 // Financial Planning routes
 const financialPlanningRoutes = require('./financialPlanning');
 router.use('/financial-planning', financialPlanningRoutes);
+
+// Financial Planner (Analyst) Profile Routes
+const financialPlannerController = require('../controllers/financialPlannerController');
+router.post('/financial-planners', financialPlannerController.createFinancialPlanner);
+router.get('/financial-planners/stats', financialPlannerController.getAnalystStats);
 
 // Credit Card Submissions routes
 const creditCardSubmissionRoutes = require('./creditCardSubmissions');

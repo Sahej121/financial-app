@@ -42,4 +42,8 @@ Thumbs.db
 # Server
 /server/node_modules
 /server/.env
-/server/dist 
+/server/dist
+/server/.eslintcache
+/server/database.sqlite
+/server/uploads/*
+!/server/uploads/.gitkeep

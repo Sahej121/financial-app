@@ -1,8 +1,9 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { Card, Descriptions, Spin, Avatar, Typography, Button, Space, Tag } from 'antd';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Card, Descriptions, Spin, Avatar, Typography, Button, Space, Tag, Modal, Form, Input, message } from 'antd';
 import { UserOutlined, EditOutlined, MailOutlined, CrownOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import { updateProfile } from '../redux/slices/userSlice';
 
 const { Title, Text } = Typography;
 
@@ -10,11 +11,11 @@ const ProfileContainer = styled.div`
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000;
   min-height: 100vh;
-  border-radius: 20px;
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 
   &::before {
     content: '';
@@ -30,46 +31,44 @@ const ProfileContainer = styled.div`
 `;
 
 const ProfileCard = styled(Card)`
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .ant-card-head {
-    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    background: transparent;
     border: none;
-    border-radius: 24px 24px 0 0;
-    padding: 32px 32px 24px 32px;
+    padding: 40px 40px 0 40px;
 
     .ant-card-head-title {
       color: white;
       font-size: 24px;
-      font-weight: 700;
-      text-align: center;
+      font-weight: 800;
+      letter-spacing: -0.5px;
     }
   }
 
   .ant-card-body {
-    padding: 40px;
+    padding: 32px 40px 40px 40px;
   }
 `;
 
 const UserHeader = styled.div`
   text-align: center;
   margin-bottom: 32px;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(24, 144, 255, 0.1);
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 `;
 
 const UserAvatar = styled(Avatar)`
@@ -93,27 +92,28 @@ const RoleTag = styled(Tag)`
 
 const StyledDescriptions = styled(Descriptions)`
   .ant-descriptions-item-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 16px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-right: 16px;
-    width: 200px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    background: transparent !important;
+    padding: 16px 0 !important;
+    width: 180px;
   }
 
   .ant-descriptions-item-content {
     font-size: 16px;
-    color: #666;
-    padding: 12px 16px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e8f2ff;
+    color: white;
+    padding: 16px 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .ant-descriptions-row > td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
   .ant-descriptions-item {
-    padding: 8px 0;
+    padding: 0;
   }
 `;
 
@@ -123,26 +123,28 @@ const ActionButtons = styled.div`
 `;
 
 const EditButton = styled(Button)`
-  height: 48px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 16px;
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  height: 52px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  background: white;
   border: none;
-  color: white;
-  box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3);
+  color: black;
   transition: all 0.3s ease;
-  padding: 0 32px;
+  padding: 0 40px;
 
   &:hover {
-    background: linear-gradient(135deg, #389e0d 0%, #52c41a 100%);
+    background: #e6e6e6 !important;
+    color: black !important;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(82, 196, 26, 0.4);
   }
 `;
 
 const Profile = () => {
   const { user, loading } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
   if (loading) {
     return (
@@ -156,10 +158,10 @@ const Profile = () => {
 
   const getRoleDisplay = (role) => {
     const roleMap = {
-      'user': '👤 Regular User',
-      'ca': '👨‍💼 Chartered Accountant',
-      'financial_planner': '📊 Financial Planner',
-      'admin': '👑 Administrator'
+      'user': 'Regular User',
+      'ca': 'Chartered Accountant',
+      'financial_planner': 'Financial Planner',
+      'admin': 'Administrator'
     };
     return roleMap[role] || role;
   };
@@ -176,10 +178,10 @@ const Profile = () => {
 
   return (
     <ProfileContainer>
-      <ProfileCard title="👤 Profile Information">
+      <ProfileCard title="Profile Information">
         <UserHeader>
           <UserAvatar icon={<UserOutlined />} />
-          <Title level={3} style={{ margin: '0 0 8px 0', color: '#333' }}>
+          <Title level={3} style={{ margin: '0 0 8px 0', color: 'white', fontWeight: 800, letterSpacing: '-0.5px' }}>
             {user.name}
           </Title>
           <RoleTag color={getRoleColor(user.role)}>
@@ -188,31 +190,97 @@ const Profile = () => {
         </UserHeader>
 
         <StyledDescriptions bordered column={1}>
-          <Descriptions.Item label="👤 Full Name">
+          <Descriptions.Item label="Full Name">
             {user.name}
           </Descriptions.Item>
-          <Descriptions.Item label="📧 Email Address">
+          <Descriptions.Item label="Email Address">
             <Space>
               <MailOutlined style={{ color: '#1890ff' }} />
               {user.email}
             </Space>
           </Descriptions.Item>
-          <Descriptions.Item label="🎭 User Role">
+          <Descriptions.Item label="User Role">
             <Space>
               <CrownOutlined style={{ color: getRoleColor(user.role) }} />
               {getRoleDisplay(user.role)}
             </Space>
           </Descriptions.Item>
-          <Descriptions.Item label="📅 Member Since">
+          <Descriptions.Item label="Member Since">
             {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not available'}
           </Descriptions.Item>        </StyledDescriptions>
 
         <ActionButtons>
-          <EditButton icon={<EditOutlined />}>
-            ✏️ Edit Profile
+          <EditButton
+            icon={<EditOutlined />}
+            onClick={() => {
+              form.setFieldsValue({ name: user.name, email: user.email });
+              setIsModalVisible(true);
+            }}
+          >
+            Edit Profile
           </EditButton>
         </ActionButtons>
       </ProfileCard>
+
+      <Modal
+        title="Edit Profile"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        centered
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={async (values) => {
+            try {
+              const response = await fetch('/api/auth/update-profile', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(values)
+              });
+              const data = await response.json();
+              if (response.ok) {
+                message.success('Profile updated successfully!');
+                setIsModalVisible(false);
+                // Update local state via dispatch
+                dispatch(updateProfile(data.user));
+              } else {
+                message.error(data.error || 'Failed to update profile');
+              }
+            } catch (err) {
+              message.error('An error occurred. Please try again.');
+            }
+          }}
+        >
+          <Form.Item
+            name="name"
+            label="Full Name"
+            rules={[{ required: true, message: 'Please enter your name' }]}
+          >
+            <Input prefix={<UserOutlined />} />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email Address"
+            rules={[
+              { required: true, message: 'Please enter your email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
+            <Input prefix={<MailOutlined />} />
+          </Form.Item>
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Space>
+              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
+              <Button type="primary" htmlType="submit">Save Changes</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </ProfileContainer>
   );
 };

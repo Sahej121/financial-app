@@ -4,16 +4,16 @@ const { Op } = require('sequelize');
 exports.getCAs = async (req, res) => {
   try {
     const { experience, minPrice, maxPrice, specialization, sortBy } = req.query;
-    
+
     let whereClause = { isActive: true };
-    
+
     if (experience && experience !== 'all') {
       const [min, max] = experience.split('-');
       whereClause.experience = {
         [Op.between]: [parseInt(min), max === '+' ? 100 : parseInt(max)]
       };
     }
-    
+
     if (minPrice && maxPrice) {
       whereClause.consultationFee = {
         [Op.between]: [parseFloat(minPrice), parseFloat(maxPrice)]
@@ -49,12 +49,12 @@ exports.getCAs = async (req, res) => {
           orderClause = [['rating', 'DESC']];
       }
     }
-    
+
     const cas = await CA.findAll({
       where: whereClause,
       order: orderClause
     });
-    
+
     res.json(cas);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -64,9 +64,11 @@ exports.getCAs = async (req, res) => {
 exports.createCA = async (req, res) => {
   try {
     const caData = req.body;
+    console.log('Creating CA with data:', JSON.stringify(caData, null, 2));
     const ca = await CA.create(caData);
     res.status(201).json(ca);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('CA Creation Error:', error);
+    res.status(400).json({ error: error.message });
   }
-}; 
+};

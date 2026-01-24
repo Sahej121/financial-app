@@ -8,6 +8,7 @@ const { sequelize } = require('./models');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (needed for rate limiter behind proxy)
 
 // Middleware
 app.use(cors());
@@ -21,7 +22,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 sequelize.authenticate()
   .then(() => {
     console.log('Connected to SQLite database');
-    return sequelize.sync({ force: false, alter: true }); // Create/update tables based on models
+    return sequelize.sync({ force: false, alter: true }); // Create tables if they don't exist
   })
   .then(() => {
     console.log('Database synchronized');

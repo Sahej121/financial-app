@@ -1,4 +1,4 @@
-const { User, Document, Meeting } = require('../models');
+const { User, Document, Meeting, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Get user analytics summary
@@ -6,7 +6,7 @@ exports.getAnalyticsSummary = async (req, res) => {
   try {
     const userId = req.user.id;
     const { period } = req.query; // 'month', 'quarter', 'year'
-    
+
     // Calculate date range based on period
     let startDate = new Date();
     switch (period) {
@@ -19,51 +19,51 @@ exports.getAnalyticsSummary = async (req, res) => {
       default: // month
         startDate.setMonth(startDate.getMonth() - 1);
     }
-    
+
     // Get document counts by status
     const documentStats = await Document.count({
-      where: { 
+      where: {
         userId,
         uploadedAt: { [Op.gte]: startDate }
       },
       group: ['status'],
       raw: true
     });
-    
+
     // Get meeting counts by status
     const meetingStats = await Meeting.count({
-      where: { 
+      where: {
         clientId: userId,
         createdAt: { [Op.gte]: startDate }
       },
       group: ['status'],
       raw: true
     });
-    
+
     // Get total counts
     const totalDocuments = await Document.count({
       where: { userId }
     });
-    
+
     const totalMeetings = await Meeting.count({
       where: { clientId: userId }
     });
-    
+
     const completedMeetings = await Meeting.count({
-      where: { 
+      where: {
         clientId: userId,
         status: 'completed'
       }
     });
-    
+
     const upcomingMeetings = await Meeting.count({
-      where: { 
+      where: {
         clientId: userId,
         status: { [Op.in]: ['scheduled', 'confirmed'] },
         startsAt: { [Op.gt]: new Date() }
       }
     });
-    
+
     // Get recent activity
     const recentDocuments = await Document.findAll({
       where: { userId },
@@ -71,7 +71,7 @@ exports.getAnalyticsSummary = async (req, res) => {
       limit: 5,
       attributes: ['id', 'fileName', 'status', 'uploadedAt', 'category']
     });
-    
+
     const recentMeetings = await Meeting.findAll({
       where: { clientId: userId },
       order: [['startsAt', 'DESC']],
@@ -83,7 +83,7 @@ exports.getAnalyticsSummary = async (req, res) => {
       }],
       attributes: ['id', 'title', 'status', 'startsAt', 'planningType']
     });
-    
+
     res.json({
       success: true,
       summary: {
@@ -124,11 +124,11 @@ exports.getChartData = async (req, res) => {
   try {
     const userId = req.user.id;
     const { type, period } = req.query; // type: 'documents', 'meetings', 'activity'
-    
+
     // Calculate date range
     let startDate = new Date();
     let dateFormat = '%Y-%m'; // Default to monthly
-    
+
     switch (period) {
       case 'week':
         startDate.setDate(startDate.getDate() - 7);
@@ -145,9 +145,9 @@ exports.getChartData = async (req, res) => {
         startDate.setMonth(startDate.getMonth() - 1);
         dateFormat = '%Y-%m-%d';
     }
-    
+
     let chartData = {};
-    
+
     switch (type) {
       case 'documents':
         // Document upload trends
@@ -165,14 +165,14 @@ exports.getChartData = async (req, res) => {
           order: [[sequelize.fn('DATE', sequelize.col('uploadedAt')), 'ASC']],
           raw: true
         });
-        
+
         // Document status distribution
         const documentStatusData = await Document.count({
           where: { userId },
           group: ['status'],
           raw: true
         });
-        
+
         chartData = {
           trends: documentTrends,
           statusDistribution: documentStatusData,
@@ -183,7 +183,7 @@ exports.getChartData = async (req, res) => {
           })
         };
         break;
-        
+
       case 'meetings':
         // Meeting trends over time
         const meetingTrends = await Meeting.findAll({
@@ -200,7 +200,7 @@ exports.getChartData = async (req, res) => {
           order: [[sequelize.fn('DATE', sequelize.col('startsAt')), 'ASC']],
           raw: true
         });
-        
+
         chartData = {
           trends: meetingTrends,
           byProfessionalRole: await Meeting.count({
@@ -215,7 +215,7 @@ exports.getChartData = async (req, res) => {
           })
         };
         break;
-        
+
       case 'activity':
         // Combined activity overview
         const documentActivity = await Document.count({
@@ -230,7 +230,7 @@ exports.getChartData = async (req, res) => {
           ],
           raw: true
         });
-        
+
         const meetingActivity = await Meeting.count({
           where: {
             clientId: userId,
@@ -243,21 +243,21 @@ exports.getChartData = async (req, res) => {
           ],
           raw: true
         });
-        
+
         chartData = {
           documentActivity,
           meetingActivity,
           combined: this.combineActivityData(documentActivity, meetingActivity)
         };
         break;
-        
+
       default:
         return res.status(400).json({
           success: false,
           message: 'Invalid chart type. Use: documents, meetings, or activity'
         });
     }
-    
+
     res.json({
       success: true,
       chartData,
@@ -281,18 +281,18 @@ exports.getChartData = async (req, res) => {
 exports.getBusinessInsights = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     // Get user's document and meeting history for insights
     const totalDocuments = await Document.count({ where: { userId } });
-    const reviewedDocuments = await Document.count({ 
-      where: { userId, status: { [Op.in]: ['approved', 'reviewed'] } } 
+    const reviewedDocuments = await Document.count({
+      where: { userId, status: { [Op.in]: ['approved', 'reviewed'] } }
     });
-    
+
     const totalMeetings = await Meeting.count({ where: { clientId: userId } });
-    const completedMeetings = await Meeting.count({ 
-      where: { clientId: userId, status: 'completed' } 
+    const completedMeetings = await Meeting.count({
+      where: { clientId: userId, status: 'completed' }
     });
-    
+
     // Get most used document categories
     const documentCategories = await Document.findAll({
       where: { userId },
@@ -305,7 +305,7 @@ exports.getBusinessInsights = async (req, res) => {
       limit: 3,
       raw: true
     });
-    
+
     // Get preferred professional types
     const professionalPreferences = await Meeting.findAll({
       where: { clientId: userId },
@@ -317,11 +317,11 @@ exports.getBusinessInsights = async (req, res) => {
       order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']],
       raw: true
     });
-    
+
     // Generate insights based on data
     const insights = [];
     const recommendations = [];
-    
+
     if (totalDocuments > 0) {
       const reviewRate = (reviewedDocuments / totalDocuments) * 100;
       if (reviewRate > 80) {
@@ -346,7 +346,7 @@ exports.getBusinessInsights = async (req, res) => {
         });
       }
     }
-    
+
     if (totalMeetings > 0) {
       const meetingCompletionRate = (completedMeetings / totalMeetings) * 100;
       if (meetingCompletionRate > 90) {
@@ -358,7 +358,7 @@ exports.getBusinessInsights = async (req, res) => {
         });
       }
     }
-    
+
     if (documentCategories.length > 0) {
       const topCategory = documentCategories[0];
       insights.push({
@@ -368,7 +368,7 @@ exports.getBusinessInsights = async (req, res) => {
         icon: 'FileTextOutlined'
       });
     }
-    
+
     // Add recommendations based on patterns
     if (professionalPreferences.length > 0) {
       const preferredRole = professionalPreferences[0];
@@ -381,7 +381,7 @@ exports.getBusinessInsights = async (req, res) => {
         });
       }
     }
-    
+
     res.json({
       success: true,
       insights,
@@ -409,17 +409,17 @@ exports.getBusinessInsights = async (req, res) => {
 // Helper function to combine activity data
 exports.combineActivityData = (documentActivity, meetingActivity) => {
   const combined = {};
-  
+
   documentActivity.forEach(item => {
     if (!combined[item.date]) combined[item.date] = { documents: 0, meetings: 0 };
     combined[item.date].documents = item.documents;
   });
-  
+
   meetingActivity.forEach(item => {
     if (!combined[item.date]) combined[item.date] = { documents: 0, meetings: 0 };
     combined[item.date].meetings = item.meetings;
   });
-  
+
   return Object.entries(combined).map(([date, data]) => ({
     date,
     ...data,

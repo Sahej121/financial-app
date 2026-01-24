@@ -15,28 +15,53 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     annualFee: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0
+      type: DataTypes.STRING,
+      defaultValue: '0'
     },
     rewardRate: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     welcomeOffer: DataTypes.TEXT,
     minIncomeRequired: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: true
     },
     benefits: {
       type: DataTypes.TEXT,
       get() {
         const rawValue = this.getDataValue('benefits');
-        return rawValue ? JSON.parse(rawValue) : [];
+        try {
+          return rawValue ? JSON.parse(rawValue) : [];
+        } catch (e) {
+          return rawValue ? rawValue.split(',') : [];
+        }
       },
       set(value) {
-        this.setDataValue('benefits', JSON.stringify(value));
+        this.setDataValue('benefits', typeof value === 'string' ? value : JSON.stringify(value));
       }
     },
+    ratings: {
+      type: DataTypes.TEXT,
+      get() {
+        const rawValue = this.getDataValue('ratings');
+        return rawValue ? JSON.parse(rawValue) : {};
+      },
+      set(value) {
+        this.setDataValue('ratings', JSON.stringify(value));
+      }
+    },
+    eligibility: {
+      type: DataTypes.TEXT,
+      get() {
+        const rawValue = this.getDataValue('eligibility');
+        return rawValue ? JSON.parse(rawValue) : {};
+      },
+      set(value) {
+        this.setDataValue('eligibility', JSON.stringify(value));
+      }
+    },
+    specialRemarks: DataTypes.TEXT,
     rating: {
       type: DataTypes.DECIMAL(3, 2),
       defaultValue: 0

@@ -27,12 +27,12 @@ const CAConsultation = () => {
 
   return (
     <Container>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <Title level={2} style={{ textAlign: 'center', marginBottom: '32px', color: 'white' }}>
         CA Consultation Service
       </Title>
 
       <CASelectionList onStartConsultation={handleStartConsultation} />
-      
+
       <ConsultationModal
         visible={isModalVisible}
         onCancel={handleModalCancel}

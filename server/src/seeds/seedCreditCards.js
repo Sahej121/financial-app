@@ -16,11 +16,27 @@ async function seedCreditCards() {
 
     // Insert new data
     for (const card of creditCards) {
+      // Basic inference for provider and type
+      const provider = card.name.split(' ')[0] || 'Generic';
+      let type = 'Shopping';
+      if (card.name.toLowerCase().includes('travel') || card.name.toLowerCase().includes('airline')) {
+        type = 'Travel';
+      } else if (card.name.toLowerCase().includes('reward')) {
+        type = 'Rewards';
+      } else if (card.name.toLowerCase().includes('fuel')) {
+        type = 'Fuel';
+      } else if (card.name.toLowerCase().includes('dining') || card.name.toLowerCase().includes('entertainment')) {
+        type = 'Lifestyle';
+      }
+
       await CreditCard.create({
         name: card.name,
+        type: type,
+        provider: provider,
         annualFee: card.annual_charges,
-        hiddenCharges: card.hidden_charges,
-        keyBenefits: card.key_benefits,
+        benefits: card.benefits,
+        ratings: card.ratings,
+        welcomeOffer: card.welcomeOffer,
         specialRemarks: card.special_remarks
       });
     }

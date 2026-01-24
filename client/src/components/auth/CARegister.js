@@ -1,19 +1,94 @@
 import React from 'react';
-import { Form, Input, Button, Card, Alert, Select, InputNumber, Checkbox, Steps } from 'antd';
+import { Form, Input, Button, Card, Alert, Select, InputNumber, Steps, Typography, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../../redux/slices/userSlice';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+import { UserOutlined, MailOutlined, BankOutlined, PhoneOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
+import api from '../../services/api';
 
-const RegisterContainer = styled.div`
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 0 16px;
-`;
-
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 const { Step } = Steps;
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const RegisterContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  padding: 40px 16px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(114, 46, 209, 0.1) 0%, rgba(0,0,0,1) 70%);
+    top: -50%;
+    left: -50%;
+  }
+`;
+
+const StyledCard = styled(Card)`
+  width: 100%;
+  max-width: 800px;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  animation: ${fadeInUp} 0.6s ease-out;
+  position: relative;
+
+  .ant-card-body {
+    padding: 40px;
+  }
+`;
+
+const StyledInput = styled(Input)`
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  height: 50px;
+  border-radius: 12px;
+  
+  &::placeholder { color: rgba(255, 255, 255, 0.3); }
+  &:hover, &:focus { border-color: #722ed1 !important; background: rgba(255, 255, 255, 0.08) !important; }
+`;
+
+const StyledInputPassword = styled(Input.Password)`
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px;
+  height: 50px;
+  input { background: transparent !important; color: white !important; }
+  &:hover, &:focus-within { border-color: #722ed1 !important; }
+`;
+
+const StyledButton = styled(Button)`
+  height: 50px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+`;
+
+const StyledSteps = styled(Steps)`
+  margin-bottom: 40px;
+  .ant-steps-item-process .ant-steps-item-icon { background: #722ed1; border-color: #722ed1; }
+  .ant-steps-item-finish .ant-steps-item-icon { border-color: #722ed1; color: #722ed1; }
+  .ant-steps-item-finish .ant-steps-item-tail::after { background-color: #722ed1 !important; }
+  .ant-steps-item-title { color: rgba(255, 255, 255, 0.8) !important; }
+  .ant-steps-item-description { color: rgba(255, 255, 255, 0.4) !important; }
+`;
 
 const CARegister = () => {
   const [form] = Form.useForm();
@@ -23,10 +98,10 @@ const CARegister = () => {
   const { loading, error } = useSelector((state) => state.user);
 
   const specializations = [
-    'Tax Planning', 'Business Advisory', 'Corporate Finance', 'Audit', 
+    'Tax Planning', 'Business Advisory', 'Corporate Finance', 'Audit',
     'GST', 'International Taxation', 'Personal Finance', 'Investment Planning',
-    'Corporate Restructuring', 'Mergers & Acquisitions', 'Startup Advisory', 
-    'Compliance', 'Real Estate', 'Property Tax', 'NRI Taxation', 
+    'Corporate Restructuring', 'Mergers & Acquisitions', 'Startup Advisory',
+    'Compliance', 'Real Estate', 'Property Tax', 'NRI Taxation',
     'FEMA Compliance', 'Risk Advisory', 'Internal Audit'
   ];
 
@@ -35,7 +110,14 @@ const CARegister = () => {
 
   const next = async () => {
     try {
-      await form.validateFields();
+      let fieldsToValidate = [];
+      if (currentStep === 0) {
+        fieldsToValidate = ['name', 'email', 'caNumber', 'phone', 'password', 'confirmPassword'];
+      } else if (currentStep === 1) {
+        fieldsToValidate = ['experience', 'consultationFee', 'description', 'qualifications', 'languages'];
+      }
+
+      await form.validateFields(fieldsToValidate);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       console.log('Validation failed:', error);
@@ -48,21 +130,21 @@ const CARegister = () => {
 
   const onFinish = async (values) => {
     try {
-      // Remove confirmPassword from the data sent to server
       const { confirmPassword, ...userData } = values;
-      
-      // First register the user account
-      const result = await dispatch(register({ 
+
+      // 1. Create User Account
+      const result = await dispatch(register({
         name: userData.name,
         email: userData.email,
         phone: userData.phone,
         password: userData.password,
         caNumber: userData.caNumber,
-        role: 'ca' 
+        role: 'ca'
       })).unwrap();
-      
-      // Then create the CA profile with all professional details
+
+      // 2. Create CA Profile (linked to User)
       const caProfileData = {
+        userId: result.user.id, // Link to User record
         name: userData.name,
         email: userData.email,
         caNumber: userData.caNumber,
@@ -76,274 +158,126 @@ const CARegister = () => {
         availability: userData.availability
       };
 
-      // Save CA profile to the CA endpoint
-      const response = await fetch('/api/cas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(caProfileData)
-      });
+      const response = await api.post('/cas', caProfileData);
 
-      if (!response.ok) {
-        throw new Error('Failed to create CA profile');
+      if (response.data.error) {
+        throw new Error(response.data.error);
       }
 
-      // Navigate to CA dashboard after registration
+      message.success('Registration successful!');
       navigate('/ca-dashboard', { replace: true });
     } catch (error) {
       console.error('Registration error:', error);
-      // Error is handled by Redux for user registration
-      // For CA profile creation, we might want to show a specific error
+      // Display error to user
+      const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
+      if (!errorMessage.includes('action')) {
+        message.error(errorMessage);
+      }
     }
   };
 
   const steps = [
-    {
-      title: 'Basic Information',
-      content: 'basic-info'
-    },
-    {
-      title: 'Professional Details',
-      content: 'professional-details'
-    },
-    {
-      title: 'Specializations',
-      content: 'specializations'
-    }
+    { title: 'Basic Info' },
+    { title: 'Professional Details' },
+    { title: 'Specializations' }
   ];
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 0:
-  return (
-          <>
-          <Form.Item
-            name="name"
-            label="Full Name"
-            rules={[{ required: true, message: 'Please enter your full name' }]}
-          >
-              <Input size="large" />
+  const renderSteps = () => {
+    return (
+      <>
+        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
+          <Form.Item name="name" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Full Name</Text>} rules={[{ required: true }]}>
+            <StyledInput prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
           </Form.Item>
-
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Please enter your email' },
-              { type: 'email', message: 'Please enter a valid email' }
-            ]}
-          >
-              <Input size="large" />
+          <Form.Item name="email" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Email</Text>} rules={[{ required: true, type: 'email' }]}>
+            <StyledInput prefix={<MailOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
           </Form.Item>
-
-          <Form.Item
-            name="caNumber"
-            label="CA Registration Number"
-            rules={[
-              { required: true, message: 'Please enter your CA registration number' },
-              { pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit CA number' }
-            ]}
-          >
-              <Input placeholder="Enter your 6-digit CA registration number" size="large" />
+          <Form.Item name="caNumber" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>CA Registration Number</Text>} rules={[{ required: true, pattern: /^[0-9]{6}$/ }]}>
+            <StyledInput prefix={<BankOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} placeholder="6-digit CA Number" />
           </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Phone Number"
-            rules={[
-              { required: true, message: 'Please enter your phone number' },
-              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
-            ]}
-          >
-              <Input addonBefore="+91" size="large" />
+          <Form.Item name="phone" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Phone Number</Text>} rules={[{ required: true, pattern: /^[0-9]{10}$/ }]}>
+            <StyledInput prefix={<PhoneOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} addonBefore={<span style={{ color: 'black' }}>+91</span>} />
           </Form.Item>
-
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[
-              { required: true, message: 'Please enter your password' },
-              { min: 6, message: 'Password must be at least 6 characters' }
-            ]}
-          >
-              <Input.Password size="large" />
+          <Form.Item name="password" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Password</Text>} rules={[{ required: true, min: 6 }]}>
+            <StyledInputPassword prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
           </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            label="Confirm Password"
-            dependencies={['password']}
-            rules={[
-              { required: true, message: 'Please confirm your password' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('Passwords do not match'));
-                },
-              }),
-            ]}
-          >
-              <Input.Password size="large" />
-            </Form.Item>
-          </>
-        );
-
-      case 1:
-        return (
-          <>
-            <Form.Item
-              name="experience"
-              label="Years of Experience"
-              rules={[{ required: true, message: 'Please enter your experience' }]}
-            >
-              <InputNumber min={0} max={50} style={{ width: '100%' }} size="large" />
-            </Form.Item>
-
-            <Form.Item
-              name="consultationFee"
-              label="Consultation Fee (₹)"
-              rules={[{ required: true, message: 'Please enter your consultation fee' }]}
-            >
-              <InputNumber min={500} max={10000} style={{ width: '100%' }} size="large" />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label="Professional Description"
-              rules={[
-                { required: true, message: 'Please enter your professional description' },
-                { max: 500, message: 'Description should not exceed 500 characters' }
-              ]}
-            >
-              <TextArea 
-                rows={4} 
-                placeholder="Describe your expertise and experience..."
-                showCount
-                maxLength={500}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="qualifications"
-              label="Qualifications"
-              rules={[{ required: true, message: 'Please select your qualifications' }]}
-            >
-              <Select
-                mode="multiple"
-                placeholder="Select your qualifications"
-                size="large"
-              >
-                {qualifications.map(qual => (
-                  <Option key={qual} value={qual}>{qual}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              name="languages"
-              label="Languages"
-              rules={[{ required: true, message: 'Please select languages you speak' }]}
-            >
-              <Select
-                mode="multiple"
-                placeholder="Select languages you speak"
-                size="large"
-              >
-                {languages.map(lang => (
-                  <Option key={lang} value={lang}>{lang}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </>
-        );
-
-      case 2:
-        return (
-          <>
-            <Form.Item
-              name="specializations"
-              label="Specializations"
-              rules={[{ required: true, message: 'Please select your specializations' }]}
-            >
-              <Select
-                mode="multiple"
-                placeholder="Select your areas of specialization"
-                size="large"
-              >
-                {specializations.map(spec => (
-                  <Option key={spec} value={spec}>{spec}</Option>
-                ))}
-              </Select>
+          <Form.Item name="confirmPassword" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Confirm Password</Text>} dependencies={['password']} rules={[{ required: true }, ({ getFieldValue }) => ({ validator(_, value) { if (!value || getFieldValue('password') === value) return Promise.resolve(); return Promise.reject(new Error('Passwords do not match')); } })]}>
+            <StyledInputPassword prefix={<SafetyOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
           </Form.Item>
+        </div>
 
-            <Form.Item
-              name="availability"
-              label="Current Availability"
-              rules={[{ required: true, message: 'Please select your availability' }]}
-            >
-              <Select placeholder="Select your current availability" size="large">
-                <Option value="Available Now">Available Now</Option>
-                <Option value="Available in 30 mins">Available in 30 mins</Option>
-                <Option value="Available in 1 hour">Available in 1 hour</Option>
-                <Option value="Available in 2 hours">Available in 2 hours</Option>
-                <Option value="Available tomorrow">Available tomorrow</Option>
-              </Select>
-            </Form.Item>
-          </>
-        );
+        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+          <Form.Item name="experience" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Years of Experience</Text>} rules={[{ required: true }]}>
+            <InputNumber min={0} max={50} style={{ width: '100%', borderRadius: '12px', height: '50px', paddingTop: '10px' }} />
+          </Form.Item>
+          <Form.Item name="consultationFee" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Consultation Fee (₹)</Text>} rules={[{ required: true }]}>
+            <InputNumber min={500} max={10000} style={{ width: '100%', borderRadius: '12px', height: '50px', paddingTop: '10px' }} />
+          </Form.Item>
+          <Form.Item name="description" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Professional Description</Text>} rules={[{ required: true, max: 500 }]}>
+            <TextArea rows={4} style={{ borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+          </Form.Item>
+          <Form.Item name="qualifications" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Qualifications</Text>} rules={[{ required: true }]}>
+            <Select mode="multiple" size="large" style={{ width: '100%' }}>
+              {qualifications.map(qual => <Option key={qual} value={qual}>{qual}</Option>)}
+            </Select>
+          </Form.Item>
+          <Form.Item name="languages" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Languages</Text>} rules={[{ required: true }]}>
+            <Select mode="multiple" size="large">
+              {languages.map(lang => <Option key={lang} value={lang}>{lang}</Option>)}
+            </Select>
+          </Form.Item>
+        </div>
 
-      default:
-        return null;
-    }
+        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+          <Form.Item name="specializations" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Specializations</Text>} rules={[{ required: true }]}>
+            <Select mode="multiple" size="large" placeholder="Select your areas of specialization">
+              {specializations.map(spec => <Option key={spec} value={spec}>{spec}</Option>)}
+            </Select>
+          </Form.Item>
+          <Form.Item name="availability" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Current Availability</Text>} rules={[{ required: true }]}>
+            <Select size="large">
+              <Option value="Available Now">Available Now</Option>
+              <Option value="Available in 30 mins">Available in 30 mins</Option>
+              <Option value="Available in 1 hour">Available in 1 hour</Option>
+              <Option value="Available in 2 hours">Available in 2 hours</Option>
+              <Option value="Available tomorrow">Available tomorrow</Option>
+            </Select>
+          </Form.Item>
+        </div>
+      </>
+    );
   };
 
   return (
     <RegisterContainer>
-      <Card title="CA Registration">
-        {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
-        
-        <Steps current={currentStep} style={{ marginBottom: 32 }}>
-          {steps.map(item => (
-            <Step key={item.title} title={item.title} />
-          ))}
-        </Steps>
+      <StyledCard bordered={false}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <Title level={2} style={{ color: 'white', marginBottom: 8 }}>CA Registration</Title>
+          <Text style={{ color: 'rgba(255,255,255,0.6)' }}>Join our network of elite financial experts</Text>
+        </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-        >
-          {renderStepContent()}
+        {error && <Alert message={error} type="error" style={{ marginBottom: 24, borderRadius: '12px' }} />}
 
-          <div style={{ marginTop: 24 }}>
-            {currentStep > 0 && (
-              <Button style={{ margin: '0 8px' }} onClick={prev}>
-                Previous
-              </Button>
-            )}
-            {currentStep < steps.length - 1 && (
-              <Button type="primary" onClick={next}>
-                Next
-              </Button>
-            )}
-            {currentStep === steps.length - 1 && (
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={loading}
-              size="large"
-            >
-                Complete Registration
-            </Button>
-            )}
+        <StyledSteps current={currentStep}>
+          {steps.map(item => <Step key={item.title} title={item.title} />)}
+        </StyledSteps>
+
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+          {renderSteps()}
+
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            {currentStep > 0 && <StyledButton onClick={prev}>Previous</StyledButton>}
+            {currentStep < steps.length - 1 &&
+              <StyledButton type="primary" onClick={next} style={{ background: '#722ed1', border: 'none' }}>Next</StyledButton>
+            }
+            {currentStep === steps.length - 1 &&
+              <StyledButton type="primary" htmlType="submit" loading={loading} style={{ background: '#722ed1', border: 'none' }}>Complete Registration</StyledButton>
+            }
           </div>
         </Form>
-      </Card>
+      </StyledCard>
     </RegisterContainer>
   );
 };
 
-export default CARegister; 
+export default CARegister;

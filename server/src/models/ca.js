@@ -11,6 +11,14 @@ module.exports = (sequelize) => {
       allowNull: false,
       unique: true
     },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
+    },
     caNumber: {
       type: DataTypes.STRING,
       allowNull: false,

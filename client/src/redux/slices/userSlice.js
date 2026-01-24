@@ -3,30 +3,39 @@ import api from '../../services/api';
 
 export const register = createAsyncThunk(
   'user/register',
-  async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    if (response.data?.token) {
-      try {
-        localStorage.setItem('token', response.data.token);
-      } catch (error) {
-        console.error('Failed to store token:', error);
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      if (response.data?.token) {
+        try {
+          localStorage.setItem('token', response.data.token);
+        } catch (error) {
+          console.error('Failed to store token:', error);
+        }
       }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
-    return response.data;
   }
 );
+
 export const login = createAsyncThunk(
   'user/login',
-  async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    if (response.data?.token) {
-      try {
-        localStorage.setItem('token', response.data.token);
-      } catch (error) {
-        console.error('Failed to store token:', error);
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      if (response.data?.token) {
+        try {
+          localStorage.setItem('token', response.data.token);
+        } catch (error) {
+          console.error('Failed to store token:', error);
+        }
       }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
-    return response.data;
   }
 );
 export const getProfile = createAsyncThunk(
@@ -53,12 +62,16 @@ const userSlice = createSlice({
     token: localStorage.getItem('token'),
     loading: false,
     error: null
-  },  reducers: {
+  }, reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+    },
+    updateProfile: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem('user', JSON.stringify(state.user));
     }
   },
   extraReducers: (builder) => {
@@ -76,7 +89,7 @@ const userSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -91,7 +104,7 @@ const userSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(getProfile.fulfilled, (state, action) => {
         state.user = action.payload.user;
@@ -101,5 +114,5 @@ const userSlice = createSlice({
   }
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, updateProfile } = userSlice.actions;
 export default userSlice.reducer; 
