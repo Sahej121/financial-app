@@ -4,21 +4,16 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Result, Button } from 'antd';
 
 const RoleBasedRoute = ({ children, allowedRoles, requireAuth = true }) => {
-  const { user, token } = useSelector((state) => state.user);
+  const { user, isVerified, isInitializing } = useSelector((state) => state.user);
   const location = useLocation();
 
-  console.log('RoleBasedRoute Check:', {
-    path: location.pathname,
-    requireAuth,
-    hasUser: !!user,
-    hasToken: !!token,
-    userRole: user?.role,
-    allowedRoles
-  });
+  if (isInitializing) {
+    return null;
+  }
 
   // Check authentication
-  if (requireAuth && (!user || !token)) {
-    console.warn('RoleBasedRoute: Access denied - No user/token. Redirecting to login.');
+  if (requireAuth && !isVerified) {
+    console.warn('RoleBasedRoute: Access denied - Not verified. Redirecting to login.');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

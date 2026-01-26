@@ -70,23 +70,39 @@ h6 {
 }
 
 .ant-btn-primary {
-  background: var(--accent-primary) !important;
-  border-color: var(--accent-primary) !important;
-  color: black !important;
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: white !important;
   font-weight: 600;
 }
 
 .ant-btn-primary:hover {
   opacity: 0.9;
-  color: black !important;
+  color: white !important;
+}
+
+.ant-btn {
+  color: white !important;
+}
+
+.ant-btn-default {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .ant-input,
+.ant-input-affix-wrapper,
 .ant-picker,
-.ant-select-selector {
+.ant-select-selector,
+.ant-input-number {
   background: var(--bg-secondary) !important;
-  border-color: var(--border-color) !important;
+  border: 1px solid var(--border-color) !important;
   color: var(--text-primary) !important;
+}
+
+.ant-input::placeholder,
+.ant-select-selection-placeholder {
+  color: var(--text-tertiary) !important;
 }
 
 .ant-table {

@@ -1,18 +1,74 @@
-import React, { useState } from 'react';
-import { Modal, Form, Upload, Button, message, Space, Typography, Alert, Input, Steps } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, Upload, Button, message, Space, Typography, Alert, Input, Steps, Select, Switch } from 'antd';
 import { UploadOutlined, FilePdfOutlined, FileExcelOutlined, FileImageOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import { useSelector } from 'react-redux';
+import api from '../../services/api';
 import AuthGuard from '../auth/AuthGuard';
+import moment from 'moment';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
 
+const ModalContainer = styled.div`
+  .ant-modal-content {
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .ant-modal-header {
+    background: #141414;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 24px;
+    .ant-modal-title { color: white; font-size: 20px; }
+  }
+`;
+
+const FormSection = styled.div`
+  padding: 10px 0;
+`;
+
+const StepContainer = styled.div`
+  margin-bottom: 30px;
+  .ant-steps-item-title { color: rgba(255,255,255,0.45) !important; }
+  .ant-steps-item-active .ant-steps-item-title { color: white !important; }
+  .ant-steps-item-finish .ant-steps-item-icon { border-color: var(--primary-color); }
+  .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon { color: var(--primary-color); }
+`;
+
+const CAInfoCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+`;
+
+const PaymentButton = styled(Button)`
+  height: 56px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #00B0F0 0%, #0080C0 100%);
+  border: none;
+  box-shadow: 0 8px 20px rgba(0, 176, 240, 0.3);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(0, 176, 240, 0.4);
+    background: linear-gradient(135deg, #00C0FF 0%, #0090D0 100%) !important;
+  }
+`;
+
 const DocumentList = styled.div`
   margin: 20px 0;
   padding: 24px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
-  border-left: 4px solid #1890ff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 4px solid #00B0F0;
   position: relative;
   overflow: hidden;
 
@@ -23,157 +79,7 @@ const DocumentList = styled.div`
     right: 0;
     width: 80px;
     height: 80px;
-    background: linear-gradient(45deg, rgba(24, 144, 255, 0.1), transparent);
-    border-radius: 50%;
-    transform: translate(20px, -20px);
-  }
-`;
-
-const PaymentButton = styled(Button)`
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-  border: none;
-  border-radius: 12px;
-  height: 60px;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 8px 25px rgba(24, 144, 255, 0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  &:hover {
-    background: linear-gradient(135deg, #096dd9 0%, #1890ff 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(24, 144, 255, 0.4);
-
-    &::before {
-      left: 100%;
-    }
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const ModalContainer = styled.div`
-  .ant-modal-content {
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-  }
-
-  .ant-modal-header {
-    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-    border: none;
-    padding: 24px 32px;
-
-    .ant-modal-title {
-      color: white;
-      font-size: 20px;
-      font-weight: 700;
-    }
-  }
-
-  .ant-modal-body {
-    padding: 32px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-  }
-
-  .ant-modal-close {
-    color: white;
-    font-size: 20px;
-    top: 24px;
-    right: 32px;
-
-    &:hover {
-      color: rgba(255, 255, 255, 0.8);
-    }
-  }
-`;
-
-const StepContainer = styled.div`
-  .ant-steps {
-    .ant-steps-item {
-      .ant-steps-item-icon {
-        background: linear-gradient(135deg, #1890ff, #096dd9);
-        border: none;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        box-shadow: 0 4px 15px rgba(24, 144, 255, 0.3);
-      }
-      
-      .ant-steps-item-title {
-        font-weight: 600;
-        color: #333;
-        font-size: 14px;
-      }
-      
-      &.ant-steps-item-active {
-        .ant-steps-item-icon {
-          background: linear-gradient(135deg, #52c41a, #389e0d);
-          animation: pulse 2s infinite;
-        }
-      }
-      
-      &.ant-steps-item-finish {
-        .ant-steps-item-icon {
-          background: linear-gradient(135deg, #52c41a, #389e0d);
-        }
-      }
-    }
-  }
-
-  @keyframes pulse {
-    0% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
-    50% { box-shadow: 0 4px 25px rgba(82, 196, 26, 0.5); }
-    100% { box-shadow: 0 4px 15px rgba(82, 196, 26, 0.3); }
-  }
-`;
-
-const FormSection = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  margin: 16px 0;
-  border: 1px solid rgba(24, 144, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-`;
-
-const CAInfoCard = styled.div`
-  background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(24, 144, 255, 0.05), transparent);
-    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(0, 176, 240, 0.1), transparent);
   }
 `;
 
@@ -182,28 +88,85 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
   const [uploading, setUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
+  const { user } = useSelector(state => state.user);
 
-  const handleConsultationSubmit = async () => {    try {
+  useEffect(() => {
+    if (user && visible) {
+      form.setFieldsValue({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || ''
+      });
+    }
+  }, [user, visible, form]);
+
+  const handleConsultationSubmit = async () => {
+    try {
       const values = await form.validateFields();
       setUploading(true);
 
-      // Simulating upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      message.success('Documents uploaded successfully!');
-      
-      // Simulating consultation start delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      message.success(`Starting consultation with ${selectedCA?.name}. We'll contact you at ${values.email}`);
-      
+      // Simulate Payment Process (Dummy)
+      message.loading('Processing payment securely...', 1.5);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 1. Upload Documents
+      const documentIds = [];
+      for (const file of fileList) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('assignedToId', selectedCA.userId || 1);
+        formData.append('assignedRole', 'ca');
+        formData.append('category', 'tax_documents');
+
+        const uploadRes = await api.post('/documents/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        if (uploadRes.data.document) {
+          documentIds.push(uploadRes.data.document.id);
+        }
+      }
+
+      // 2. Create Meeting
+      const startsAt = moment().add(1, 'days').hour(10).minute(0).second(0).toISOString();
+      const endsAt = moment().add(1, 'days').hour(11).minute(0).second(0).toISOString();
+
+      const meetingPayload = {
+        professionalId: selectedCA.userId || 1,
+        professionalRole: 'ca',
+        title: `Consultation with ${selectedCA.name}`,
+        startsAt,
+        endsAt,
+        clientNotes: values.notes || `Consultation booked via CA selection.`,
+        documentIds,
+        // Specific field mapping to ensure cleanliness
+        clientType: values.clientType,
+        residentStatus: values.residentStatus,
+        pan: values.pan,
+        city: values.city,
+        industry: values.industry,
+        turnoverBand: values.turnoverBand,
+        incomeSources: values.incomeSources,
+        accountingMethod: values.accountingMethod,
+        hasPastNotices: !!values.hasPastNotices,
+        hasPendingFilings: !!values.hasPendingFilings,
+        hasLoans: !!values.hasLoans,
+        hasCryptoForeignAssets: !!values.hasCryptoForeignAssets,
+        isCashHeavy: !!values.isCashHeavy
+      };
+
+      await api.post('/meetings', meetingPayload);
+
+      message.success(`Consultation booked with ${selectedCA?.name}. Room link sent to email.`);
+
       setFileList([]);
       form.resetFields();
+      setCurrentStep(0);
       onCancel();
     } catch (error) {
-      if (error.errorFields) {
-        message.error('Please fill in all required fields');
-      } else {
-        message.error('Upload failed.');
-      }
+      console.error('Consultation error:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Submission failed. Please check all fields.';
+      message.error(errorMsg, 5); // Show for 5 seconds to allow reading
     } finally {
       setUploading(false);
     }
@@ -221,194 +184,63 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
       return false;
     },
     fileList,
+    multiple: true,
     accept: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
   };
 
-  const steps = [
-    {
-      title: 'Personal Info',
-      content: (
-        <FormSection>
-          <Form form={form} layout="vertical">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <Form.Item
-                name="name"
-                label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>👤 Your Name</span>}
-                rules={[{ required: true, message: 'Please enter your name' }]}
-              >
-                <Input 
-                  placeholder="Enter your full name" 
-                  size="large"
-                  style={{
-                    borderRadius: '12px',
-                    border: '2px solid #e8f2ff',
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              </Form.Item>
+  const renderChecklist = () => {
+    const type = form.getFieldValue('clientType');
+    const isBusiness = ['pvt_ltd', 'llp', 'partnership', 'proprietor'].includes(type);
 
-              <Form.Item
-                name="email"
-                label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>📧 Email Address</span>}
-                rules={[
-                  { required: true, message: 'Please enter your email' },
-                  { type: 'email', message: 'Please enter a valid email' }
-                ]}
-              >
-                <Input 
-                  placeholder="Enter your email address" 
-                  size="large"
-                  style={{
-                    borderRadius: '12px',
-                    border: '2px solid #e8f2ff',
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              </Form.Item>
+    const individualDocs = [
+      { label: 'Last 2 Years ITR', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> },
+      { label: 'Form 26AS + AIS', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> },
+      { label: 'Bank Statements (Last 12 Months)', icon: <FileExcelOutlined style={{ color: '#52c41a' }} /> },
+      { label: 'Salary Slips / Form 16 (If salaried)', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> }
+    ];
 
-              <Form.Item
-                name="phone"
-                label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>📱 Phone Number</span>}
-                rules={[
-                  { required: true, message: 'Please enter your phone number' },
-                  { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
-                ]}
-              >
-                <Input 
-                  placeholder="Enter your phone number" 
-                  size="large"
-                  style={{
-                    borderRadius: '12px',
-                    border: '2px solid #e8f2ff',
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              </Form.Item>
+    const businessDocs = [
+      { label: 'Primary Bank Statements (12m)', icon: <FileExcelOutlined style={{ color: '#52c41a' }} /> },
+      { label: 'GST Returns (GSTR-1, 3B)', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> },
+      { label: 'Trial Balance / P&L / Balance Sheet', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> },
+      { label: 'Loan Sanction Letters (If any)', icon: <FilePdfOutlined style={{ color: '#ff4d4f' }} /> }
+    ];
+
+    const docs = isBusiness ? businessDocs : individualDocs;
+
+    return (
+      <DocumentList>
+        <Title level={5} style={{ color: 'var(--primary-color)', marginBottom: '16px' }}>
+          📋 {isBusiness ? 'Business' : 'Individual'} Case Checklist:
+        </Title>
+        <Space direction="vertical" size="middle">
+          {docs.map((doc, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {doc.icon}
+              <Text style={{ fontSize: '15px', fontWeight: '500', color: 'rgba(255,255,255,0.85)' }}>{doc.label}</Text>
             </div>
-          </Form>
-        </FormSection>
-      )
-    },
-    {
-      title: 'Documents',
-      content: (
-        <FormSection>
-          <DocumentList>
-            <Title level={5} style={{ color: '#1890ff', marginBottom: '16px' }}>📋 Required Documents:</Title>
-            <Space direction="vertical" size="middle">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: '18px' }} />
-                <Text style={{ fontSize: '16px', fontWeight: '500' }}>PAN Card or Aadhar Card</Text>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileExcelOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
-                <Text style={{ fontSize: '16px', fontWeight: '500' }}>Bank Statements / Income Statements</Text>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileImageOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
-                <Text style={{ fontSize: '16px', fontWeight: '500' }}>Any Additional Supporting Documents</Text>
-              </div>
-            </Space>
-          </DocumentList>
+          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileImageOutlined style={{ color: 'var(--primary-color)', fontSize: '18px' }} />
+            <Text style={{ fontSize: '15px', fontWeight: '500', color: 'rgba(255,255,255,0.85)' }}>Supporting Identity Docs (PAN/Aadhar)</Text>
+          </div>
+        </Space>
+      </DocumentList>
+    );
+  };
 
-          <Form.Item
-            label={<span style={{ fontWeight: '600', color: '#333', fontSize: '16px' }}>📁 Upload Documents</span>}
-            required
-            tooltip="Upload any relevant documents for the consultation"
-          >
-            <Upload 
-              {...props}
-              style={{
-                border: '2px dashed #d9d9d9',
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
-                background: 'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <Button 
-                icon={<UploadOutlined />} 
-                size="large"
-                style={{
-                  borderRadius: '12px',
-                  height: '48px',
-                  padding: '0 24px',
-                  fontWeight: '600',
-                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-                  border: 'none',
-                  color: 'white',
-                  boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
-                }}
-              >
-                📤 Select Documents
-              </Button>
-            </Upload>
-          </Form.Item>
-        </FormSection>
-      )
-    },
-    {
-      title: 'Payment',
-      content: (
-        <FormSection>
-          <CAInfoCard>
-            <Title level={3} style={{ 
-              color: '#1890ff', 
-              marginBottom: '16px',
-              background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              💰 Consultation Fee: ₹{selectedCA?.consultationFee}
-            </Title>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Text style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>🎯 Expertise:</Text>
-              <Text style={{ fontSize: '16px', color: '#666' }}>
-                {selectedCA?.specializations?.join(', ') || 'N/A'}
-              </Text>            </div>
-            <div style={{ 
-              background: 'rgba(24, 144, 255, 0.1)', 
-              borderRadius: '8px', 
-              padding: '12px',
-              marginTop: '16px'
-            }}>
-              <Text style={{ fontSize: '14px', color: '#666' }}>
-                ⏰ Consultation will be scheduled within 24 hours of payment
-              </Text>
-            </div>
-          </CAInfoCard>
-          
-          <AuthGuard>
-            <PaymentButton
-              type="primary"
-              onClick={handleConsultationSubmit}
-              disabled={fileList.length === 0}
-              loading={uploading}
-              block
-              size="large"
-            >
-              {uploading ? '⏳ Processing...' : `💳 Pay ₹${selectedCA?.consultationFee} & Start Consultation`}
-            </PaymentButton>
-          </AuthGuard>
-        </FormSection>
-      )
-    }
-  ];
+  const stepTitles = ['Situational', 'Business', 'Risk', 'Documents', 'Payment'];
 
   const next = async () => {
     try {
       if (currentStep === 0) {
-        await form.validateFields(['name', 'email', 'phone']);
+        await form.validateFields(['clientType', 'residentStatus', 'city', 'engagementPurpose', 'timeSensitivity', 'engagementType', 'phone']);
+      } else if (currentStep === 1) {
+        await form.validateFields(['industry', 'turnoverBand', 'incomeSources', 'accountingMethod']);
       }
       setCurrentStep(currentStep + 1);
     } catch (error) {
+      console.error('Validation error:', error);
       message.error('Please fill in all required fields');
     }
   };
@@ -420,7 +252,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
   return (
     <ModalContainer>
       <Modal
-        title={`🤝 Start Consultation with ${selectedCA?.name}`}
+        title={`🛸 Start Consultation v2 with ${selectedCA?.name}`}
         visible={visible}
         onCancel={onCancel}
         footer={null}
@@ -429,90 +261,152 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
       >
         <Alert
           message="🎯 Demo Mode"
-          description="This is a demonstration. Document upload and consultation features are simulated."
+          description="This is a demonstration. Payment is simulated for your convenience."
           type="info"
           showIcon
-          style={{ 
-            marginBottom: 24,
-            borderRadius: '12px',
-            border: 'none',
-            background: 'linear-gradient(135deg, #e6f7ff 0%, #f0f8ff 100%)'
-          }}
+          style={{ marginBottom: 24, borderRadius: '12px', background: 'rgba(0, 176, 240, 0.05)', color: 'white' }}
         />
 
         <StepContainer>
           <Steps current={currentStep} style={{ marginBottom: '32px' }}>
-            {steps.map(item => (
-              <Step key={item.title} title={item.title} />
+            {stepTitles.map(title => (
+              <Step key={title} title={title} />
             ))}
           </Steps>
         </StepContainer>
 
-        {steps[currentStep].content}
-
-        <div style={{ 
-          marginTop: '32px', 
-          textAlign: 'right',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            {currentStep > 0 && (
-              <Button 
-                size="large"
-                onClick={prev}
-                style={{
-                  borderRadius: '12px',
-                  height: '48px',
-                  padding: '0 24px',
-                  fontWeight: '600',
-                  border: '2px solid #d9d9d9',
-                  background: 'white'
-                }}
-              >
-                ← Previous
-              </Button>
-            )}
+        <Form form={form} layout="vertical">
+          <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
+            <FormSection>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <Form.Item name="clientType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🏢 Entity Type</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select type" size="large">
+                    <Select.Option value="individual">Individual</Select.Option>
+                    <Select.Option value="proprietor">Proprietor</Select.Option>
+                    <Select.Option value="partnership">Partnership</Select.Option>
+                    <Select.Option value="pvt_ltd">Pvt Ltd</Select.Option>
+                    <Select.Option value="llp">LLP</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="residentStatus" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🌍 Resident Status</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select status" size="large">
+                    <Select.Option value="resident">Resident</Select.Option>
+                    <Select.Option value="nri">NRI</Select.Option>
+                    <Select.Option value="rnor">RNOR</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="pan" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🆔 PAN</span>}><Input placeholder="XXXXX0000X" size="large" /></Form.Item>
+                <Form.Item name="city" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📍 City</span>} rules={[{ required: true }]}><Input placeholder="Enter city" size="large" /></Form.Item>
+                <Form.Item name="engagementPurpose" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🎯 Goal</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select goal" size="large">
+                    <Select.Option value="tax_filing">Tax Filing</Select.Option>
+                    <Select.Option value="loan_expansion">Loan Planning</Select.Option>
+                    <Select.Option value="compliance_cleanup">Compliance</Select.Option>
+                    <Select.Option value="advisory">Advisory</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="timeSensitivity" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>⏱️ Urgency</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select urgency" size="large">
+                    <Select.Option value="deadline_driven">Deadline-driven</Select.Option>
+                    <Select.Option value="advisory_only">Advisory-only</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="engagementType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📅 Scope</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select scope" size="large">
+                    <Select.Option value="one_time">One-time</Select.Option>
+                    <Select.Option value="ongoing">Ongoing</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="phone" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📱 Phone</span>} rules={[{ required: true }]}><Input placeholder="Enter phone" size="large" /></Form.Item>
+              </div>
+            </FormSection>
           </div>
-          
-          <div>
-            {currentStep < steps.length - 1 && (
-              <Button 
-                type="primary" 
-                size="large"
-                onClick={next}
-                style={{
-                  borderRadius: '12px',
-                  height: '48px',
-                  padding: '0 32px',
-                  fontWeight: '600',
-                  background: 'linear-gradient(135deg, #1890ff, #096dd9)',
-                  border: 'none',
-                  boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)'
-                }}
-              >
-                Next →
-              </Button>
-            )}
-          </div>
-        </div>
 
-        <div style={{ 
-          marginTop: '24px',
-          padding: '16px',
-          background: 'linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)',
-          borderRadius: '12px',
-          border: '1px solid rgba(24, 144, 255, 0.1)'
-        }}>
-          <Paragraph style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-            <Text style={{ fontWeight: '600' }}>📝 Note:</Text> After payment, you will be connected with {selectedCA?.name} for the consultation.
-            Please ensure you have a stable internet connection.
-          </Paragraph>
+          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+            <FormSection>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <Form.Item name="industry" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🏢 Industry</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select industry" size="large">
+                    <Select.Option value="manufacturing">Manufacturing</Select.Option>
+                    <Select.Option value="services">Services / Tech</Select.Option>
+                    <Select.Option value="trading">Trading / Retail</Select.Option>
+                    <Select.Option value="gig">Gig / Freelance</Select.Option>
+                    <Select.Option value="salaried">Salaried Professional</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="turnoverBand" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>💰 Annual Turnover</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select band" size="large">
+                    <Select.Option value="under_20l">&lt; 20 Lakhs</Select.Option>
+                    <Select.Option value="20l_2cr">20 Lakhs - 2 Cr</Select.Option>
+                    <Select.Option value="2cr_10cr">2 Cr - 10 Cr</Select.Option>
+                    <Select.Option value="over_10cr">10 Cr +</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="incomeSources" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>💵 Income Sources</span>} rules={[{ required: true }]}>
+                  <Select mode="multiple" placeholder="Select all that apply" size="large">
+                    <Select.Option value="salary">Salary</Select.Option>
+                    <Select.Option value="business">Business / Prof</Select.Option>
+                    <Select.Option value="capital_gains">Capital Gains</Select.Option>
+                    <Select.Option value="rental">Rental / IFOS</Select.Option>
+                    <Select.Option value="foreign">Foreign Income</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item name="accountingMethod" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📖 Accounting Method</span>} rules={[{ required: true }]}>
+                  <Select placeholder="Select method" size="large">
+                    <Select.Option value="cash">Cash Basis</Select.Option>
+                    <Select.Option value="accrual">Accrual Basis</Select.Option>
+                    <Select.Option value="unknown">Don't Know</Select.Option>
+                  </Select>
+                </Form.Item>
+              </div>
+            </FormSection>
+          </div>
+
+          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+            <FormSection>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                <Form.Item name="hasPastNotices" label={<span style={{ color: 'white' }}>📜 Past Notices?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasPendingFilings" label={<span style={{ color: 'white' }}>📅 Pending Filings?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasLoans" label={<span style={{ color: 'white' }}>🏦 Existing Loans?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasCryptoForeignAssets" label={<span style={{ color: 'white' }}>₿ Crypto/Foreign?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="isCashHeavy" label={<span style={{ color: 'white' }}>💸 Cash-Heavy?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+              </div>
+            </FormSection>
+          </div>
+
+          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+            <FormSection>
+              {renderChecklist()}
+              <Form.Item label={<span style={{ fontWeight: '600', color: 'white' }}>📁 Upload Documents</span>}>
+                <Upload {...props} style={{ width: '100%' }}>
+                  <Button icon={<UploadOutlined />} size="large" block>Select Documents</Button>
+                </Upload>
+              </Form.Item>
+            </FormSection>
+          </div>
+
+          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+            <FormSection>
+              <CAInfoCard>
+                <Title level={3} style={{ color: 'var(--primary-color)' }}>💰 Fee: ₹{selectedCA?.consultationFee}</Title>
+                <Text style={{ color: 'rgba(255,255,255,0.65)' }}>{selectedCA?.specializations?.join(', ')}</Text>
+              </CAInfoCard>
+              <AuthGuard>
+                <PaymentButton type="primary" onClick={handleConsultationSubmit} loading={uploading} block>
+                  {uploading ? '⏳ Processing...' : `💳 Pay ₹${selectedCA?.consultationFee} & Start`}
+                </PaymentButton>
+              </AuthGuard>
+            </FormSection>
+          </div>
+        </Form>
+
+        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'space-between' }}>
+          <Button size="large" onClick={prev} disabled={currentStep === 0 || uploading}>← Previous</Button>
+          {currentStep < 4 && <Button type="primary" size="large" onClick={next}>Next →</Button>}
         </div>
       </Modal>
     </ModalContainer>
   );
 };
 
-export default ConsultationModal; 
+export default ConsultationModal;

@@ -16,6 +16,7 @@ const FinancialPlanningSubmission = require('./FinancialPlanningSubmission');
 const CreditCardSubmission = require('./CreditCardSubmission');
 const DocumentInsight = require('./DocumentInsight');
 const FinancialPlanner = require('./financialPlanner');
+const ActivityLog = require('./activityLog');
 
 // Initialize models
 const models = {
@@ -28,7 +29,8 @@ const models = {
   FinancialPlanningSubmission: FinancialPlanningSubmission(sequelize),
   CreditCardSubmission: CreditCardSubmission(sequelize),
   DocumentInsight: DocumentInsight(sequelize),
-  FinancialPlanner: FinancialPlanner(sequelize)
+  FinancialPlanner: FinancialPlanner(sequelize),
+  ActivityLog: ActivityLog(sequelize)
 };
 
 // Set up associations

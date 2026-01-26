@@ -1,4 +1,4 @@
-const { Document, User } = require('../models');
+const { Document, User, ActivityLog } = require('../models');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
@@ -22,7 +22,7 @@ exports.uploadDocument = async (req, res) => {
       });
     }
 
-    const { category, clientNotes, priority, submissionId } = req.body;
+    const { category, clientNotes, priority, submissionId, assignedToId, assignedRole } = req.body;
 
     // Save file locally - sanitize filename for security
     const sanitizedOriginalName = path.basename(req.file.originalname).replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -45,11 +45,25 @@ exports.uploadDocument = async (req, res) => {
       clientNotes: clientNotes || null,
       priority: priority || 'medium',
       submissionId: submissionId || null,
-      status: 'submitted',
+      assignedToId: assignedToId || null,
+      assignedRole: assignedRole || null,
+      status: assignedToId ? 'assigned' : 'submitted',
       uploadedAt: new Date()
     });
 
     console.log('Document record created:', document.id);
+
+    // Step 7: Real-time Change Log
+    await ActivityLog.create({
+      userId: req.user.id,
+      action: 'DOCUMENT_UPLOAD',
+      description: `Uploaded document: ${document.fileName}`,
+      metadata: {
+        documentId: document.id,
+        category: document.category,
+        assignedToId: document.assignedToId
+      }
+    });
 
     res.status(201).json({
       success: true,
@@ -120,12 +134,13 @@ exports.getPendingDocuments = async (req, res) => {
 
     let whereClause = {};
 
-    // Filter by assigned professional or unassigned documents for the role
+    // Filter by assigned professional or unassigned documents meant for the role
     if (role && ['ca', 'financial_planner'].includes(role)) {
       whereClause = {
         [Op.or]: [
-          { assignedToId: professionalId, assignedRole: role },
-          { assignedToId: null, status: 'submitted' }
+          { assignedToId: professionalId }, // Assigned to me
+          { assignedToId: null, status: 'submitted', assignedRole: role }, // Unassigned but for my role
+          { assignedToId: null, status: 'submitted', assignedRole: null } // Unassigned and role-agnostic
         ]
       };
     } else {
@@ -338,15 +353,22 @@ exports.downloadDocument = async (req, res) => {
       });
     }
 
-    // Check permissions - owner, assigned professional, or admin
+    // Check permissions - owner, assigned professional, admin, 
+    // OR a professional authorized to see this pool
     const isOwner = document.userId === req.user.id;
     const isAssigned = document.assignedToId === req.user.id;
     const isAdmin = req.user.role === 'admin';
 
-    if (!isOwner && !isAssigned && !isAdmin) {
+    // Professionals can download if it's assigned to them OR it's unassigned but matches their role
+    const isProfessionalForThisPool =
+      ['ca', 'financial_planner'].includes(req.user.role) &&
+      document.status === 'submitted' &&
+      (document.assignedRole === req.user.role || document.assignedRole === null);
+
+    if (!isOwner && !isAssigned && !isAdmin && !isProfessionalForThisPool) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied. You must be assigned to this document or it must be in your pool.'
       });
     }
 
@@ -361,8 +383,9 @@ exports.downloadDocument = async (req, res) => {
       });
     }
 
-    // Set proper headers for download
-    res.setHeader('Content-Disposition', `attachment; filename="${document.fileName}"`);
+    // Set proper headers for viewing/download
+    // Using 'inline' allows standard browsers to display PDFs directly
+    res.setHeader('Content-Disposition', `inline; filename="${document.fileName}"`);
     res.setHeader('Content-Type', document.fileType || 'application/octet-stream');
 
     // Stream file

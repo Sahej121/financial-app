@@ -46,6 +46,7 @@ class DocumentAnalysisService {
                 submissionId: submissionId,
                 insightType: this._mapCategoryToInsightType(documentType),
                 extractedData: validation.normalizedData,
+                highlights: analysis.highlights || {},
                 summary: analysis.summary,
                 redFlags: analysis.redFlags || validation.warnings,
                 confidenceScore: (ocrConfidence + (analysis.confidenceScore || 0.8)) / 2,

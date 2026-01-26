@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout, Spin, ConfigProvider, theme } from 'antd';
 import { getProfile } from './redux/slices/userSlice';
@@ -40,20 +40,17 @@ const StyledLayout = styled(Layout)`
 `;
 
 const MainContent = styled(Content)`
-  padding-top: 64px; // Height of the fixed navbar
+padding - top: 64px; // Height of the fixed navbar
 `;
 
 function App() {
   const dispatch = useDispatch();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const { isInitializing } = useSelector((state) => state.user);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      dispatch(getProfile())
-        .finally(() => setIsInitializing(false));
-    } else {
-      setIsInitializing(false);
+      dispatch(getProfile());
     }
   }, [dispatch]);
 
@@ -78,6 +75,7 @@ function App() {
             fontFamily: "'Inter', sans-serif",
             colorTextHeading: '#FFFFFF',
             colorText: 'rgba(255, 255, 255, 0.85)',
+            colorTextLightSolid: '#FFFFFF', // Ensures white text on primary buttons
           },
           components: {
             Button: {
@@ -91,12 +89,15 @@ function App() {
             Input: {
               controlHeight: 45,
               borderRadius: 12,
-              colorBgContainer: 'rgba(255, 255, 255, 0.04)',
+              colorBgContainer: '#0A0A0A', // Consistent with --bg-secondary
+              colorBorder: 'rgba(255, 255, 255, 0.08)',
               activeBorderColor: '#00B0F0',
             },
             Select: {
               controlHeight: 45,
               borderRadius: 12,
+              colorBgContainer: '#0A0A0A',
+              colorBorder: 'rgba(255, 255, 255, 0.08)',
             }
           }
         }}

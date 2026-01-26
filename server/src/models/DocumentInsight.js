@@ -54,6 +54,12 @@ module.exports = (sequelize) => {
             defaultValue: [],
             comment: 'Recommended discussion points for the analyst'
         },
+        highlights: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: {},
+            comment: 'Mapping of keys to source snippets and page coordinates { key: { text, page, bbox } }'
+        },
         processedAt: {
             type: DataTypes.DATE,
             allowNull: false,

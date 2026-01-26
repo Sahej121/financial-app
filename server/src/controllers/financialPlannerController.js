@@ -24,6 +24,19 @@ exports.createFinancialPlanner = async (req, res) => {
     }
 };
 
+exports.getFinancialPlanners = async (req, res) => {
+    try {
+        const planners = await FinancialPlanner.findAll({
+            where: { isActive: true },
+            order: [['rating', 'DESC']]
+        });
+        res.json(planners);
+    } catch (error) {
+        console.error('Error getting financial planners:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 exports.getAnalystStats = async (req, res) => {
     try {
         // Mock data generation for the "Power BI" charts

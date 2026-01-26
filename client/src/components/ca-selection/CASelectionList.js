@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Button, Avatar, Tag, Rate, Typography, message, Input, Select, Spin } from 'antd';
-import { UserOutlined, CheckCircleOutlined, ClockCircleOutlined, SearchOutlined, FilterOutlined, SortAscendingOutlined } from '@ant-design/icons';
+import { UserOutlined, SearchOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import axios from 'axios';
+import api from '../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -118,81 +118,6 @@ const PrimaryButton = styled(Button)`
   }
 `;
 
-// Mock data - Replace with actual API data later
-const mockCAs = [
-  {
-    id: 1,
-    name: "CA Rahul Sharma",
-    experience: 8,
-    rating: 4.8,
-    specializations: ["Tax Planning", "Business Advisory"],
-    consultationFee: 1500,
-    availability: "Available Now",
-    description: "Experienced CA with expertise in tax planning and business advisory services. Specializes in startups and SMEs.",
-    qualifications: ["FCA", "DISA"],
-    languages: ["English", "Hindi"],
-  },
-  {
-    id: 2,
-    name: "CA Priya Patel",
-    experience: 12,
-    rating: 4.9,
-    specializations: ["Corporate Finance", "Audit"],
-    consultationFee: 2000,
-    availability: "Available in 1 hour",
-    description: "Senior CA with focus on corporate finance and statutory audits. Expert in IFRS and Ind AS.",
-    qualifications: ["FCA", "CPA"],
-    languages: ["English", "Hindi", "Gujarati"],
-  },
-  {
-    id: 3,
-    name: "CA Amit Kumar",
-    experience: 15,
-    rating: 4.7,
-    specializations: ["GST", "International Taxation"],
-    consultationFee: 2500,
-    availability: "Available Now",
-    description: "GST expert with extensive experience in international taxation and cross-border transactions.",
-    qualifications: ["FCA", "LLB"],
-    languages: ["English", "Hindi", "Bengali"],
-  },
-  {
-    id: 4,
-    name: "CA Sneha Reddy",
-    experience: 10,
-    rating: 4.9,
-    specializations: ["Personal Finance", "Investment Planning"],
-    consultationFee: 1800,
-    availability: "Available Now",
-    description: "Specializes in personal financial planning and investment advisory. Expert in mutual funds and equity markets.",
-    qualifications: ["FCA", "CFP"],
-    languages: ["English", "Telugu", "Hindi"],
-  },
-  {
-    id: 5,
-    name: "CA Rajesh Gupta",
-    experience: 20,
-    rating: 4.9,
-    specializations: ["Corporate Restructuring", "Mergers & Acquisitions"],
-    consultationFee: 3000,
-    availability: "Available in 2 hours",
-    description: "Senior consultant specializing in corporate restructuring and M&A. Former Big 4 partner.",
-    qualifications: ["FCA", "ICWA"],
-    languages: ["English", "Hindi"],
-  },
-  {
-    id: 6,
-    name: "CA Meera Iyer",
-    experience: 7,
-    rating: 4.6,
-    specializations: ["Startup Advisory", "Compliance"],
-    consultationFee: 1200,
-    availability: "Available Now",
-    description: "Startup specialist helping new businesses with compliance and growth strategy.",
-    qualifications: ["ACA", "CS"],
-    languages: ["English", "Tamil", "Hindi"],
-  }
-];
 
 const CASelectionList = ({ onStartConsultation }) => {
   const [selectedCA, setSelectedCA] = useState(null);
@@ -203,25 +128,26 @@ const CASelectionList = ({ onStartConsultation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchCAs();
-  }, [sortBy, filterSpecialization]);
-
-  const fetchCAs = async () => {
+  const fetchCAs = useCallback(async () => {
     try {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setCAs(mockCAs);
-        setLoading(false);
-      }, 500);
+      setError(null); // Clear previous errors
+      const response = await api.get('/cas', {
+        params: { sortBy }
+      });
+      setCAs(response.data);
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching CAs:', err);
       setError('Failed to load CAs. Please try again.');
-      setCAs(mockCAs);
+      setCAs([]); // Clear CAs on error or keep previous state if desired
       setLoading(false);
     }
-  };
+  }, [sortBy]);
+
+  useEffect(() => {
+    fetchCAs();
+  }, [fetchCAs]);
 
   const handleCASelect = (ca) => {
     setSelectedCA(ca);

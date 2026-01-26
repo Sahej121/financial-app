@@ -120,6 +120,25 @@ const FinancialPlannerDashboard = () => {
     yAxis: { grid: { line: { style: { stroke: '#333' } } } }
   };
 
+  const handleDownload = async (docId, fileName) => {
+    try {
+      const response = await api.get(`/documents/${docId}/download`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      message.error('Failed to download document');
+    }
+  };
+
   // --- Table Columns ---
   const meetingColumns = [
     {
@@ -133,9 +152,26 @@ const FinancialPlannerDashboard = () => {
       )
     },
     {
-      title: 'Type',
-      dataIndex: 'planningType',
-      render: (type) => <Tag color="blue">{type?.replace('_', ' ').toUpperCase()}</Tag>
+      title: 'Goal',
+      dataIndex: 'engagementPurpose',
+      render: (purpose) => {
+        const labels = {
+          tax_filing: 'Tax Filing',
+          loan_expansion: 'Loan/Expansion',
+          compliance_cleanup: 'Compliance',
+          advisory: 'Advisory'
+        };
+        return <Tag color="gold">{labels[purpose] || 'Review'}</Tag>;
+      }
+    },
+    {
+      title: 'Urgency',
+      dataIndex: 'timeSensitivity',
+      render: (urgency) => (
+        <Tag color={urgency === 'deadline_driven' ? 'red' : 'green'}>
+          {urgency === 'deadline_driven' ? 'URGENT' : 'STANDARD'}
+        </Tag>
+      )
     },
     {
       title: 'Time',
@@ -189,10 +225,22 @@ const FinancialPlannerDashboard = () => {
     },
     {
       title: 'Action',
+      key: 'action',
+      width: 100,
       render: (_, record) => (
         <Space>
-          <Button icon={<EyeOutlined />} size="small" onClick={() => window.open(`/api/documents/${record.id}/download`, '_blank')} />
-          <Button type="primary" icon={<EditOutlined />} size="small" onClick={() => { setSelectedDocument(record); setReviewModalVisible(true); }} />
+          <Button
+            icon={<EyeOutlined />}
+            size="small"
+            onClick={() => handleDownload(record.id, record.fileName)}
+            style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+          />
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => { setSelectedDocument(record); setReviewModalVisible(true); }}
+          />
         </Space>
       )
     }
@@ -274,6 +322,7 @@ const FinancialPlannerDashboard = () => {
               pagination={false}
               size="small"
               rowKey="id"
+              scroll={{ x: 'max-content' }}
             />
           </TableContainer>
         </Col>

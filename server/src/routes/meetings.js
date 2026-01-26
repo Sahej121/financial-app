@@ -5,37 +5,44 @@ const { auth } = require('../controllers/authController');
 const requireRole = require('../middleware/requireRole');
 
 // Get user's own meetings (clients only)
-router.get('/user', 
-  auth, 
-  requireRole(['user']), 
+router.get('/user',
+  auth,
+  requireRole(['user']),
   meetingController.getUserMeetings
 );
 
 // Get professional's assigned meetings (CAs and Financial Planners)
-router.get('/professional', 
-  auth, 
-  requireRole(['ca', 'financial_planner']), 
+router.get('/professional',
+  auth,
+  requireRole(['ca', 'financial_planner']),
   meetingController.getProfessionalMeetings
 );
 
-// Create a new meeting (admins, professionals can create)
-router.post('/', 
-  auth, 
-  requireRole(['admin', 'ca', 'financial_planner']), 
+// Create a new meeting (admins, professionals and users can create)
+router.post('/',
+  auth,
+  requireRole(['admin', 'ca', 'financial_planner', 'user']),
   meetingController.createMeeting
 );
 
 // Update meeting status (participants only)
-router.patch('/:id/status', 
-  auth, 
+router.patch('/:id/status',
+  auth,
   meetingController.updateMeetingStatus
 );
 
 // Generate Zoom meeting link (professionals only)
-router.post('/:id/zoom-link', 
-  auth, 
-  requireRole(['ca', 'financial_planner']), 
+router.post('/:id/zoom-link',
+  auth,
+  requireRole(['ca', 'financial_planner']),
   meetingController.generateZoomLink
+);
+
+// Generate professional pre-call briefing
+router.get('/:id/briefing',
+  auth,
+  requireRole(['ca', 'financial_planner']),
+  meetingController.getBriefing
 );
 
 module.exports = router;

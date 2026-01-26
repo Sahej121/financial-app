@@ -134,7 +134,23 @@ exports.login = async (req, res) => {
         emailNotifications: user.emailNotifications,
         pushNotifications: user.pushNotifications,
         marketingEmails: user.marketingEmails,
-        darkTheme: user.darkTheme
+        darkTheme: user.darkTheme,
+        clientType: user.clientType,
+        residentStatus: user.residentStatus,
+        pan: user.pan,
+        aadhaar: user.aadhaar,
+        city: user.city,
+        state: user.state,
+        industry: user.industry,
+        turnoverBand: user.turnoverBand,
+        incomeSources: user.incomeSources,
+        accountingMethod: user.accountingMethod,
+        hasPastNotices: user.hasPastNotices,
+        hasPendingFilings: user.hasPendingFilings,
+        hasLoans: user.hasLoans,
+        hasCryptoForeignAssets: user.hasCryptoForeignAssets,
+        isCashHeavy: user.isCashHeavy,
+        riskScore: user.riskScore
       },
       token
     });
@@ -225,7 +241,23 @@ exports.getProfile = async (req, res) => {
         emailNotifications: req.user.emailNotifications,
         pushNotifications: req.user.pushNotifications,
         marketingEmails: req.user.marketingEmails,
-        darkTheme: req.user.darkTheme
+        darkTheme: req.user.darkTheme,
+        clientType: req.user.clientType,
+        residentStatus: req.user.residentStatus,
+        pan: req.user.pan,
+        aadhaar: req.user.aadhaar,
+        city: req.user.city,
+        state: req.user.state,
+        industry: req.user.industry,
+        turnoverBand: req.user.turnoverBand,
+        incomeSources: req.user.incomeSources,
+        accountingMethod: req.user.accountingMethod,
+        hasPastNotices: req.user.hasPastNotices,
+        hasPendingFilings: req.user.hasPendingFilings,
+        hasLoans: req.user.hasLoans,
+        hasCryptoForeignAssets: req.user.hasCryptoForeignAssets,
+        isCashHeavy: req.user.isCashHeavy,
+        riskScore: req.user.riskScore
       }
     });
   } catch (error) {

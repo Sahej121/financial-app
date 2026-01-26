@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Input, Select, InputNumber, Radio, Button, Card, Steps, message, DatePicker } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { submitCreditCardForm } from '../../redux/slices/creditCardSlice';
+import { Form, Input, Select, InputNumber, Button, Card, Steps, message, DatePicker, Radio } from 'antd';
+import { useSelector } from 'react-redux';
 import InteractiveCard from './InteractiveCard';
 import styled from 'styled-components';
 import CreditCardRecommendations from './CreditCardRecommendations';
 import creditCards from './creditCardData';
-import moment from 'moment';
+import api from '../../services/api';
 
 const { Step } = Steps;
 const { Option } = Select;
@@ -44,7 +43,7 @@ const WelcomeText = styled.div`
   text-align: left;
   padding-bottom: 32px;
   
-  h2 {
+  h1 {
     color: white;
     font-size: 24px;
     font-weight: 700;
@@ -54,65 +53,6 @@ const WelcomeText = styled.div`
   p {
     color: var(--text-secondary);
     font-size: 16px;
-  }
-`;
-
-const FormCard = styled(Card)`
-  background: rgba(30, 30, 30, 0.6);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s ease;
-
-  .ant-card-body {
-    padding: 40px;
-  }
-`;
-
-const StepIndicator = styled.div`
-  margin-bottom: 40px;
-  .ant-steps {
-    .ant-steps-item {
-      .ant-steps-item-icon {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        color: white;
-      }
-      
-      .ant-steps-item-title {
-        font-weight: 600;
-        color: var(--text-tertiary) !important;
-        font-size: 14px;
-      }
-      
-      &.ant-steps-item-active {
-        .ant-steps-item-icon {
-          background: var(--primary-color);
-          border-color: var(--primary-color);
-          color: black;
-        }
-        .ant-steps-item-title {
-            color: white !important;
-        }
-      }
-      
-      &.ant-steps-item-finish {
-        .ant-steps-item-icon {
-          background: transparent;
-          border-color: var(--success-color);
-          color: var(--success-color);
-        }
-      }
-    }
   }
 `;
 
@@ -200,6 +140,7 @@ const FormContainerStyled = styled.div`
     font-size: 16px;
     height: 52px;
     color: white;
+    width: 100%;
 
     .ant-picker-input > input {
         color: white;
@@ -217,6 +158,7 @@ const FormContainerStyled = styled.div`
     font-size: 16px;
     height: 52px;
     color: white;
+    width: 100%;
 
     .ant-input-number-input {
       height: 48px;
@@ -227,51 +169,43 @@ const FormContainerStyled = styled.div`
       border-color: white;
     }
   }
-`;
 
-const ButtonContainer = styled.div`
-  margin-top: 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const PrimaryButton = styled(Button)`
-  height: 52px;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 16px;
-  background: white;
-  border: none;
-  color: black;
-  transition: all 0.3s ease;
-  padding: 0 32px;
-
-  &:hover {
-    background: #e6e6e6 !important;
-    color: black !important;
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(0);
+  .ant-radio-group {
+    width: 100%;
+    
+    .ant-radio-button-wrapper {
+      height: 48px;
+      line-height: 48px;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      
+      &.ant-radio-button-wrapper-checked {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: black;
+        font-weight: 600;
+      }
+    }
   }
 `;
 
-const SecondaryButton = styled(Button)`
-  height: 52px;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 15px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.6);
-  padding: 0 24px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    border-color: white !important;
-    color: white !important;
+const SectionDivider = styled.div`
+  margin: 32px 0 24px 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  h3 {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
   }
 `;
 
@@ -280,7 +214,6 @@ const CreditCardForm = () => {
   const [form] = Form.useForm();
   const [formData, setFormData] = useState({});
   const [recommendations, setRecommendations] = useState([]);
-  const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.creditCard);
 
   const steps = [
@@ -303,12 +236,9 @@ const CreditCardForm = () => {
           <Form.Item
             name="dob"
             label="Birth Date (Optional)"
-            rules={[
-              { required: false }
-            ]}
+            rules={[{ required: false }]}
           >
             <DatePicker
-              style={{ width: '100%' }}
               format="DD-MM-YYYY"
               placeholder="Select your birth date"
             />
@@ -346,7 +276,7 @@ const CreditCardForm = () => {
       )
     },
     {
-      title: 'Eligibility Info',
+      title: 'Financial Profile',
       content: (
         <FormContainerStyled>
           <Form.Item
@@ -357,7 +287,6 @@ const CreditCardForm = () => {
             <InputNumber
               min={18}
               max={80}
-              style={{ width: '100%' }}
               placeholder="Enter your age"
             />
           </Form.Item>
@@ -405,13 +334,86 @@ const CreditCardForm = () => {
               <Option value="">I don't know my credit score</Option>
             </Select>
           </Form.Item>
+
+          <SectionDivider>
+            <h3>Banking & Credit History</h3>
+          </SectionDivider>
+
+          <Form.Item
+            name="hasExistingCard"
+            label="Do you currently have any credit cards?"
+            rules={[{ required: true, message: 'Please select an option' }]}
+          >
+            <Radio.Group>
+              <Radio.Button value="yes">Yes</Radio.Button>
+              <Radio.Button value="no">No</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.hasExistingCard !== currentValues.hasExistingCard
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue('hasExistingCard') === 'yes' ? (
+                <Form.Item
+                  name="existingCardsCount"
+                  label="How many credit cards do you have?"
+                  rules={[{ required: true, message: 'Please select number of cards' }]}
+                >
+                  <Select placeholder="Select number of cards">
+                    <Option value="1">1 Card</Option>
+                    <Option value="2">2 Cards</Option>
+                    <Option value="3-4">3-4 Cards</Option>
+                    <Option value="5+">5+ Cards</Option>
+                  </Select>
+                </Form.Item>
+              ) : null
+            }
+          </Form.Item>
+
+          <Form.Item
+            name="primaryBank"
+            label="Primary Bank (where you have savings account)"
+            rules={[{ required: true, message: 'Please select your primary bank' }]}
+          >
+            <Select placeholder="Select your primary bank">
+              <Option value="hdfc">HDFC Bank</Option>
+              <Option value="icici">ICICI Bank</Option>
+              <Option value="axis">Axis Bank</Option>
+              <Option value="sbi">State Bank of India</Option>
+              <Option value="kotak">Kotak Mahindra Bank</Option>
+              <Option value="indusind">IndusInd Bank</Option>
+              <Option value="yes">Yes Bank</Option>
+              <Option value="other">Other Bank</Option>
+            </Select>
+          </Form.Item>
         </FormContainerStyled>
       )
     },
     {
-      title: 'Preferences',
+      title: 'Spending & Preferences',
       content: (
         <FormContainerStyled>
+          <Form.Item
+            name="monthlySpend"
+            label="Expected Monthly Spend on Credit Card"
+            rules={[
+              { required: true, message: 'Please enter your expected monthly spend' },
+              { type: 'number', min: 5000, message: 'Monthly spend should be at least ₹5,000' }
+            ]}
+          >
+            <InputNumber
+              formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={value => value.replace(/₹\s?|(,*)/g, '')}
+              min={5000}
+              step={1000}
+              placeholder="Enter amount in INR"
+            />
+          </Form.Item>
+
           <Form.Item
             name="cardType"
             label="Preferred Card Type"
@@ -446,38 +448,102 @@ const CreditCardForm = () => {
             </Select>
           </Form.Item>
 
+          <SectionDivider>
+            <h3>Travel & Lifestyle</h3>
+          </SectionDivider>
+
           <Form.Item
-            name="monthlySpend"
-            label="Expected Monthly Spend"
-            rules={[
-              { required: true, message: 'Please enter your expected monthly spend' },
-              { type: 'number', min: 5000, message: 'Monthly spend should be at least ₹5,000' }
-            ]}
+            name="domesticTravelFrequency"
+            label="Domestic Travel Frequency"
+            rules={[{ required: true, message: 'Please select travel frequency' }]}
           >
-            <InputNumber
-              style={{ width: '100%' }}
-              formatter={value => `INR ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={value => value.replace(/INR\s?|(,*)/g, '')}
-              min={5000}
-              step={1000}
-              placeholder="Enter amount in INR"
-            />
+            <Select placeholder="How often do you travel within India?">
+              <Option value="never">Never / Rarely</Option>
+              <Option value="1-2">1-2 times per year</Option>
+              <Option value="3-6">3-6 times per year</Option>
+              <Option value="monthly">Monthly or more</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="internationalTravelFrequency"
+            label="International Travel Frequency"
+            rules={[{ required: true, message: 'Please select international travel frequency' }]}
+          >
+            <Select placeholder="How often do you travel abroad?">
+              <Option value="never">Never / Rarely</Option>
+              <Option value="1-2">1-2 times per year</Option>
+              <Option value="3-6">3-6 times per year</Option>
+              <Option value="frequent">More than 6 times per year</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="onlineShoppingPlatforms"
+            label="Primary Online Shopping Platforms"
+            tooltip="Select platforms where you shop frequently"
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select your preferred platforms (optional)"
+            >
+              <Option value="amazon">Amazon</Option>
+              <Option value="flipkart">Flipkart</Option>
+              <Option value="myntra">Myntra</Option>
+              <Option value="ajio">Ajio</Option>
+              <Option value="swiggy">Swiggy</Option>
+              <Option value="zomato">Zomato</Option>
+              <Option value="bookmyshow">BookMyShow</Option>
+              <Option value="makemytrip">MakeMyTrip</Option>
+            </Select>
           </Form.Item>
         </FormContainerStyled>
       )
     },
     {
-      title: 'Additional Details',
+      title: 'Reward Preferences',
       content: (
         <FormContainerStyled>
           <Form.Item
+            name="rewardPreference"
+            label="How do you prefer to earn rewards?"
+            rules={[{ required: true, message: 'Please select reward preference' }]}
+          >
+            <Radio.Group>
+              <Radio.Button value="cashback">Cashback (Direct money back)</Radio.Button>
+              <Radio.Button value="points">Reward Points (Flexible redemption)</Radio.Button>
+              <Radio.Button value="travel">Travel Miles/Benefits</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="maxAnnualFee"
+            label="Maximum Annual Fee You're Comfortable With"
+            rules={[{ required: true, message: 'Please select maximum annual fee' }]}
+          >
+            <Select placeholder="Select maximum annual fee">
+              <Option value="0">₹0 (Only free cards)</Option>
+              <Option value="500">Up to ₹500</Option>
+              <Option value="1000">Up to ₹1,000</Option>
+              <Option value="2500">Up to ₹2,500</Option>
+              <Option value="5000">Up to ₹5,000</Option>
+              <Option value="10000">Up to ₹10,000</Option>
+              <Option value="unlimited">Above ₹10,000 (Premium cards)</Option>
+            </Select>
+          </Form.Item>
+
+          <SectionDivider>
+            <h3>Additional Preferences</h3>
+          </SectionDivider>
+
+          <Form.Item
             name="bankPreference"
-            label="Preferred Banks"
-            rules={[{ type: 'array' }]}
+            label="Preferred Banks (Optional)"
+            tooltip="We'll prioritize cards from these banks if you have existing relationship"
           >
             <Select
               mode="multiple"
-              placeholder="Select your preferred banks (optional)"
+              placeholder="Select preferred banks (optional)"
             >
               <Option value="hdfc">HDFC Bank</Option>
               <Option value="icici">ICICI Bank</Option>
@@ -490,12 +556,11 @@ const CreditCardForm = () => {
 
           <Form.Item
             name="additionalFeatures"
-            label="Important Card Features"
-            rules={[{ type: 'array' }]}
+            label="Important Card Features (Optional)"
           >
             <Select
               mode="multiple"
-              placeholder="Select important features (optional)"
+              placeholder="Select important features"
             >
               <Option value="lounge">Airport Lounge Access</Option>
               <Option value="insurance">Insurance Coverage</Option>
@@ -503,6 +568,7 @@ const CreditCardForm = () => {
               <Option value="forex">Low Forex Markup</Option>
               <Option value="welcome">Welcome Benefits</Option>
               <Option value="movie">Movie Ticket Offers</Option>
+              <Option value="concierge">Concierge Services</Option>
             </Select>
           </Form.Item>
         </FormContainerStyled>
@@ -511,48 +577,61 @@ const CreditCardForm = () => {
   ];
 
   const getRecommendations = (userPreferences) => {
-    // Enhanced scoring system with multiple factors
     const scoredCards = creditCards.map(card => {
-      let score = 0;
       let eligibilityScore = 0;
       let personalizedScore = 0;
 
-      // 1. ELIGIBILITY SCORING (40% weight)
+      // 1. ELIGIBILITY SCORING (35% weight)
       if (card.eligibility) {
         const age = parseInt(userPreferences.age) || 25;
         const income = parseFloat(userPreferences.annualIncome) || 300000;
         const creditScore = parseInt(userPreferences.creditScore) || 650;
 
-        // Age eligibility
         if (age >= card.eligibility.min_age && age <= card.eligibility.max_age) {
-          eligibilityScore += 25;
+          eligibilityScore += 20;
         }
 
-        // Income eligibility with bonus for higher income
         if (income >= card.eligibility.min_income) {
           eligibilityScore += 25;
           if (income > card.eligibility.min_income * 1.5) {
-            eligibilityScore += 10; // Bonus for well-qualified applicants
+            eligibilityScore += 10;
           }
         }
 
-        // Credit score matching
         if (creditScore >= card.eligibility.credit_score_min) {
           eligibilityScore += 20;
           if (creditScore > card.eligibility.credit_score_min + 50) {
-            eligibilityScore += 10; // Bonus for excellent credit
+            eligibilityScore += 10;
           }
         }
 
-        // Employment type matching
         if (userPreferences.employmentType &&
           card.eligibility.employment_type.includes(userPreferences.employmentType)) {
           eligibilityScore += 10;
         }
       }
 
-      // 2. PERSONALIZED PREFERENCE SCORING (35% weight)
-      // Spending category matching with weighted importance
+      // 2. ENHANCED PERSONALIZED SCORING (40% weight)
+      if (userPreferences.hasExistingCard === 'no' && card.card_type === 'Cashback') {
+        personalizedScore += 15;
+      }
+
+      if (userPreferences.primaryBank &&
+        card.bank?.toLowerCase().includes(userPreferences.primaryBank.toLowerCase())) {
+        personalizedScore += 25;
+      }
+
+      const domesticTravel = userPreferences.domesticTravelFrequency || 'never';
+      const intlTravel = userPreferences.internationalTravelFrequency || 'never';
+
+      if ((domesticTravel === 'monthly' || intlTravel === 'frequent' || intlTravel === '3-6') &&
+        (card.card_type === 'Travel' || card.ratings.travel >= 8)) {
+        personalizedScore += 30;
+      } else if ((domesticTravel === 'never' && intlTravel === 'never') &&
+        card.card_type === 'Travel') {
+        personalizedScore -= 20;
+      }
+
       userPreferences.spendingCategories?.forEach(category => {
         const categoryMapping = {
           groceries: 'shopping',
@@ -566,11 +645,17 @@ const CreditCardForm = () => {
 
         const mappedCategory = categoryMapping[category];
         if (card.ratings[mappedCategory]) {
-          personalizedScore += card.ratings[mappedCategory] * 3; // Higher weight for category match
+          personalizedScore += card.ratings[mappedCategory] * 3;
         }
       });
 
-      // Card type preference matching
+      if (userPreferences.onlineShoppingPlatforms?.length > 0 &&
+        (card.key_benefits.toLowerCase().includes('amazon') ||
+          card.key_benefits.toLowerCase().includes('flipkart') ||
+          card.key_benefits.toLowerCase().includes('online'))) {
+        personalizedScore += 15;
+      }
+
       userPreferences.cardType?.forEach(type => {
         if (card.card_type?.toLowerCase() === type.toLowerCase() ||
           card.special_remarks.toLowerCase().includes(type.toLowerCase())) {
@@ -578,50 +663,35 @@ const CreditCardForm = () => {
         }
       });
 
-      // Bank preference matching
-      if (userPreferences.bankPreference) {
-        userPreferences.bankPreference.forEach(bank => {
-          if (card.bank?.toLowerCase().includes(bank.toLowerCase()) ||
-            card.name.toLowerCase().includes(bank.toLowerCase())) {
-            personalizedScore += 15;
-          }
-        });
+      // 3. REWARD PREFERENCE MATCHING (15% weight)
+      let rewardScore = 0;
+      const rewardPref = userPreferences.rewardPreference;
+
+      if (rewardPref === 'cashback' && card.card_type === 'Cashback') {
+        rewardScore += 30;
+      } else if (rewardPref === 'travel' && card.card_type === 'Travel') {
+        rewardScore += 30;
+      } else if (rewardPref === 'points' && card.card_type === 'Rewards') {
+        rewardScore += 30;
       }
 
-      // 3. SPENDING PATTERN ANALYSIS (15% weight)
-      const monthlySpend = parseFloat(userPreferences.monthlySpend || 0);
-      let spendingScore = 0;
+      // 4. ANNUAL FEE FILTERING (10% weight)
+      let feeScore = 0;
+      const maxFee = parseInt(userPreferences.maxAnnualFee) || 0;
+      const cardFee = parseInt(card.annual_charges?.replace(/[^0-9]/g, '') || '0');
 
-      // Match card tier to spending level
-      if (monthlySpend > 100000) { // High spender
-        if (card.card_type === 'Premium' || card.annual_charges.includes('10,000')) {
-          spendingScore += 25;
-        }
-      } else if (monthlySpend > 50000) { // Medium spender
-        if (card.card_type === 'Travel' || card.card_type === 'Rewards') {
-          spendingScore += 20;
-        }
-      } else { // Low spender
-        if (card.card_type === 'Cashback' || card.annual_charges.includes('0')) {
-          spendingScore += 20;
-        }
+      if (maxFee === 0 && cardFee === 0) {
+        feeScore += 25;
+      } else if (cardFee <= maxFee) {
+        feeScore += 20;
+      } else if (cardFee > maxFee) {
+        feeScore -= 30;
       }
 
-      // 4. FEATURE MATCHING (10% weight)
-      let featureScore = 0;
-      if (userPreferences.additionalFeatures) {
-        userPreferences.additionalFeatures.forEach(feature => {
-          if (card.key_benefits.toLowerCase().includes(feature.toLowerCase())) {
-            featureScore += 8;
-          }
-        });
-      }
+      const totalScore = (eligibilityScore * 0.35) + (personalizedScore * 0.40) +
+        (rewardScore * 0.15) + (feeScore * 0.10);
 
-      // Calculate weighted total score
-      const totalScore = (eligibilityScore * 0.4) + (personalizedScore * 0.35) +
-        (spendingScore * 0.15) + (featureScore * 0.1);
-
-      // Calculate approval probability based on eligibility
+      // Calculate approval probability
       let approvalChance = 0;
       if (card.eligibility) {
         const age = parseInt(userPreferences.age) || 25;
@@ -641,43 +711,57 @@ const CreditCardForm = () => {
           card.eligibility.employment_type.includes(userPreferences.employmentType)) {
           approvalChance += 10;
         }
+
+        if (userPreferences.primaryBank &&
+          card.bank?.toLowerCase().includes(userPreferences.primaryBank.toLowerCase())) {
+          approvalChance += 15;
+        }
       } else {
-        approvalChance = 70; // Default for cards without eligibility data
+        approvalChance = 70;
       }
 
       return {
         ...card,
-        score: totalScore,
         matchPercentage: Math.min(Math.round(totalScore), 100),
-        approvalChance: Math.min(Math.round(approvalChance), 95), // Cap at 95%
-        eligibilityMet: eligibilityScore >= 50 // At least 50% eligibility criteria met
+        approvalChance: Math.min(Math.round(approvalChance), 95),
+        eligibilityMet: eligibilityScore >= 50
       };
     });
 
-    // Sort by score and return top recommendations
     return scoredCards
-      .sort((a, b) => b.score - a.score)
+      .filter(card => card.matchPercentage > 30)
+      .sort((a, b) => b.matchPercentage - a.matchPercentage)
       .slice(0, 6);
   };
 
   const next = async () => {
     try {
-      // Get the fields in the current step
-      const currentStepContent = steps[currentStep].content.props.children;
-      const currentFields = currentStepContent
-        .filter(item => item.props.name !== 'dob') // Exclude dob from validation
-        .map(item => item.props.name);
+      const currentStepFields = [];
+      const content = steps[currentStep].content.props.children;
 
-      // Validate current step fields
-      await form.validateFields(currentFields);
+      const extractFields = (element) => {
+        if (!element) return;
+
+        if (Array.isArray(element)) {
+          element.forEach(extractFields);
+        } else if (element.props) {
+          if (element.props.name && element.props.name !== 'dob') {
+            currentStepFields.push(element.props.name);
+          }
+          if (element.props.children) {
+            extractFields(element.props.children);
+          }
+        }
+      };
+
+      extractFields(content);
+
+      await form.validateFields(currentStepFields);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       console.error('Validation error:', error);
-      // Show specific validation errors
       if (error.errorFields) {
-        error.errorFields.forEach(field => {
-          message.error(field.errors[0]);
-        });
+        message.error(error.errorFields[0].errors[0]);
       } else {
         message.error('Please fill in all required fields correctly');
       }
@@ -690,86 +774,58 @@ const CreditCardForm = () => {
 
   const onFinish = async (values) => {
     try {
-      // Format the values
       const formValues = {
         ...values,
         monthlySpend: values.monthlySpend ? parseFloat(values.monthlySpend) : 0,
-        dob: null, // Set to null since we're making it optional
+        dob: values.dob ? values.dob.format('YYYY-MM-DD') : null,
         cardType: values.cardType || [],
         spendingCategories: values.spendingCategories || [],
         bankPreference: values.bankPreference || [],
-        additionalFeatures: values.additionalFeatures || []
+        additionalFeatures: values.additionalFeatures || [],
+        onlineShoppingPlatforms: values.onlineShoppingPlatforms || []
       };
 
-      console.log('Form Values:', formValues); // Debug log
+      let fetchedRecommendations = [];
 
-      // Set loading state... (assuming there's a setRecommendationsLoading if needed, but for now we'll just handle the response)
-
-      // Get recommendations from backend
       try {
-        const recResponse = await fetch('/api/credit-cards/recommend-enhanced', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify(formValues)
-        });
+        const recResponse = await api.post('/credit-cards/recommend-enhanced', formValues);
 
-        const recData = await recResponse.json();
-
-        if (recResponse.ok && recData.success) {
-          const fetchedRecommendations = recData.recommendations;
-          console.log('Recommendations from backend:', fetchedRecommendations);
-
-          if (fetchedRecommendations.length === 0) {
-            message.warning('No matching credit cards found. Please adjust your preferences.');
-            return;
-          }
-
-          // Set recommendations
-          setRecommendations(fetchedRecommendations);
+        if (recResponse.data && recResponse.data.success) {
+          fetchedRecommendations = recResponse.data.recommendations;
         } else {
-          throw new Error(recData.message || 'Failed to fetch recommendations');
+          throw new Error(recResponse.data.message || 'Failed to fetch recommendations');
         }
       } catch (recError) {
         console.error('Recommendation fetch error:', recError);
-        message.warning('Could not get personalized recommendations. Falling back to basics.');
-        // Optional: fallback to local logic if critical
-        const fallbackRecs = getRecommendations(formValues);
-        setRecommendations(fallbackRecs);
+        message.warning('Using local recommendation engine.');
+        fetchedRecommendations = getRecommendations(formValues);
       }
 
-      // Submit form data to backend with recommendations
+      if (fetchedRecommendations.length === 0) {
+        message.warning('No matching credit cards found. Please adjust your preferences.');
+        return;
+      }
+
+      setRecommendations(fetchedRecommendations);
+
       try {
         const submissionData = {
           ...formValues,
-          recommendedCards: recommendations,
-          recommendationScore: recommendations.length > 0 ?
-            (recommendations.reduce((sum, card) => sum + (card.overallRating || 7), 0) / recommendations.length).toFixed(2) :
+          recommendedCards: fetchedRecommendations,
+          recommendationScore: fetchedRecommendations.length > 0 ?
+            (fetchedRecommendations.reduce((sum, card) => sum + (card.matchPercentage || 70), 0) / fetchedRecommendations.length).toFixed(2) :
             null
         };
 
-        const response = await fetch('/api/credit-card-submissions/submit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify(submissionData)
-        });
+        const response = await api.post('/credit-card-submissions/submit', submissionData);
 
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log('Credit card form submitted:', data);
+        if (response.status === 200 || response.status === 201) {
           message.success('Form submitted successfully! Here are your recommended cards.');
         } else {
-          throw new Error(data.error || 'Failed to submit form');
+          throw new Error(response.data.error || 'Failed to submit form');
         }
       } catch (submitError) {
         console.error('Form submission error:', submitError);
-        // Even if submission fails, still show recommendations
         message.warning('Could not save your preferences, but here are your recommended cards.');
       }
     } catch (error) {
@@ -781,8 +837,9 @@ const CreditCardForm = () => {
   const handleFormChange = (changedValues, allValues) => {
     setFormData(allValues);
 
-    // Only clear recommendations if relevant fields changed
-    const relevantFields = ['cardType', 'spendingCategories', 'monthlySpend', 'bankPreference', 'additionalFeatures'];
+    const relevantFields = ['cardType', 'spendingCategories', 'monthlySpend', 'bankPreference',
+      'additionalFeatures', 'rewardPreference', 'domesticTravelFrequency',
+      'internationalTravelFrequency', 'maxAnnualFee'];
     const hasRelevantChanges = Object.keys(changedValues).some(key => relevantFields.includes(key));
 
     if (hasRelevantChanges && recommendations.length > 0) {
@@ -797,8 +854,8 @@ const CreditCardForm = () => {
       </CardSection>
       <FormSection>
         <WelcomeText>
-          <h1>Welcome to Credit Card Recommendation</h1>
-          <p>Please fill in your basic information:</p>
+          <h1>Find Your Perfect Credit Card</h1>
+          <p>Answer a few questions to get personalized recommendations</p>
         </WelcomeText>
 
         <Card>
@@ -829,7 +886,7 @@ const CreditCardForm = () => {
               )}
               {currentStep === steps.length - 1 && (
                 <Button type="primary" htmlType="submit" loading={loading}>
-                  Submit
+                  Get Recommendations
                 </Button>
               )}
             </div>
@@ -837,7 +894,7 @@ const CreditCardForm = () => {
         </Card>
 
         {recommendations.length > 0 && (
-          <CreditCardRecommendations recommendations={recommendations} />
+          <CreditCardRecommendations recommendations={recommendations} userPreferences={formData} />
         )}
       </FormSection>
     </FormContainer>

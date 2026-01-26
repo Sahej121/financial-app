@@ -26,7 +26,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for debugging
+// Add response interceptor for debugging and error handling
 api.interceptors.response.use(
   (response) => {
     console.log('Response:', {
@@ -41,6 +41,17 @@ api.interceptors.response.use(
       data: error.response?.data,
       config: error.config
     });
+
+    if (error.response?.status === 401) {
+      // Clear local storage on auth error
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // We don't necessarily want to redirect to /login immediately here
+      // because some pages might be partially public.
+      // The ProtectedRoute/RoleBasedRoute will handle redirection.
+    }
+
     return Promise.reject(error);
   }
 );
@@ -65,7 +76,7 @@ export const auth = {
       console.log('Attempting login with:', credentials);
       const response = await api.post('/auth/login', credentials);
       console.log('Login response:', response.data);
-      
+
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
@@ -81,7 +92,7 @@ export const auth = {
       console.log('Attempting registration with:', userData);
       const response = await api.post('/auth/register', userData);
       console.log('Registration response:', response.data);
-      
+
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }

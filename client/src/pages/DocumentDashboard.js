@@ -141,6 +141,48 @@ const DocumentDashboard = () => {
         }
     };
 
+    const triggerManualAnalysis = async (docId) => {
+        setAnalyzing(true);
+        try {
+            await api.post(`/documents/${docId}/analyze`);
+            message.loading('AI is analyzing the document...', 2.5);
+            setTimeout(async () => {
+                const res = await api.get(`/documents/${docId}/insights`);
+                if (res.data.insight) {
+                    setInsights(res.data.insight);
+                    fetchDocuments(); // Refresh list to get status
+                } else {
+                    message.warning('Still processing. Please check back in a moment.');
+                }
+                setAnalyzing(false);
+            }, 3000);
+        } catch (error) {
+            console.error('Manual analysis error:', error);
+            message.error('Failed to trigger analysis');
+            setAnalyzing(false);
+        }
+    };
+
+    const handleDownload = async (docId, fileName) => {
+        try {
+            const response = await api.get(`/documents/${docId}/download`, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download error:', error);
+            message.error('Failed to download document');
+        }
+    };
+
     const columns = [
         {
             title: 'Document Name',
@@ -159,7 +201,7 @@ const DocumentDashboard = () => {
             title: 'Category',
             dataIndex: 'category',
             key: 'category',
-            render: text => <Tag>{text?.toUpperCase() || 'UNCATEGORIZED'}</Tag>
+            render: text => <Tag>{text?.toUpperCase() || 'OTHER'}</Tag>
         },
         {
             title: 'Uploaded At',
@@ -173,14 +215,20 @@ const DocumentDashboard = () => {
             render: (_, record) => (
                 <Space>
                     <Button
-                        type="primary"
                         size="small"
                         icon={<RobotOutlined />}
                         onClick={() => viewInsights(record)}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
                     >
                         Insights
                     </Button>
-                    <Button size="small" href={`/api/documents/${record.id}/download`}>Download</Button>
+                    <Button
+                        size="small"
+                        onClick={() => handleDownload(record.id, record.fileName)}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+                    >
+                        Download
+                    </Button>
                 </Space>
             )
         }
@@ -225,7 +273,19 @@ const DocumentDashboard = () => {
                 title={<Space><RobotOutlined style={{ color: '#00B0F0' }} /> AI Financial Insights</Space>}
                 open={insightModalVisible}
                 onCancel={() => setInsightModalVisible(false)}
-                footer={[<Button key="close" onClick={() => setInsightModalVisible(false)}>Close</Button>]}
+                footer={[
+                    <Button key="close" onClick={() => setInsightModalVisible(false)}>Close</Button>,
+                    !insights && !analyzing && (
+                        <Button
+                            key="analyze"
+                            type="primary"
+                            icon={<SyncOutlined />}
+                            onClick={() => triggerManualAnalysis(selectedDocument?.id)}
+                        >
+                            Trigger Analysis
+                        </Button>
+                    )
+                ]}
                 width={800}
                 style={{ top: 20 }}
             >
@@ -285,7 +345,16 @@ const DocumentDashboard = () => {
                     </div>
                 ) : (
                     <div style={{ textAlign: 'center', padding: 40 }}>
-                        <p>No insights available. Please trigger analysis.</p>
+                        <p>No insights available.</p>
+                        <Button
+                            type="primary"
+                            size="large"
+                            icon={<SyncOutlined />}
+                            onClick={() => triggerManualAnalysis(selectedDocument?.id)}
+                            style={{ marginTop: 16 }}
+                        >
+                            Run AI Analysis Now
+                        </Button>
                     </div>
                 )}
             </Modal>

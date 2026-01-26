@@ -29,8 +29,16 @@ exports.extractFinancialData = async (text, documentType) => {
       
       Return a JSON object with:
       {
-        "extractedData": { ...fields relevant to document type... },
-        "summary": "2-3 sentence overview",
+        "extractedData": { 
+          ...fields relevant to document type...,
+          "totalCredits": number,
+          "totalDebits": number,
+          "revenueTrend": "up/down/flat",
+          "cashPercentage": number (0-100),
+          "gstMismatchFlags": ["description"],
+          "loanEmis": [{ "amount": number, "lender": "bank" }]
+        },
+        "summary": "2-3 sentence overview focusing on health and risk",
         "redFlags": ["anomalies", "risks"],
         "confidenceScore": 0.0-1.0
       }
@@ -55,20 +63,37 @@ function getMockAnalysis(category) {
     if (category === 'bank_statements') {
         return {
             extractedData: {
-                accountHolder: "Sample Client",
+                accountHolder: "Sahej Budhiraja",
                 bankName: "HDFC Bank",
-                avgMonthlyBalance: 250000,
-                totalCredits: 1200000,
-                totalDebits: 950000
+                avgMonthlyBalance: 450000,
+                totalCredits: 3200000,
+                totalDebits: 2850000,
+                revenueTrend: "up",
+                cashPercentage: 12.5,
+                loanEmis: [{ "amount": 45000, "lender": "ICICI Bank" }]
             },
-            summary: "Steady income pattern detected.",
-            redFlags: [],
+            summary: "Positive revenue trajectory with healthy cash-to-credit ratio. No major large unusual transactions found.",
+            redFlags: ["High cash withdrawals in last 2 months"],
             confidenceScore: 0.95
         };
+    } else if (category === 'tax_documents' || category === 'gst_return') {
+        return {
+            extractedData: {
+                gstMismatchFlags: ["2A vs 3B mismatch detected in Q3 (₹45,000)"],
+                totalTaxPaid: 125000,
+                filingFrequency: "monthly"
+            },
+            summary: "GST compliance looks good except for a minor Q3 mismatch requiring reconciliation.",
+            redFlags: ["Q3 Input Tax Credit mismatch"],
+            confidenceScore: 0.92
+        }
     }
     return {
-        extractedData: {},
-        summary: "Document analyzed.",
+        extractedData: {
+            totalValue: 500000,
+            summary: "Financial document verified."
+        },
+        summary: "Document analyzed and categorized.",
         redFlags: [],
         confidenceScore: 0.8
     };

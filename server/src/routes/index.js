@@ -66,6 +66,7 @@ router.use('/financial-planning', financialPlanningRoutes);
 
 // Financial Planner (Analyst) Profile Routes
 const financialPlannerController = require('../controllers/financialPlannerController');
+router.get('/financial-planners', financialPlannerController.getFinancialPlanners);
 router.post('/financial-planners', financialPlannerController.createFinancialPlanner);
 router.get('/financial-planners/stats', financialPlannerController.getAnalystStats);
 
@@ -73,4 +74,7 @@ router.get('/financial-planners/stats', financialPlannerController.getAnalystSta
 const creditCardSubmissionRoutes = require('./creditCardSubmissions');
 router.use('/credit-card-submissions', creditCardSubmissionRoutes);
 
-module.exports = router; 
+ // Activity Logs
+const activityLogsRouter = require('./activityLogs');
+router.use('/activity-logs', activityLogsRouter);
+module.exports = router;

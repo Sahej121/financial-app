@@ -1,7 +1,8 @@
 import styled from 'styled-components';
-import { Card } from 'antd';
+import { Card, Row, Col } from 'antd';
 
 // Premium Theme Colors referencing CSS variables for consistency
+// ... rest of colors ...
 const colors = {
   background: 'var(--bg-primary)',
   cardBg: 'var(--bg-card)',
@@ -24,11 +25,11 @@ export const DashboardContainer = styled.div`
     radial-gradient(circle at 95% 95%, rgba(242, 200, 17, 0.03) 0%, transparent 20%);
 `;
 
-export const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 24px; // Increased gap for airy feel
+export const GridContainer = styled(Row).attrs({
+  gutter: [24, 24]
+})`
   margin-bottom: 24px;
+  width: 100%;
 `;
 
 export const PowerBICard = styled(Card)`

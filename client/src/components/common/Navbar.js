@@ -96,8 +96,20 @@ const Navbar = () => {
     window.location.reload();
   };
 
+  const getDashboardPath = () => {
+    if (!user) return '/login';
+    switch (user.role) {
+      case 'ca': return '/ca-dashboard';
+      case 'financial_planner': return '/financial-planner-dashboard';
+      case 'admin':
+      case 'user':
+      default: return '/dashboard';
+    }
+  };
+
   const menuItems = [
     { key: '/', icon: <HomeOutlined />, label: 'Home' },
+    ...(token && user ? [{ key: getDashboardPath(), icon: <DashboardOutlined />, label: 'Dashboard' }] : []),
     { key: '/planning', icon: <BankOutlined />, label: 'Planning' },
     { key: '/ca-selection', icon: <TeamOutlined />, label: 'Expert CA' },
     { key: '/credit-card', icon: <CreditCardOutlined />, label: 'Cards' },
@@ -106,7 +118,7 @@ const Navbar = () => {
 
   const userMenu = (
     <Menu style={{ background: '#1c1c1c', border: '1px solid #333' }}>
-      <Menu.Item key="dashboard" icon={<DashboardOutlined />} onClick={() => navigate('/dashboard')}>
+      <Menu.Item key="dashboard" icon={<DashboardOutlined />} onClick={() => navigate(getDashboardPath())}>
         <span style={{ color: '#fff' }}>Dashboard</span>
       </Menu.Item>
       <Menu.Item key="settings" icon={<SettingOutlined />} onClick={() => navigate('/settings')}>

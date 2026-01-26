@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 import {
   Form,
   Input,
   Button,
   Upload,
   Select,
-  Typography,
   message,
   Steps,
-  Alert,
   Modal,
   Row,
   Col
@@ -208,14 +207,34 @@ const FinancialPlanning = () => {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
 
-  // Mock data
-  const availableSlots = [
-    { id: 1, date: '2024-03-15', time: '10:00 AM', analyst: 'John Doe' },
-    { id: 2, date: '2024-03-15', time: '2:00 PM', analyst: 'Jane Smith' },
-    { id: 3, date: '2024-03-16', time: '11:00 AM', analyst: 'John Doe' },
-    { id: 4, date: '2024-03-16', time: '3:00 PM', analyst: 'Jane Smith' },
-  ];
+  const fetchAnalysts = useCallback(async () => {
+    try {
+      const response = await api.get('/financial-planners');
+      const planners = response.data;
+
+      // Generate slots for each planner
+      const slots = planners.flatMap((p, idx) => [
+        { id: `${p.id}-1`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '10:00 AM', analyst: p.name, plannerId: p.id },
+        { id: `${p.id}-2`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '2:00 PM', analyst: p.name, plannerId: p.id },
+        { id: `${p.id}-3`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '11:00 AM', analyst: p.name, plannerId: p.id }
+      ]);
+
+      setAvailableSlots(slots);
+    } catch (error) {
+      console.error('Error fetching planners:', error);
+      // Fallback with some mock if empty
+      setAvailableSlots([
+        { id: 1, date: moment().format('YYYY-MM-DD'), time: '10:00 AM', analyst: 'John Doe' },
+        { id: 2, date: moment().format('YYYY-MM-DD'), time: '2:00 PM', analyst: 'Jane Smith' },
+      ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalysts();
+  }, [fetchAnalysts]);
 
   const steps = [
     {

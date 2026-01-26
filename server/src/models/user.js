@@ -29,6 +29,76 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true
     },
+    // Situational Clarity Fields
+    clientType: {
+      type: DataTypes.ENUM('individual', 'proprietor', 'partnership', 'pvt_ltd', 'llp'),
+      allowNull: true
+    },
+    residentStatus: {
+      type: DataTypes.ENUM('resident', 'nri', 'rnor'),
+      allowNull: true
+    },
+    pan: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Masked in UI'
+    },
+    aadhaar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Masked in UI'
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    state: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    // Structured Business Understanding (Step 2)
+    industry: {
+      type: DataTypes.ENUM('manufacturing', 'services', 'trading', 'gig', 'salaried', 'other'),
+      allowNull: true
+    },
+    turnoverBand: {
+      type: DataTypes.ENUM('under_20l', '20l_2cr', '2cr_10cr', 'over_10cr'),
+      allowNull: true
+    },
+    incomeSources: {
+      type: DataTypes.JSON, // Array of selected sources
+      allowNull: true
+    },
+    accountingMethod: {
+      type: DataTypes.ENUM('cash', 'accrual', 'unknown'),
+      allowNull: true
+    },
+    // Risk Assessment Fields (Step 3)
+    hasPastNotices: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    hasPendingFilings: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    hasLoans: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    hasCryptoForeignAssets: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    isCashHeavy: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    riskScore: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: '0-100 logic-based risk score'
+    },
     caNumber: {
       type: DataTypes.STRING,
       allowNull: true

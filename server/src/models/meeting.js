@@ -39,6 +39,45 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 'financial_planning'
     },
+    // New intake fields
+    engagementPurpose: {
+      type: DataTypes.ENUM('tax_filing', 'loan_expansion', 'compliance_cleanup', 'advisory'),
+      allowNull: true
+    },
+    engagementType: {
+      type: DataTypes.ENUM('one_time', 'ongoing'),
+      allowNull: true
+    },
+    timeSensitivity: {
+      type: DataTypes.ENUM('deadline_driven', 'advisory_only'),
+      allowNull: true
+    },
+    // Business Snapshot (Step 2)
+    industry: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    turnoverBand: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    incomeSources: {
+      type: DataTypes.JSON,
+      allowNull: true
+    },
+    accountingMethod: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    // Risk Assessment (Step 3)
+    riskFlags: {
+      type: DataTypes.JSON, // { notices: bool, pending: bool, etc }
+      allowNull: true
+    },
+    riskScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
 
     // Meeting scheduling
     startsAt: {
@@ -123,6 +162,47 @@ module.exports = (sequelize) => {
         model: 'financial_planning_submissions',
         key: 'id'
       }
+    },
+    // Post-Engagement Management (Step 6)
+    finalFee: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    engagementScope: {
+      type: DataTypes.ENUM('one_time', 'monthly_managed'),
+      allowNull: true
+    },
+    engagementNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Post-call details and engagement terms'
+    },
+    deliverables: {
+      type: DataTypes.JSON,
+      allowNull: true
+    },
+    milestones: {
+      type: DataTypes.JSON,
+      allowNull: true
+    },
+    pendingStatus: {
+      type: DataTypes.ENUM('none', 'client_pending', 'ca_pending'),
+      allowNull: false,
+      defaultValue: 'none'
+    },
+    nextFollowUp: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    referenceNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    },
+    healthScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: '0-100 health metrics summary'
     }
   }, {
     tableName: 'meetings',

@@ -61,11 +61,14 @@ const userSlice = createSlice({
     })(),
     token: localStorage.getItem('token'),
     loading: false,
+    isVerified: false,
+    isInitializing: !!localStorage.getItem('token'),
     error: null
   }, reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.isVerified = false;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     },
@@ -83,6 +86,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.isVerified = true;
         state.error = null;
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
@@ -98,6 +102,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.isVerified = true;
         state.error = null;
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
@@ -106,10 +111,23 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error.message;
       })
+      .addCase(getProfile.pending, (state) => {
+        state.isInitializing = true;
+      })
       .addCase(getProfile.fulfilled, (state, action) => {
         state.user = action.payload.user;
+        state.isVerified = true;
+        state.isInitializing = false;
         // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
+      })
+      .addCase(getProfile.rejected, (state) => {
+        state.isInitializing = false;
+        state.isVerified = false;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       });
   }
 });

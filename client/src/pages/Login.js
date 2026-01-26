@@ -61,14 +61,14 @@ const Login = () => {
       >
         <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
           <Input
-            prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
+            prefix={<UserOutlined style={{ color: 'rgba(255,255,255,1)' }} />}
             placeholder="Email Address"
           />
         </Form.Item>
 
         <Form.Item name="password" rules={[{ required: true }]}>
           <Input.Password
-            prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
+            prefix={<LockOutlined style={{ color: 'rgba(255,255,255,1)' }} />}
             placeholder="Password"
           />
         </Form.Item>
@@ -86,7 +86,7 @@ const Login = () => {
         </Form.Item>
       </Form>
 
-      <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>OR</Divider>
+      <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,1)', fontSize: '0.9rem' }}>OR</Divider>
 
       <Button style={SOCIAL_BUTTON_STYLE} onClick={() => window.location.href = '/api/auth/google'}>
         <GoogleOutlined style={{ color: '#EA4335', fontSize: 18 }} />
