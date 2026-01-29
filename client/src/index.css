@@ -137,3 +137,141 @@ h6 {
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
 }
+
+/* Premium Glassmorphic Notifications & Messages */
+.ant-message {
+  top: 32px !important;
+}
+
+.ant-message-notice-content {
+  background: rgba(20, 20, 20, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 100px !important;
+  /* Premium Pill Shape */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+  padding: 10px 24px !important;
+  color: white !important;
+}
+
+.ant-message-custom-content {
+  display: flex !important;
+  align-items: center !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.ant-message-custom-content .anticon {
+  font-size: 18px !important;
+  margin-right: 12px !important;
+}
+
+/* Status Specific Colors */
+.ant-message-success .anticon {
+  color: #52c41a !important;
+  filter: drop-shadow(0 0 8px rgba(82, 196, 26, 0.4));
+}
+
+.ant-message-error .anticon {
+  color: #ff4d4f !important;
+  filter: drop-shadow(0 0 8px rgba(255, 77, 79, 0.4));
+}
+
+.ant-message-warning .anticon {
+  color: #faad14 !important;
+  filter: drop-shadow(0 0 8px rgba(250, 173, 20, 0.4));
+}
+
+.ant-message-info .anticon {
+  color: #00B0F0 !important;
+  filter: drop-shadow(0 0 8px rgba(0, 176, 240, 0.4));
+}
+
+/* Glassmorphic Global Notifications (Sidebar/Toast) */
+.ant-notification-notice {
+  background: rgba(20, 20, 20, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+}
+
+.ant-notification-notice-message {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.ant-notification-notice-close {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.ant-notification-notice-close:hover {
+  color: white !important;
+}
+
+/* Premium Glassmorphic Alerts (In-page) */
+.ant-alert {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+}
+
+.ant-alert-message {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.ant-alert-description {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ant-alert-icon {
+  font-size: 18px !important;
+}
+
+.ant-alert-info {
+  border-left: 4px solid #00B0F0 !important;
+}
+
+.ant-alert-success {
+  border-left: 4px solid #52c41a !important;
+}
+
+.ant-alert-warning {
+  border-left: 4px solid #faad14 !important;
+}
+
+.ant-alert-error {
+  border-left: 4px solid #ff4d4f !important;
+}
+
+/* Form Validation Messages */
+.ant-form-item-explain-error {
+  color: #ff4d4f !important;
+  font-size: 0.85rem !important;
+  margin-top: 4px !important;
+  padding-left: 4px !important;
+  font-weight: 500 !important;
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
