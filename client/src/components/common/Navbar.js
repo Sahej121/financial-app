@@ -111,6 +111,7 @@ const Navbar = () => {
     ...(token && user ? [
       { key: getDashboardPath(), icon: <DashboardOutlined style={{ color: '#00B0F0' }} />, label: 'Dashboard' },
       { key: '/documents', icon: <FileTextOutlined style={{ color: '#00B0F0' }} />, label: 'Docs AI' },
+      { key: '/wealth-monitor', icon: <RocketOutlined style={{ color: '#00B0F0' }} />, label: 'Wealth Monitor' },
       { key: '/gst', icon: <AuditOutlined style={{ color: '#00B0F0' }} />, label: 'GST Filing' }
     ] : []),
     { key: '/planning', icon: <BankOutlined style={{ color: '#00B0F0' }} />, label: 'Planning' },

@@ -38,6 +38,30 @@ function getActiveProvider() {
  * Build the analysis prompt
  */
 function buildPrompt(text, documentType) {
+    if (documentType === 'wealth_monitor') {
+        return `You are an expert Financial Strategy Consultant. 
+Analyze this receipt/bill and provide financial insights for wealth monitoring.
+
+TEXT FROM RECEIPT:
+${text.substring(0, 12000)}
+
+Return a JSON object with this structure:
+{
+  "extractedData": {
+    "merchantName": "string",
+    "amount": number,
+    "category": "Food/Travel/Shopping/Luxury/Utilities/Healthcare/Other",
+    "isAvoidable": boolean,
+    "itrRelevance": "80C/80D/Business/None"
+  },
+  "summary": "1-2 sentence advice on if this purchase helps or hurts their financial goals",
+  "recommendations": ["1-2 actionable steps for budgeting"],
+  "confidenceScore": 0.8
+}
+
+Return ONLY valid JSON.`;
+    }
+
     return `You are an expert Financial Analyst specializing in Indian financial documents.
 Analyze the following document text and extract structured financial intelligence.
 

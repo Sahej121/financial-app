@@ -28,6 +28,9 @@ router.post('/cas', caController.createCA);
 // Meeting routes
 router.use('/meetings', meetingsRouter);
 
+// Wealth Monitor routes
+router.use('/wealth-monitor', require('./wealthMonitor'));
+
 // Document routes (enhanced) - this must come BEFORE any specific document routes
 const documentsRouter = require('./documents');
 router.use('/documents', documentsRouter);

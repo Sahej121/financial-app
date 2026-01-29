@@ -33,6 +33,7 @@ import GSTDashboard from './pages/GSTDashboard';
 import GSTInvoiceManagement from './pages/GSTInvoiceManagement';
 import GSTRFilingWizard from './pages/GSTRFilingWizard';
 import ITCReconciliation from './pages/ITCReconciliation';
+import WealthMonitor from './pages/WealthMonitor';
 import styled from 'styled-components';
 
 const { Content } = Layout;
@@ -170,6 +171,16 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Settings />
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* Wealth Monitor */}
+                  <Route
+                    path="/wealth-monitor"
+                    element={
+                      <PrivateRoute>
+                        <WealthMonitor />
                       </PrivateRoute>
                     }
                   />

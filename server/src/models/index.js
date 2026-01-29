@@ -23,6 +23,7 @@ const GSTInvoice = require('./GSTInvoice');
 const GSTFiling = require('./GSTFiling');
 const HSNCode = require('./HSNCode');
 const ITCRecord = require('./ITCRecord');
+const WealthMonitor = require('./WealthMonitor');
 
 // Initialize models
 const models = {
@@ -42,7 +43,8 @@ const models = {
   GSTInvoice: GSTInvoice(sequelize),
   GSTFiling: GSTFiling(sequelize),
   HSNCode: HSNCode(sequelize),
-  ITCRecord: ITCRecord(sequelize)
+  ITCRecord: ITCRecord(sequelize),
+  WealthMonitor: WealthMonitor(sequelize)
 };
 
 // Set up associations
