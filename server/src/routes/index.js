@@ -7,10 +7,14 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const creditCardController = require('../controllers/creditCardController');
 const meetingsRouter = require('./meetings');
+const { registerValidation, loginValidation } = require('../middleware/authValidator');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 // Auth routes
-router.post('/auth/register', authController.register);
-router.post('/auth/login', authController.login);
+router.post('/auth/register', authLimiter, registerValidation, authController.register);
+router.post('/auth/login', authLimiter, loginValidation, authController.login);
+router.post('/auth/google', authController.googleLogin);
+router.post('/auth/apple', authController.appleLogin);
 router.post('/auth/forgot-password', authController.forgotPassword);
 router.put('/auth/reset-password/:resetToken', authController.resetPassword);
 router.get('/auth/profile', authController.auth, authController.getProfile);
@@ -74,7 +78,24 @@ router.get('/financial-planners/stats', financialPlannerController.getAnalystSta
 const creditCardSubmissionRoutes = require('./creditCardSubmissions');
 router.use('/credit-card-submissions', creditCardSubmissionRoutes);
 
- // Activity Logs
+// Activity Logs
 const activityLogsRouter = require('./activityLogs');
 router.use('/activity-logs', activityLogsRouter);
+
+// AI Status Check endpoint
+const extractionService = require('../services/extractionService');
+router.get('/ai-status', (req, res) => {
+  const info = extractionService.getProviderInfo();
+  res.json(info);
+});
+
+// GST routes
+const gstRouter = require('./gst');
+router.use('/gst', gstRouter);
+
+// Payment routes
+const paymentRouter = require('./payment');
+router.use('/payments', paymentRouter);
+
 module.exports = router;
+

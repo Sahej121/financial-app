@@ -62,6 +62,14 @@ module.exports = (sequelize) => {
       }
     },
     specialRemarks: DataTypes.TEXT,
+    applicationUrl: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    hiddenCharges: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     rating: {
       type: DataTypes.DECIMAL(3, 2),
       defaultValue: 0

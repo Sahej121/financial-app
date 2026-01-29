@@ -40,12 +40,41 @@ export const login = createAsyncThunk(
 );
 export const getProfile = createAsyncThunk(
   'user/getProfile',
-  async (_, { getState }) => {
-    const { token } = getState().user;
-    const response = await api.get('/auth/profile', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  async () => {
+    const response = await api.get('/auth/profile');
     return response.data;
+  }
+);
+
+export const googleLogin = createAsyncThunk(
+  'user/googleLogin',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/google', data);
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
+  }
+);
+
+export const appleLogin = createAsyncThunk(
+  'user/appleLogin',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/apple', data);
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
   }
 );
 
@@ -108,6 +137,34 @@ const userSlice = createSlice({
         localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(googleLogin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isVerified = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(appleLogin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(appleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isVerified = true;
+        state.error = null;
+      })
+      .addCase(appleLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       })

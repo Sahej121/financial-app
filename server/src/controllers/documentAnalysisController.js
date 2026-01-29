@@ -1,4 +1,5 @@
 const documentAnalysisService = require('../services/documentAnalysisService');
+const briefingService = require('../services/briefingService');
 const { Document, DocumentInsight } = require('../models');
 
 /**
@@ -82,6 +83,24 @@ exports.getSubmissionSnapshot = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch submission snapshot'
+        });
+    }
+};
+
+exports.getSubmissionBriefing = async (req, res) => {
+    try {
+        const { submissionId } = req.params;
+        const briefing = await briefingService.generateBriefing(submissionId);
+
+        res.json({
+            success: true,
+            briefing
+        });
+    } catch (error) {
+        console.error('Get briefing error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate analyst briefing: ' + error.message
         });
     }
 };

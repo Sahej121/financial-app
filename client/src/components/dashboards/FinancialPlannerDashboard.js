@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input } from 'antd';
-import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Tabs } from 'antd';
+import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, FileTextOutlined } from '@ant-design/icons';
 import { Pie, Area, Column } from '@ant-design/plots';
 import moment from 'moment';
-import api from '../../utils/api';
+import api from '../../services/api';
 import ClientSnapshot from '../analyst/ClientSnapshot';
 import DocumentInsightsPanel from '../analyst/DocumentInsightsPanel';
-import { RobotOutlined } from '@ant-design/icons';
+import BriefingPanel from '../analyst/BriefingPanel';
+import ClientSubmissionReport from '../analyst/ClientSubmissionReport';
+import DocumentPreviewModal from '../analyst/DocumentPreviewModal';
 import {
   DashboardContainer,
   GridContainer,
@@ -19,9 +21,24 @@ import {
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { TabPane } = Tabs;
+
+// Helper to download CSV
+const downloadCSV = (content, fileName) => {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 const FinancialPlannerDashboard = () => {
-  const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     meetings: [],
     documents: [],
@@ -40,19 +57,28 @@ const FinancialPlannerDashboard = () => {
 
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Document Preview State
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
+
   const [reviewForm] = Form.useForm();
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) setRefreshing(true);
+      if (isRefresh) setRefreshing(true);
+
       const [meetingsRes, documentsRes, statsRes] = await Promise.all([
         api.get('/meetings/professional?role=financial_planner&upcoming=true'),
         api.get('/documents/pending?role=financial_planner'),
-        api.get('/financial-planners/stats').catch(() => ({ data: {} })) // Fallback if endpoint not ready
+        api.get('/financial-planners/stats').catch(() => ({ data: {} }))
       ]);
 
       setData({
@@ -61,14 +87,50 @@ const FinancialPlannerDashboard = () => {
         stats: {
           ...statsRes.data,
           meetingsToday: meetingsRes.data.meetings?.filter(m => moment(m.startsAt).isSame(moment(), 'day')).length || 0,
-          activeClients: new Set(meetingsRes.data.meetings?.map(m => m.client?.id)).size || 0
+          activeClients: new Set(meetingsRes.data.meetings?.map(m => m.client?.id)).size || 0,
+          aum: statsRes.data?.aum || 12500000 // Ensure fallback
         }
       });
+      if (isRefresh) message.success('Dashboard data synchronized');
     } catch (error) {
       console.error('Error loading dashboard:', error);
       message.error('Failed to load dashboard data');
     } finally {
-      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleExport = () => {
+    try {
+      message.loading({ content: 'Generating report...', key: 'export' });
+
+      let csv = 'ANALYST DASHBOARD REPORT\n';
+      csv += `Generated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}\n\n`;
+
+      csv += '--- PRIMARY KPIs ---\n';
+      csv += `AUM (Estimated),${(data.stats.aum / 10000000).toFixed(2)} Cr\n`;
+      csv += `Active Clients,${data.stats.activeClients}\n`;
+      csv += `Meetings Today,${data.stats.meetingsToday}\n`;
+      csv += `Client Satisfaction,${data.stats.satisfaction}/5.0\n\n`;
+
+      csv += '--- UPCOMING MEETINGS ---\n';
+      csv += 'Client,Goal,Urgency,Starts At\n';
+      data.meetings.forEach(m => {
+        csv += `${m.client?.name || 'N/A'},${m.engagementPurpose},${m.timeSensitivity},${moment(m.startsAt).format('YYYY-MM-DD HH:mm')}\n`;
+      });
+      csv += '\n';
+
+      csv += '--- PENDING DOCUMENTS ---\n';
+      csv += 'File Name,Client,Status\n';
+      data.documents.forEach(d => {
+        csv += `${d.fileName},${d.owner?.name || 'N/A'},${d.status}\n`;
+      });
+
+      downloadCSV(csv, `Analyst_Report_${moment().format('YYYYMMDD')}.csv`);
+      message.success({ content: 'Report exported successfully', key: 'export' });
+    } catch (error) {
+      console.error('Export failed:', error);
+      message.error({ content: 'Failed to export report', key: 'export' });
     }
   };
 
@@ -76,6 +138,8 @@ const FinancialPlannerDashboard = () => {
     try {
       setAiLoading(true);
       setAiModalVisible(true);
+      console.log('Selected Meeting Submission:', meeting.submission);
+      setSelectedSubmission(meeting.submission);
       const res = await api.get(`/documents/submission/${meeting.submissionId}/snapshot`);
       setSelectedMeetingInsights(res.data.insights || []);
     } catch (error) {
@@ -120,23 +184,9 @@ const FinancialPlannerDashboard = () => {
     yAxis: { grid: { line: { style: { stroke: '#333' } } } }
   };
 
-  const handleDownload = async (docId, fileName) => {
-    try {
-      const response = await api.get(`/documents/${docId}/download`, {
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
-      message.error('Failed to download document');
-    }
+  const handlePreview = (record) => {
+    setPreviewDoc(record);
+    setPreviewVisible(true);
   };
 
   // --- Table Columns ---
@@ -144,16 +194,18 @@ const FinancialPlannerDashboard = () => {
     {
       title: 'Client',
       dataIndex: 'client',
+      width: 150,
       render: (client) => (
         <Space>
-          <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#00B0F0' }} />
-          <span style={{ fontWeight: 600 }}>{client?.name}</span>
+          <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#00B0F0' }} size="small" />
+          <span style={{ fontWeight: 600, fontSize: '13px' }}>{client?.name}</span>
         </Space>
       )
     },
     {
       title: 'Goal',
       dataIndex: 'engagementPurpose',
+      width: 100,
       render: (purpose) => {
         const labels = {
           tax_filing: 'Tax Filing',
@@ -161,14 +213,15 @@ const FinancialPlannerDashboard = () => {
           compliance_cleanup: 'Compliance',
           advisory: 'Advisory'
         };
-        return <Tag color="gold">{labels[purpose] || 'Review'}</Tag>;
+        return <Tag color="gold" style={{ fontSize: '11px', margin: 0 }}>{labels[purpose] || 'Review'}</Tag>;
       }
     },
     {
       title: 'Urgency',
       dataIndex: 'timeSensitivity',
+      width: 100,
       render: (urgency) => (
-        <Tag color={urgency === 'deadline_driven' ? 'red' : 'green'}>
+        <Tag color={urgency === 'deadline_driven' ? 'red' : 'green'} style={{ fontSize: '11px', margin: 0 }}>
           {urgency === 'deadline_driven' ? 'URGENT' : 'STANDARD'}
         </Tag>
       )
@@ -176,18 +229,21 @@ const FinancialPlannerDashboard = () => {
     {
       title: 'Time',
       dataIndex: 'startsAt',
-      render: (time) => moment(time).format('MMM DD, HH:mm')
+      width: 120,
+      render: (time) => <span style={{ fontSize: '12px' }}>{moment(time).format('MMM DD, HH:mm')}</span>
     },
     {
       title: 'Action',
+      fixed: 'right',
+      width: 150,
       render: (_, record) => (
-        <Space>
+        <Space size="small">
           <Button
             type="primary"
             size="small"
             icon={<VideoCameraOutlined />}
             onClick={() => window.open(record.zoomStartUrl || '#', '_blank')}
-            style={{ background: '#00B0F0' }}
+            style={{ background: '#00B0F0', fontSize: '11px' }}
           >
             Join
           </Button>
@@ -195,7 +251,7 @@ const FinancialPlannerDashboard = () => {
             size="small"
             icon={<RobotOutlined />}
             onClick={() => loadAIInsights(record)}
-            style={{ background: '#52c41a', color: 'white', border: 'none' }}
+            style={{ background: '#52c41a', color: 'white', border: 'none', fontSize: '11px' }}
           >
             AI Prep
           </Button>
@@ -226,20 +282,22 @@ const FinancialPlannerDashboard = () => {
     {
       title: 'Action',
       key: 'action',
-      width: 100,
+      width: 120,
       render: (_, record) => (
         <Space>
           <Button
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => handleDownload(record.id, record.fileName)}
-            style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+            onClick={() => handlePreview(record)}
+            title="Preview Document"
+            style={{ background: 'rgba(0, 176, 240, 0.1)', color: '#00B0F0', borderColor: 'rgba(0, 176, 240, 0.3)' }}
           />
           <Button
             type="primary"
             icon={<EditOutlined />}
             size="small"
             onClick={() => { setSelectedDocument(record); setReviewModalVisible(true); }}
+            title="Review Document"
           />
         </Space>
       )
@@ -251,8 +309,10 @@ const FinancialPlannerDashboard = () => {
       <Header>
         <h1>Analyst Overview</h1>
         <div className="actions">
-          <ActionButton onClick={loadDashboardData}><ReloadOutlined /> Refresh Data</ActionButton>
-          <ActionButton onClick={() => message.info('Exporting report...')}>Export Report</ActionButton>
+          <ActionButton onClick={() => loadDashboardData(true)} disabled={refreshing}>
+            <ReloadOutlined spin={refreshing} /> {refreshing ? 'Refreshing...' : 'Refresh Data'}
+          </ActionButton>
+          <ActionButton onClick={handleExport}><FileTextOutlined /> Export Report</ActionButton>
         </div>
       </Header>
 
@@ -297,13 +357,8 @@ const FinancialPlannerDashboard = () => {
           </ChartContainer>
         </Col>
 
-        {/* Second Row */}
-        <Col span={8}>
-          <ChartContainer title="New Client Acquisition">
-            <Column {...acquisitionConfig} height={300} />
-          </ChartContainer>
-        </Col>
-        <Col span={8}>
+        {/* Third Row - Main Tables */}
+        <Col span={12}>
           <TableContainer title="Upcoming Meetings">
             <Table
               dataSource={data.meetings.slice(0, 5)}
@@ -311,10 +366,11 @@ const FinancialPlannerDashboard = () => {
               pagination={false}
               size="small"
               rowKey="id"
+              scroll={{ x: 600 }}
             />
           </TableContainer>
         </Col>
-        <Col span={8}>
+        <Col span={12}>
           <TableContainer title="Pending Document Reviews">
             <Table
               dataSource={data.documents.slice(0, 5)}
@@ -322,9 +378,16 @@ const FinancialPlannerDashboard = () => {
               pagination={false}
               size="small"
               rowKey="id"
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: 600 }}
             />
           </TableContainer>
+        </Col>
+
+        {/* Fourth Row - Secondary Chart */}
+        <Col span={24}>
+          <ChartContainer title="New Client Acquisition Trends">
+            <Column {...acquisitionConfig} height={200} />
+          </ChartContainer>
         </Col>
       </Row>
 
@@ -361,24 +424,91 @@ const FinancialPlannerDashboard = () => {
       </Modal>
 
       <Modal
-        title="AI Financial Intelligence - Call Prep"
+        title={
+          <Space>
+            <RobotOutlined style={{ color: '#00B0F0' }} />
+            <span>AI Financial Intelligence - Client Prep Kit</span>
+          </Space>
+        }
         visible={aiModalVisible}
         onCancel={() => setAiModalVisible(false)}
         footer={null}
-        width={1000}
-        bodyStyle={{ background: '#000', padding: '24px' }}
+        width={1100}
+        bodyStyle={{ background: '#000', padding: '24px', minHeight: '80vh' }}
+        closeIcon={<CloseOutlined style={{ color: 'white' }} />}
       >
-        <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
-        <div style={{ marginTop: '24px' }}>
-          <DocumentInsightsPanel
-            documents={selectedMeetingInsights?.map(i => i.document) || []}
-            insights={selectedMeetingInsights || []}
-          />
-        </div>
+        <Tabs defaultActiveKey="1" className="ai-prep-tabs">
+          <TabPane
+            tab={<span><RobotOutlined /> Intelligent Briefing</span>}
+            key="1"
+          >
+            {selectedSubmission?.id && <BriefingPanel submissionId={selectedSubmission.id} />}
+            <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
+            <div style={{ marginTop: '24px' }}>
+              <DocumentInsightsPanel
+                documents={selectedMeetingInsights?.map(i => i.document) || []}
+                insights={selectedMeetingInsights || []}
+              />
+            </div>
+          </TabPane>
+          <TabPane
+            tab={<span><FileTextOutlined /> Client Submission Data (Report)</span>}
+            key="2"
+          >
+            {selectedSubmission ? (
+              <ClientSubmissionReport submission={selectedSubmission} />
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center' }}>
+                <FileTextOutlined style={{ fontSize: '48px', color: 'rgba(255,255,255,0.2)', marginBottom: '16px' }} />
+                <p style={{ color: 'rgba(255,255,255,0.4)' }}>No form submission data found for this consultation.</p>
+              </div>
+            )}
+          </TabPane>
+        </Tabs>
+
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          .ai-prep-tabs .ant-tabs-nav::before {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+          }
+          .ai-prep-tabs .ant-tabs-tab {
+            color: rgba(255,255,255,0.6);
+          }
+          .ai-prep-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: #00B0F0 !important;
+          }
+          .ai-prep-tabs .ant-tabs-ink-bar {
+            background: #00B0F0;
+          }
+        `}} />
       </Modal>
+
+      <DocumentPreviewModal
+        visible={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        documentId={previewDoc?.id}
+        fileName={previewDoc?.fileName}
+        fileType={previewDoc?.fileType}
+      />
 
     </DashboardContainer>
   );
 };
+
+// Helper for CloseIcon
+const CloseOutlined = ({ style }) => (
+  <svg
+    viewBox="64 64 896 896"
+    focusable="false"
+    data-icon="close"
+    width="1em"
+    height="1em"
+    fill="currentColor"
+    aria-hidden="true"
+    style={style}
+  >
+    <path d="M563.8 512l262.5-312.9c4.4-5.2.7-13.1-6.1-13.1h-79.8c-4.7 0-9.2 2.1-12.3 5.7L511.6 449.8 295.1 191.7c-3-3.6-7.5-5.7-12.3-5.7H203c-6.8 0-10.5 7.9-6.1 13.1L459.4 512 196.9 824.9A7.95 7.95 0 00203 838h79.8c4.7 0 9.2-2.1 12.3-5.7l216.5-258.1 216.5 258.1c3 3.6 7.5 5.7 12.3 5.7h79.8c6.8 0 10.5-7.9 6.1-13.1L563.8 512z"></path>
+  </svg>
+);
 
 export default FinancialPlannerDashboard;

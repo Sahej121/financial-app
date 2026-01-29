@@ -118,9 +118,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
         formData.append('assignedRole', 'ca');
         formData.append('category', 'tax_documents');
 
-        const uploadRes = await api.post('/documents/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const uploadRes = await api.post('/documents/upload', formData);
 
         if (uploadRes.data.document) {
           documentIds.push(uploadRes.data.document.id);
@@ -252,7 +250,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
   return (
     <ModalContainer>
       <Modal
-        title={`🛸 Start Consultation v2 with ${selectedCA?.name}`}
+        title={`Start Consultation v2 with ${selectedCA?.name}`}
         visible={visible}
         onCancel={onCancel}
         footer={null}
@@ -279,7 +277,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
           <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
             <FormSection>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <Form.Item name="clientType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🏢 Entity Type</span>} rules={[{ required: true }]}>
+                <Form.Item name="clientType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Entity Type</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select type" size="large">
                     <Select.Option value="individual">Individual</Select.Option>
                     <Select.Option value="proprietor">Proprietor</Select.Option>
@@ -288,16 +286,16 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
                     <Select.Option value="llp">LLP</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="residentStatus" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🌍 Resident Status</span>} rules={[{ required: true }]}>
+                <Form.Item name="residentStatus" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Resident Status</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select status" size="large">
                     <Select.Option value="resident">Resident</Select.Option>
                     <Select.Option value="nri">NRI</Select.Option>
                     <Select.Option value="rnor">RNOR</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="pan" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🆔 PAN</span>}><Input placeholder="XXXXX0000X" size="large" /></Form.Item>
-                <Form.Item name="city" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📍 City</span>} rules={[{ required: true }]}><Input placeholder="Enter city" size="large" /></Form.Item>
-                <Form.Item name="engagementPurpose" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🎯 Goal</span>} rules={[{ required: true }]}>
+                <Form.Item name="pan" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>PAN</span>}><Input placeholder="XXXXX0000X" size="large" /></Form.Item>
+                <Form.Item name="city" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>City</span>} rules={[{ required: true }]}><Input placeholder="Enter city" size="large" /></Form.Item>
+                <Form.Item name="engagementPurpose" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Goal</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select goal" size="large">
                     <Select.Option value="tax_filing">Tax Filing</Select.Option>
                     <Select.Option value="loan_expansion">Loan Planning</Select.Option>
@@ -305,19 +303,19 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
                     <Select.Option value="advisory">Advisory</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="timeSensitivity" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>⏱️ Urgency</span>} rules={[{ required: true }]}>
+                <Form.Item name="timeSensitivity" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Urgency</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select urgency" size="large">
                     <Select.Option value="deadline_driven">Deadline-driven</Select.Option>
                     <Select.Option value="advisory_only">Advisory-only</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="engagementType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📅 Scope</span>} rules={[{ required: true }]}>
+                <Form.Item name="engagementType" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Scope</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select scope" size="large">
                     <Select.Option value="one_time">One-time</Select.Option>
                     <Select.Option value="ongoing">Ongoing</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="phone" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📱 Phone</span>} rules={[{ required: true }]}><Input placeholder="Enter phone" size="large" /></Form.Item>
+                <Form.Item name="phone" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Phone</span>} rules={[{ required: true }]}><Input placeholder="Enter phone" size="large" /></Form.Item>
               </div>
             </FormSection>
           </div>
@@ -325,7 +323,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
             <FormSection>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <Form.Item name="industry" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>🏢 Industry</span>} rules={[{ required: true }]}>
+                <Form.Item name="industry" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Industry</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select industry" size="large">
                     <Select.Option value="manufacturing">Manufacturing</Select.Option>
                     <Select.Option value="services">Services / Tech</Select.Option>
@@ -334,7 +332,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
                     <Select.Option value="salaried">Salaried Professional</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="turnoverBand" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>💰 Annual Turnover</span>} rules={[{ required: true }]}>
+                <Form.Item name="turnoverBand" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Annual Turnover</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select band" size="large">
                     <Select.Option value="under_20l">&lt; 20 Lakhs</Select.Option>
                     <Select.Option value="20l_2cr">20 Lakhs - 2 Cr</Select.Option>
@@ -342,7 +340,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
                     <Select.Option value="over_10cr">10 Cr +</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="incomeSources" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>💵 Income Sources</span>} rules={[{ required: true }]}>
+                <Form.Item name="incomeSources" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Income Sources</span>} rules={[{ required: true }]}>
                   <Select mode="multiple" placeholder="Select all that apply" size="large">
                     <Select.Option value="salary">Salary</Select.Option>
                     <Select.Option value="business">Business / Prof</Select.Option>
@@ -351,7 +349,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
                     <Select.Option value="foreign">Foreign Income</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item name="accountingMethod" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>📖 Accounting Method</span>} rules={[{ required: true }]}>
+                <Form.Item name="accountingMethod" label={<span style={{ fontWeight: '600', color: 'rgba(255,255,255,0.85)' }}>Accounting Method</span>} rules={[{ required: true }]}>
                   <Select placeholder="Select method" size="large">
                     <Select.Option value="cash">Cash Basis</Select.Option>
                     <Select.Option value="accrual">Accrual Basis</Select.Option>
@@ -365,11 +363,11 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
             <FormSection>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                <Form.Item name="hasPastNotices" label={<span style={{ color: 'white' }}>📜 Past Notices?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
-                <Form.Item name="hasPendingFilings" label={<span style={{ color: 'white' }}>📅 Pending Filings?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
-                <Form.Item name="hasLoans" label={<span style={{ color: 'white' }}>🏦 Existing Loans?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
-                <Form.Item name="hasCryptoForeignAssets" label={<span style={{ color: 'white' }}>₿ Crypto/Foreign?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
-                <Form.Item name="isCashHeavy" label={<span style={{ color: 'white' }}>💸 Cash-Heavy?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasPastNotices" label={<span style={{ color: 'white' }}>Past Notices?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasPendingFilings" label={<span style={{ color: 'white' }}>Pending Filings?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasLoans" label={<span style={{ color: 'white' }}>Existing Loans?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="hasCryptoForeignAssets" label={<span style={{ color: 'white' }}>Crypto/Foreign?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
+                <Form.Item name="isCashHeavy" label={<span style={{ color: 'white' }}>Cash-Heavy?</span>} valuePropName="checked"><Switch checkedChildren="Yes" unCheckedChildren="No" /></Form.Item>
               </div>
             </FormSection>
           </div>
@@ -377,7 +375,7 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
             <FormSection>
               {renderChecklist()}
-              <Form.Item label={<span style={{ fontWeight: '600', color: 'white' }}>📁 Upload Documents</span>}>
+              <Form.Item label={<span style={{ fontWeight: '600', color: 'white' }}>Upload Documents</span>}>
                 <Upload {...props} style={{ width: '100%' }}>
                   <Button icon={<UploadOutlined />} size="large" block>Select Documents</Button>
                 </Upload>
@@ -388,12 +386,12 @@ const ConsultationModal = ({ visible, onCancel, selectedCA }) => {
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
             <FormSection>
               <CAInfoCard>
-                <Title level={3} style={{ color: 'var(--primary-color)' }}>💰 Fee: ₹{selectedCA?.consultationFee}</Title>
+                <Title level={3} style={{ color: 'var(--primary-color)' }}>Fee: ₹{selectedCA?.consultationFee}</Title>
                 <Text style={{ color: 'rgba(255,255,255,0.65)' }}>{selectedCA?.specializations?.join(', ')}</Text>
               </CAInfoCard>
               <AuthGuard>
                 <PaymentButton type="primary" onClick={handleConsultationSubmit} loading={uploading} block>
-                  {uploading ? '⏳ Processing...' : `💳 Pay ₹${selectedCA?.consultationFee} & Start`}
+                  {uploading ? 'Processing...' : `Pay ₹${selectedCA?.consultationFee} & Start`}
                 </PaymentButton>
               </AuthGuard>
             </FormSection>

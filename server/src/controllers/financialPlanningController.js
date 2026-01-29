@@ -12,70 +12,144 @@ exports.submitFinancialPlan = async (req, res) => {
       phone,
       age,
       occupation,
-      monthlyIncome,
 
-      // Financial Goals
-      planningType,
-      goalDescription,
+      // Step 1: Goal (Legacy primaryGoal removed)
       targetAmount,
-      timeframe,
-      riskTolerance,
+      targetTimeline,
 
-      // Business-specific fields
-      businessType,
-      currentRevenue,
-      expansionGoal,
+      // Step 2: Time Horizon
+      achievementTimeline,
+      timelineFlexibility,
 
-      // Loan-specific fields
-      loanType,
-      loanAmount,
-      currentEMI,
-
-      // Investment preferences
+      // Step 3: Risk Profile
+      riskReaction,
       investmentExperience,
-      preferredInvestments,
+      riskPreference,
+      riskScore,
 
-      // Additional information
-      existingInvestments,
-      specialRequirements,
+      // Step 4: Income
+      incomeType,
+      monthlyIncome,
+      incomeStability,
+      monthlySavings,
 
-      // Consultation details
+      // Step 5: Assets
+      assets,
+
+      // Step 6: Liabilities
+      liabilities,
+      totalLiabilityAmount,
+      highestInterestRate,
+      dependents,
+
+      // Step 7: Protection
+      hasHealthInsurance,
+      hasLifeInsurance,
+      medicalConditions,
+
+      // Step 8: Tax
+      taxResidency,
+      taxBracket,
+      existingTaxSavingInvestments,
+      upcomingTaxEvents,
+
+      // Step 9: Preferences
+      avoidedInvestments,
+      liquidityNeeds,
+      ethicalPreferences,
+      exposurePreference,
+
+      // Step 11: Success
+      successPriority,
+      reviewFrequency,
+
+      // Step 12: Summary/Output
+      riskProfileSummary,
+      netWorthSnapshot,
+      gapsIdentified,
+      strategyOutline,
+
+      // Consultation
       consultationSlot,
-      preferredMeetingType
+      preferredMeetingType,
+      documentIds // Extract documentIds
     } = req.body;
 
-    // Validation
-    if (!fullName || !email || !phone || !planningType) {
-      return res.status(400).json({
-        success: false,
-        error: 'Required fields missing: fullName, email, phone, planningType'
-      });
-    }
+    // Validation (Legacy primaryGoal check removed)
 
     // Create financial planning submission
+    // First, fetch the user's primary info if not provided in the request body
+    const { User: U, Document } = require('../models');
+    const userProfile = await U.findByPk(userId);
+
+    const finalFullName = fullName || userProfile?.name || 'Unknown User';
+    const finalEmail = email || userProfile?.email || '';
+    const finalPhone = phone || userProfile?.phone || '';
+
     const submission = await FinancialPlanningSubmission.create({
       userId,
-      fullName,
-      email,
-      phone,
+      fullName: finalFullName,
+      email: finalEmail,
+      phone: finalPhone,
       age: age || null,
       occupation: occupation || null,
-      monthlyIncome: monthlyIncome || null,
-      planningType,
-      goalDescription: goalDescription || null,
+
+      // Goal (Legacy primaryGoal removed)
       targetAmount: targetAmount || null,
-      timeframe: timeframe || null,
-      riskTolerance: riskTolerance || null,
-      businessType: businessType || null,
-      currentRevenue: currentRevenue || null,
-      expansionGoal: expansionGoal || null,
-      loanType: loanType || null,
-      loanAmount: loanAmount || null,
-      currentEMI: currentEMI || null,
+      targetTimeline: targetTimeline || null,
+
+      // Time Horizon
+      achievementTimeline: achievementTimeline || null,
+      timelineFlexibility: timelineFlexibility || null,
+
+      // Risk
+      riskReaction: riskReaction || null,
       investmentExperience: investmentExperience || null,
-      preferredInvestments: preferredInvestments || null,
-      existingInvestments: existingInvestments || null,
-      specialRequirements: specialRequirements || null,
+      riskPreference: riskPreference || null,
+      riskScore: riskScore || null,
+
+      // Income
+      incomeType: incomeType || null,
+      monthlyIncome: monthlyIncome || null,
+      incomeStability: incomeStability || null,
+      monthlySavings: monthlySavings || null,
+
+      // Assets
+      assets: assets || {},
+
+      // Liabilities
+      liabilities: liabilities || [],
+      totalLiabilityAmount: totalLiabilityAmount || null,
+      highestInterestRate: highestInterestRate || null,
+      dependents: dependents || null,
+
+      // Protection
+      hasHealthInsurance: hasHealthInsurance || false,
+      hasLifeInsurance: hasLifeInsurance || false,
+      medicalConditions: medicalConditions || null,
+
+      // Tax
+      taxResidency: taxResidency || null,
+      taxBracket: taxBracket || null,
+      existingTaxSavingInvestments: existingTaxSavingInvestments || null,
+      upcomingTaxEvents: upcomingTaxEvents || null,
+
+      // Preferences
+      avoidedInvestments: avoidedInvestments || [],
+      liquidityNeeds: liquidityNeeds || false,
+      ethicalPreferences: ethicalPreferences || null,
+      exposurePreference: exposurePreference || null,
+
+      // Success
+      successPriority: successPriority || null,
+      reviewFrequency: reviewFrequency || null,
+
+      // Summary
+      riskProfileSummary: riskProfileSummary || null,
+      netWorthSnapshot: netWorthSnapshot || {},
+      gapsIdentified: gapsIdentified || [],
+      strategyOutline: strategyOutline || null,
+
       consultationSlot: consultationSlot || null,
       preferredMeetingType: preferredMeetingType || null,
       status: 'submitted'
@@ -83,27 +157,77 @@ exports.submitFinancialPlan = async (req, res) => {
 
     console.log('Financial planning submission created:', submission.id);
 
+    // Link uploaded documents to this submission
+    if (documentIds && Array.isArray(documentIds) && documentIds.length > 0) {
+      console.log('Linking documents:', documentIds);
+      await Document.update(
+        { submissionId: submission.id },
+        {
+          where: {
+            id: { [Op.in]: documentIds },
+            userId: userId // Security check: Ensure user owns documents
+          }
+        }
+      ).catch(err => console.error('Error linking documents to submission:', err));
+    }
+
     // Create a meeting/consultation based on selected slot
     if (consultationSlot) {
-      const { Meeting: M } = require('../models');
+      const { Meeting: M, FinancialPlanner } = require('../models');
       const startsAt = new Date(consultationSlot.date);
-      const [hours, minutes] = (consultationSlot.time || '10:00').split(':');
-      startsAt.setHours(parseInt(hours), parseInt(minutes));
+
+      // Parse time (supports formats like "10:00 AM", "2:00 PM", or "10:00")
+      const timeStr = consultationSlot.time || '10:00 AM';
+      const timeParts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (timeParts) {
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+        const period = timeParts[3];
+
+        if (period && period.toUpperCase() === 'PM' && hours !== 12) {
+          hours += 12;
+        } else if (period && period.toUpperCase() === 'AM' && hours === 12) {
+          hours = 0;
+        }
+        startsAt.setHours(hours, minutes, 0, 0);
+      }
 
       const endsAt = new Date(startsAt);
       endsAt.setHours(endsAt.getHours() + 1);
 
+      // Get the selected planner's user ID or use the planner ID directly
+      let professionalId = consultationSlot.plannerId;
+
+      // If plannerId is provided, try to get the associated userId from FinancialPlanner
+      if (professionalId) {
+        try {
+          const planner = await FinancialPlanner.findByPk(professionalId);
+          if (planner && planner.userId) {
+            professionalId = planner.userId;
+          }
+        } catch (err) {
+          console.log('Could not find planner userId, using plannerId:', professionalId);
+        }
+      } else {
+        // Fallback: get first active financial planner
+        const firstPlanner = await FinancialPlanner.findOne({ where: { isActive: true } });
+        professionalId = firstPlanner?.userId || firstPlanner?.id || 1;
+      }
+
+      const meetingTitle = 'Financial Consultation';
+
       await M.create({
         clientId: userId,
-        professionalId: 1,
-        professionalRole: planningType === 'tax_planning' ? 'ca' : 'financial_planner',
-        title: `${planningType.toUpperCase()} Consultation`,
-        planningType: planningType,
+        professionalId,
+        professionalRole: 'financial_planner',
+        title: meetingTitle,
+        planningType: 'financial_planning', // Generic type for DB enum fit
         startsAt,
         endsAt,
         status: 'scheduled',
-        submissionId: submission.id
-      }).catch(err => console.error('Auto-meeting error:', err));
+        submissionId: submission.id,
+        clientNotes: `Risk Score: ${riskScore}.`
+      }).catch(err => console.error('Auto-meeting creation error:', err));
     }
 
     res.status(201).json({
@@ -111,7 +235,6 @@ exports.submitFinancialPlan = async (req, res) => {
       message: 'Financial planning form submitted successfully',
       submission: {
         id: submission.id,
-        planningType: submission.planningType,
         status: submission.status,
         createdAt: submission.createdAt
       }
@@ -119,6 +242,22 @@ exports.submitFinancialPlan = async (req, res) => {
 
   } catch (error) {
     console.error('Financial planning submission error:', error);
+
+    // DEBUG LOGGING
+    if (error.errors) {
+      console.error('Full Error Errors:', JSON.stringify(error.errors, null, 2));
+    }
+
+    // Detailed validation error log
+    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      const validationErrors = error.errors.map(e => `${e.path}: ${e.message}`);
+      // Console logic already logs full errors, so just return friendly message
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error: ' + validationErrors.join(', ')
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Failed to submit financial planning form: ' + error.message
@@ -135,8 +274,8 @@ exports.getUserSubmissions = async (req, res) => {
       where: { userId },
       order: [['createdAt', 'DESC']],
       attributes: [
-        'id', 'planningType', 'goalDescription', 'targetAmount',
-        'timeframe', 'status', 'assignedAnalyst', 'createdAt', 'updatedAt'
+        'id', 'targetAmount',
+        'targetTimeline', 'status', 'assignedAnalyst', 'createdAt', 'updatedAt'
       ]
     });
 
@@ -157,11 +296,10 @@ exports.getUserSubmissions = async (req, res) => {
 // Get all submissions (for admin/analysts)
 exports.getAllSubmissions = async (req, res) => {
   try {
-    const { status, planningType, page = 1, limit = 10 } = req.query;
+    const { status, page = 1, limit = 10 } = req.query;
 
     const whereClause = {};
     if (status) whereClause.status = status;
-    if (planningType) whereClause.planningType = planningType;
 
     const offset = (page - 1) * limit;
 

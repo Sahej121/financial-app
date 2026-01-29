@@ -19,7 +19,17 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true // Changed to true to support social login
+    },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    },
+    appleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
     },
     role: {
       type: DataTypes.ENUM('user', 'ca', 'financial_planner', 'admin', 'premium'),
@@ -106,6 +116,10 @@ module.exports = (sequelize) => {
     twoFactorAuth: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    twoFactorSecret: {
+      type: DataTypes.STRING,
+      allowNull: true
     },
     emailNotifications: {
       type: DataTypes.BOOLEAN,

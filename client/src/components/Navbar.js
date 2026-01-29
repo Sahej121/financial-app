@@ -61,10 +61,10 @@ const Navbar = () => {
   return (
     <StyledHeader>
       <Logo to="/">
-        <img src="/logo.svg" alt="Logo" style={{ height: 32, marginRight: 8 }} />
+        <img src="/logo_refined.svg" alt="Logo" style={{ height: 32, marginRight: 8, objectFit: 'contain' }} />
         CreditLeliya
       </Logo>
-      
+
       <Space size={16}>
         <Link to="/pricing">
           <NavButton>Pricing</NavButton>

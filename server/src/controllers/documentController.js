@@ -77,7 +77,14 @@ exports.uploadDocument = async (req, res) => {
       .catch(err => console.error('Auto-analysis background error:', err));
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('=== UPLOAD ERROR ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
+    }
+    console.error('Stack trace:', error.stack);
+
     res.status(500).json({
       success: false,
       error: 'Failed to upload document: ' + error.message
@@ -171,7 +178,7 @@ exports.getPendingDocuments = async (req, res) => {
       ],
       order: [
         ['priority', 'DESC'],
-        ['uploadedAt', 'ASC']
+        ['uploadedAt', 'DESC']
       ]
     });
 

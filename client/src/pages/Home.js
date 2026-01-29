@@ -10,7 +10,9 @@ import {
   TrophyOutlined,
   TeamOutlined,
   GlobalOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  MessageOutlined,
+  StarFilled
 } from '@ant-design/icons';
 import useScrollReveal from '../hooks/useScrollReveal';
 
@@ -55,8 +57,8 @@ const HeroSection = styled.div`
   
   /* Mesh Gradient Background */
   background: 
-    radial-gradient(circle at 15% 50%, rgba(0, 176, 240, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(242, 200, 17, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 15% 50%, rgba(0, 176, 240, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(242, 200, 17, 0.1) 0%, transparent 50%),
     linear-gradient(0deg, #050505 0%, #000000 100%);
 
   &::before {
@@ -288,6 +290,59 @@ const FeatureCard = styled.div`
   }
 `;
 
+const TestimonialCard = styled.div`
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 32px;
+  border-radius: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .quote-icon {
+    font-size: 32px;
+    color: rgba(0, 176, 240, 0.2);
+    margin-bottom: 16px;
+  }
+
+  .stars {
+    color: #F2C811;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #333, #111);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+  }
+`;
+
+const ContactBanner = styled.div`
+  background: radial-gradient(circle at 50% 100%, rgba(20, 20, 20, 1) 0%, #000 100%);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 100px 24px 120px;
+  text-align: center;
+`;
+
 const Reveal = ({ children, width = '100%', delay = 0 }) => {
   const [ref, isVisible] = useScrollReveal();
   return (
@@ -364,7 +419,7 @@ const Home = () => {
                 <div style={{ fontSize: '4rem', fontWeight: 800, color: 'white', lineHeight: 1, marginBottom: 12, letterSpacing: '-2px' }}>
                   {stat.value}
                 </div>
-                <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>
+                <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
                   {stat.label}
                 </div>
               </Col>
@@ -435,10 +490,88 @@ const Home = () => {
           </Reveal>
         </FeatureGrid>
 
+        {/* Testimonials Section */}
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 120px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <Badge style={{ margin: '0 auto 16px' }}>
+              <span /> Trusted by Professionals
+            </Badge>
+            <Title level={2} style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginBottom: 16 }}>
+              Success Stories from <span className="highlight">India's Elite</span>
+            </Title>
+            <Paragraph style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: 600, margin: '0 auto' }}>
+              From Chartered Accountants to High-Net-Worth Individuals, see how CreditLeliya is transforming wealth management.
+            </Paragraph>
+          </div>
+
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={8}>
+              <Reveal>
+                <TestimonialCard>
+                  <div className="quote-icon">❝</div>
+                  <div className="stars">
+                    <StarFilled /><StarFilled /><StarFilled /><StarFilled /><StarFilled />
+                  </div>
+                  <Paragraph style={{ fontSize: '1.05rem', fontStyle: 'italic', marginBottom: 0 }}>
+                    "The AI portfolio rebalancing saved me hours of manual work. It's like having a dedicated analyst 24/7."
+                  </Paragraph>
+                  <div className="author">
+                    <div className="avatar">R</div>
+                    <div>
+                      <Text strong style={{ display: 'block' }}>Rajesh Kumar</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>Chartered Accountant</Text>
+                    </div>
+                  </div>
+                </TestimonialCard>
+              </Reveal>
+            </Col>
+            <Col xs={24} md={8}>
+              <Reveal delay={100}>
+                <TestimonialCard>
+                  <div className="quote-icon">❝</div>
+                  <div className="stars">
+                    <StarFilled /><StarFilled /><StarFilled /><StarFilled /><StarFilled />
+                  </div>
+                  <Paragraph style={{ fontSize: '1.05rem', fontStyle: 'italic', marginBottom: 0 }}>
+                    "Finally, a platform that truly understands the nuances of Indian tax laws while optimizing global exposure."
+                  </Paragraph>
+                  <div className="author">
+                    <div className="avatar">P</div>
+                    <div>
+                      <Text strong style={{ display: 'block' }}>Priya Sharma</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>Angel Investor</Text>
+                    </div>
+                  </div>
+                </TestimonialCard>
+              </Reveal>
+            </Col>
+            <Col xs={24} md={8}>
+              <Reveal delay={200}>
+                <TestimonialCard>
+                  <div className="quote-icon">❝</div>
+                  <div className="stars">
+                    <StarFilled /><StarFilled /><StarFilled /><StarFilled /><StarFilled />
+                  </div>
+                  <Paragraph style={{ fontSize: '1.05rem', fontStyle: 'italic', marginBottom: 0 }}>
+                    "The most intuitive dashboard I've used. I can track my entire family office's performance in one glance."
+                  </Paragraph>
+                  <div className="author">
+                    <div className="avatar">A</div>
+                    <div>
+                      <Text strong style={{ display: 'block' }}>Amit Verma</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>Wealth Manager</Text>
+                    </div>
+                  </div>
+                </TestimonialCard>
+              </Reveal>
+            </Col>
+          </Row>
+        </div>
+
         {/* Big CTA */}
         <div style={{
           padding: '160px 24px',
-          background: 'linear-gradient(180deg, #000 0%, #111 100%)',
+          background: 'linear-gradient(180deg, #000 0%, #050505 100%)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden'
@@ -447,8 +580,11 @@ const Home = () => {
             <Title level={2} style={{ color: 'white', fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: 32, letterSpacing: '-1px' }}>
               Ready to Upgrade Your Life?
             </Title>
+            <Paragraph style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto 48px' }}>
+              Join thousands of professionals mastering their wealth with AI-driven insights.
+            </Paragraph>
             <Link to="/register">
-              <CTAButton style={{ height: 80, fontSize: '1.4rem', padding: '0 64px' }}>
+              <CTAButton style={{ height: 72, fontSize: '1.25rem', padding: '0 56px', boxShadow: '0 0 40px rgba(0, 176, 240, 0.2)' }}>
                 Create Free Account
               </CTAButton>
             </Link>
@@ -459,11 +595,28 @@ const Home = () => {
             position: 'absolute',
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '600px', height: '600px',
-            background: 'radial-gradient(circle, rgba(0,176,240,0.1) 0%, transparent 70%)',
+            width: '800px', height: '800px',
+            background: 'radial-gradient(circle, rgba(0,176,240,0.08) 0%, transparent 60%)',
             pointerEvents: 'none'
           }} />
         </div>
+
+        {/* Contact Banner */}
+        <ContactBanner>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <Title level={2} style={{ fontSize: '2.5rem', marginBottom: 16 }}>
+              Still have questions?
+            </Title>
+            <Paragraph style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: 32 }}>
+              Our expert team is here to help you navigate your financial journey. Whether you need enterprise solutions or personal advice, we're just a message away.
+            </Paragraph>
+            <Link to="/contact">
+              <OutlineButton>
+                Contact Support <MessageOutlined style={{ marginLeft: 8 }} />
+              </OutlineButton>
+            </Link>
+          </div>
+        </ContactBanner>
 
       </Content>
     </PageLayout>

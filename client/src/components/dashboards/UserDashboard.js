@@ -12,6 +12,8 @@ import { Line, Pie } from '@ant-design/plots';
 import moment from 'moment';
 import api from '../../services/api';
 import DocumentUploadModal from '../DocumentUploadModal';
+import WealthHealthWidget from './widgets/WealthHealthWidget';
+import GoalProgressWidget from './widgets/GoalProgressWidget';
 import {
   DashboardContainer,
   GridContainer,
@@ -170,6 +172,16 @@ const UserDashboard = () => {
           </KPICard>
         </Col>
       </GridContainer>
+
+      {/* New Wealth & Goals Widgets */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={12}>
+          <WealthHealthWidget />
+        </Col>
+        <Col xs={24} md={12}>
+          <GoalProgressWidget />
+        </Col>
+      </Row>
 
       <Row gutter={[16, 16]}>
         <Col span={16}>

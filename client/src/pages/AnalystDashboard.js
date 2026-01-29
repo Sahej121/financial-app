@@ -12,7 +12,8 @@ import {
   Button,
   Timeline,
   Avatar,
-  message
+  message,
+  Modal
 } from 'antd';
 import {
   UserOutlined,
@@ -92,11 +93,18 @@ const StatCard = styled(StyledCard)`
   }
 `;
 
+
+import ClientSubmissionDetail from '../components/analyst/ClientSubmissionDetail';
+
 const AnalystDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(moment());
+
+  // Modal state
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   useEffect(() => {
     fetchConsultations();
@@ -104,7 +112,7 @@ const AnalystDashboard = () => {
 
   const fetchConsultations = async () => {
     try {
-      const response = await fetch('/api/analyst/consultations', {
+      const response = await fetch('/api/meetings/professional', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -113,14 +121,16 @@ const AnalystDashboard = () => {
       if (data.success) {
         setConsultations(data.meetings.map(m => ({
           id: m.id,
-          clientName: m.client.name,
+          clientName: m.client?.name || 'Unknown Client',
           scheduledTime: m.startsAt,
           consultationType: m.planningType,
-          status: m.status
+          status: m.status,
+          submission: m.submission // Store the submission data
         })));
       }
     } catch (error) {
       console.error('Error fetching consultations:', error);
+      message.error('Failed to load dashboard data. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -135,6 +145,15 @@ const AnalystDashboard = () => {
       'confirmed': 'cyan'
     };
     return colors[status] || 'default';
+  };
+
+  const handleViewProfile = (record) => {
+    if (record.submission) {
+      setSelectedSubmission(record.submission);
+      setProfileModalVisible(true);
+    } else {
+      message.info('No detailed profile available for this consultation');
+    }
   };
 
   const upcomingConsultations = consultations.filter(
@@ -165,10 +184,10 @@ const AnalystDashboard = () => {
       title: 'Client',
       dataIndex: 'clientName',
       key: 'clientName',
-      render: (text) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      render: (text, record) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => handleViewProfile(record)}>
           <Avatar icon={<UserOutlined />} />
-          {text}
+          <span style={{ textDecoration: 'underline', color: '#1890ff' }}>{text}</span>
         </div>
       )
     },
@@ -191,6 +210,21 @@ const AnalystDashboard = () => {
         <Tag color={getStatusColor(status)}>
           {status.toUpperCase()}
         </Tag>
+      )
+    },
+    {
+      title: 'Profile',
+      key: 'profile',
+      render: (_, record) => (
+        <Button
+          size="small"
+          type="default"
+          ghost={true}
+          style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}
+          onClick={() => handleViewProfile(record)}
+        >
+          View Insight
+        </Button>
       )
     },
     {
@@ -278,6 +312,7 @@ const AnalystDashboard = () => {
                     <p style={{ color: '#fff' }}>{moment(consultation.scheduledTime).format('hh:mm A')}</p>
                     <p style={{ color: '#fff' }}><strong>{consultation.clientName}</strong></p>
                     <p style={{ color: '#8c8c8c' }}>{consultation.consultationType}</p>
+                    <Button size="small" type="link" onClick={() => handleViewProfile(consultation)}>View Details</Button>
                   </Timeline.Item>
                 ))}
             </Timeline>
@@ -309,6 +344,18 @@ const AnalystDashboard = () => {
           </StyledCard>
         </Col>
       </Row>
+
+      {/* Client Profile Modal */}
+      <Modal
+        visible={profileModalVisible}
+        onCancel={() => setProfileModalVisible(false)}
+        footer={null}
+        width={800}
+        bodyStyle={{ padding: 0, background: '#141414' }}
+        closeIcon={<span style={{ color: 'white' }}>x</span>}
+      >
+        <ClientSubmissionDetail submission={selectedSubmission} />
+      </Modal>
     </DashboardContainer>
   );
 };

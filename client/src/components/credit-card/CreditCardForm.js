@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Select, InputNumber, Button, Card, Steps, message, DatePicker, Radio } from 'antd';
+import { Form, Input, Select, InputNumber, Button, Steps, message, Radio } from 'antd';
 import { useSelector } from 'react-redux';
 import InteractiveCard from './InteractiveCard';
 import styled from 'styled-components';
@@ -13,13 +13,59 @@ const { Option } = Select;
 const FormContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 40px 20px;
   display: flex;
-  gap: 40px;
+  gap: 60px;
   position: relative;
   
   @media (max-width: 900px) {
     flex-direction: column;
+    padding: 20px;
+  }
+`;
+
+const StepsStyled = styled(Steps)`
+  margin-bottom: 48px;
+  
+  .ant-steps-item-title {
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+  }
+  
+  .ant-steps-item-active .ant-steps-item-title {
+    color: white !important;
+  }
+  
+  .ant-steps-item-finish .ant-steps-item-title {
+    color: #40a9ff !important;
+  }
+
+  .ant-steps-item-icon {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    
+    .ant-steps-icon {
+      color: rgba(255, 255, 255, 0.4) !important;
+    }
+  }
+
+  .ant-steps-item-active .ant-steps-item-icon {
+    background: #00B0F0 !important;
+    border-color: #00B0F0 !important;
+    
+    .ant-steps-icon {
+      color: white !important;
+    }
+  }
+  
+  .ant-steps-item-finish .ant-steps-item-icon {
+    background: transparent !important;
+    border-color: #52c41a !important;
+    
+    .ant-steps-icon {
+      color: #52c41a !important;
+    }
   }
 `;
 
@@ -29,12 +75,17 @@ const FormSection = styled.div`
 `;
 
 const CardSection = styled.div`
-  width: 350px;
+  width: 520px;
   padding-top: 20px;
   z-index: 1;
+  position: sticky;
+  top: 100px;
+  height: fit-content;
   
-  @media (max-width: 900px) {
+  @media (max-width: 1000px) {
     width: 100%;
+    position: relative;
+    top: 0;
     order: -1;
   }
 `;
@@ -58,154 +109,177 @@ const WelcomeText = styled.div`
 
 const FormContainerStyled = styled.div`
   .ant-form-item-label > label {
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
   }
 
-  .ant-input {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 16px;
-    font-size: 16px;
-    height: 48px;
-    transition: all 0.3s ease;
-    background: white;
+  .ant-input, .ant-input-affix-wrapper, .ant-select-selector, .ant-picker, .ant-input-number {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    padding: 0 !important; /* Reset padding for wrapper */
+    font-size: 16px !important;
+    height: 56px !important;
+    width: 100% !important;
+    color: white !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex;
+    align-items: center;
 
-    &:focus, &:hover {
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    &:focus, &.ant-input-focused, &.ant-select-focused, &.ant-input-number-focused {
+      border-color: #00B0F0 !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 0 20px rgba(0, 176, 240, 0.15) !important;
     }
 
     &::placeholder {
-      color: #bfbfbf;
-      font-style: italic;
-    }
-  }
-
-  .ant-input-affix-wrapper {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 16px;
-    font-size: 16px;
-    height: 52px;
-    color: white;
-    transition: all 0.3s ease;
-
-    &:focus, &:hover {
-      border-color: white;
-      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.3) !important;
     }
 
-    .ant-input {
-      border: none;
-      box-shadow: none;
-      height: auto;
-      padding: 0;
-    }
-  }
-
-  .ant-select {
-    .ant-select-selector {
-      background: rgba(255, 255, 255, 0.05) !important;
-      border-radius: 14px !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      padding: 8px 12px !important;
-      font-size: 16px !important;
-      height: 52px !important;
+    /* Target internal input elements */
+    input {
+      background: transparent !important;
       color: white !important;
-      transition: all 0.3s ease !important;
+      height: 100% !important;
+      padding: 12px 20px !important;
+      width: 100% !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
 
-      &:focus, &:hover {
-        border-color: white !important;
-        background: rgba(255, 255, 255, 0.08) !important;
+    &.ant-input-number {
+      .ant-input-number-input-wrap {
+        height: 100%;
+        width: 100%;
       }
       
-      .ant-select-selection-item {
-          color: white !important;
-          display: flex;
-          align-items: center;
+      .ant-input-number-input {
+        padding: 12px 20px !important;
+        height: 54px !important; /* Slightly less than wrapper to account for border */
+      }
+
+      .ant-input-number-handler-wrap {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 0 16px 16px 0 !important;
+        width: 32px !important;
+        
+        .ant-input-number-handler {
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          color: rgba(255, 255, 255, 0.4) !important;
+          
+          &:hover {
+            color: #00B0F0 !important;
+          }
+        }
       }
     }
   }
 
-  .ant-picker {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 12px;
-    font-size: 16px;
-    height: 52px;
-    color: white;
-    width: 100%;
-
-    .ant-picker-input > input {
-        color: white;
-    }
-
-    &:focus, &:hover {
-      border-color: white;
-    }
-  }
-
-  .ant-input-number {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 16px;
-    height: 52px;
-    color: white;
-    width: 100%;
-
-    .ant-input-number-input {
-      height: 48px;
-      color: white;
-    }
-
-    &:focus, &:hover {
-      border-color: white;
-    }
+  .ant-select-selection-item {
+    color: white !important;
+    font-weight: 500;
   }
 
   .ant-radio-group {
+    display: flex;
+    gap: 12px;
     width: 100%;
     
     .ant-radio-button-wrapper {
-      height: 48px;
-      line-height: 48px;
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.7);
+      flex: 1;
+      height: 56px;
+      line-height: 54px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px !important;
+      color: rgba(255, 255, 255, 0.6);
       transition: all 0.3s ease;
       
+      &::before { display: none; }
+
       &:hover {
         color: white;
         border-color: rgba(255, 255, 255, 0.3);
       }
       
       &.ant-radio-button-wrapper-checked {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-        color: black;
-        font-weight: 600;
+        background: linear-gradient(135deg, #00B0F0 0%, #0070C0 100%);
+        border-color: #00B0F0;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+      }
+    }
+  }
+`;
+
+const FormCard = styled.div`
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 40px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
+`;
+
+const NavButtons = styled.div`
+  margin-top: 40px;
+  display: flex;
+  gap: 16px;
+
+  .ant-btn {
+    height: 56px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #00B0F0 0%, #0070C0 100%);
+      border: none;
+      box-shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(0, 176, 240, 0.3);
+      }
+    }
+
+    &.ant-btn-default {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
       }
     }
   }
 `;
 
 const SectionDivider = styled.div`
-  margin: 32px 0 24px 0;
-  padding-top: 24px;
+  margin: 40px 0 24px 0;
+  padding-top: 32px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   
   h3 {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 16px;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
   }
 `;
 
@@ -233,16 +307,6 @@ const CreditCardForm = () => {
             <Input placeholder="Enter your name as on PAN card" />
           </Form.Item>
 
-          <Form.Item
-            name="dob"
-            label="Birth Date (Optional)"
-            rules={[{ required: false }]}
-          >
-            <DatePicker
-              format="DD-MM-YYYY"
-              placeholder="Select your birth date"
-            />
-          </Form.Item>
 
           <Form.Item
             name="profession"
@@ -858,12 +922,12 @@ const CreditCardForm = () => {
           <p>Answer a few questions to get personalized recommendations</p>
         </WelcomeText>
 
-        <Card>
-          <Steps current={currentStep} style={{ marginBottom: 40 }}>
+        <FormCard>
+          <StepsStyled current={currentStep}>
             {steps.map(item => (
               <Step key={item.title} title={item.title} />
             ))}
-          </Steps>
+          </StepsStyled>
 
           <Form
             form={form}
@@ -873,25 +937,25 @@ const CreditCardForm = () => {
           >
             {steps[currentStep].content}
 
-            <div style={{ marginTop: 24 }}>
+            <NavButtons>
               {currentStep > 0 && (
-                <Button style={{ marginRight: 8 }} onClick={prev}>
+                <Button onClick={prev}>
                   Previous
                 </Button>
               )}
               {currentStep < steps.length - 1 && (
-                <Button type="primary" onClick={next}>
-                  Next
+                <Button type="primary" onClick={next} style={{ flex: 2 }}>
+                  Next Step
                 </Button>
               )}
               {currentStep === steps.length - 1 && (
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Get Recommendations
+                <Button type="primary" htmlType="submit" loading={loading} style={{ flex: 2 }}>
+                  Get My Recommendations
                 </Button>
               )}
-            </div>
+            </NavButtons>
           </Form>
-        </Card>
+        </FormCard>
 
         {recommendations.length > 0 && (
           <CreditCardRecommendations recommendations={recommendations} userPreferences={formData} />

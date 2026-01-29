@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Typography, Card, Table, Tag, Button, Upload, message, Modal, Space, Statistic, Row, Col, Progress, Alert, Spin } from 'antd';
+import { Layout, Typography, Card, Table, Tag, Button, Upload, message, Modal, Space, Statistic, Row, Col, Progress, Alert, Spin, Descriptions, Select, Input } from 'antd';
 import { InboxOutlined, FileTextOutlined, SafetyCertificateOutlined, AlertOutlined, CloudUploadOutlined, RobotOutlined, CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -25,6 +25,7 @@ const InsightCard = styled(Card)`
 `;
 
 const DocumentDashboard = () => {
+    const { user } = useSelector(state => state.user);
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -32,9 +33,24 @@ const DocumentDashboard = () => {
     const [insightModalVisible, setInsightModalVisible] = useState(false);
     const [insights, setInsights] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
+    const [uploadCategory, setUploadCategory] = useState('other');
 
-    // We don't need token selector for manual headers anymore
-    // const { token } = useSelector(state => state.user);
+    const categories = [
+        { value: 'bank_statements', label: 'Bank Statement' },
+        { value: 'tax_documents', label: 'Tax Document / ITR' },
+        { value: 'financial_statements', label: 'Financial Statement (P&L/BS)' },
+        { value: 'invoices', label: 'Invoice' },
+        { value: 'contracts', label: 'Contract/Agreement' },
+        { value: 'other', label: 'Other/General' }
+    ];
+
+    // Add professional categories if applicable
+    if (user?.role === 'ca' || user?.role === 'financial_planner') {
+        categories.unshift(
+            { value: 'professional_report', label: '📜 Professional Report' },
+            { value: 'assessment', label: '⚖️ Assessment' }
+        );
+    }
 
     useEffect(() => {
         fetchDocuments();
@@ -43,10 +59,6 @@ const DocumentDashboard = () => {
     const fetchDocuments = async () => {
         setLoading(true);
         try {
-            // For MVP, CAs and Analysts uploading documents for themselves (e.g. verification) 
-            // should seemingly use 'documents/user'.
-            // If they are viewing CLIENT documents, that would be a different dashboard (e.g. Pending Reviews).
-            // Since this is the "Document Dashboard" for the logged-in user:
             const response = await api.get('/documents/user');
             setDocuments(response.data.documents);
         } catch (error) {
@@ -63,22 +75,27 @@ const DocumentDashboard = () => {
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('category', uploadCategory); // Include selected category
 
         try {
             const response = await api.post('/documents/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: ({ total, loaded }) => {
                     onProgress({ percent: Math.round((loaded / total) * 100).toFixed(2) }, file);
                 },
             });
 
             onSuccess(response.data);
-            message.success(`${file.name} file uploaded successfully.`);
+            message.success(`${file.name} uploaded as ${uploadCategory.replace('_', ' ')}`);
             fetchDocuments(); // Refresh list immediately
         } catch (error) {
-            console.error('Upload failed:', error);
+            console.error('Upload failed details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             onError({ error });
-            message.error(`${file.name} file upload failed.`);
+            const errorMsg = error.response?.data?.error || error.message || 'File upload failed';
+            message.error(`${file.name}: ${errorMsg}`);
         }
     };
 
@@ -183,31 +200,37 @@ const DocumentDashboard = () => {
         }
     };
 
+    const [filterCategory, setFilterCategory] = useState('all');
+    const [searchText, setSearchText] = useState('');
+
+    const filteredDocuments = documents.filter(doc => {
+        const matchesCategory = filterCategory === 'all' || doc.category === filterCategory;
+        const matchesSearch = doc.fileName.toLowerCase().includes(searchText.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
+
     const columns = [
         {
-            title: 'Document Name',
+            title: 'Document Details',
             dataIndex: 'fileName',
             key: 'fileName',
             render: (text, record) => (
-                <Space>
-                    <FileTextOutlined />
-                    <Text style={{ color: 'white' }}>{text}</Text>
-                    {record.aiProcessingStatus === 'completed' && <Tag color="green">AI Analyzed</Tag>}
-                    {record.aiProcessingStatus === 'processing' && <Tag color="blue" icon={<SyncOutlined spin />}>Processing</Tag>}
+                <Space direction="vertical" size={0}>
+                    <Space>
+                        <FileTextOutlined style={{ color: '#00B0F0' }} />
+                        <Text style={{ color: 'white', fontWeight: 600 }}>{text}</Text>
+                        {record.aiProcessingStatus === 'completed' && <Tag color="green">AI Analyzed</Tag>}
+                    </Space>
+                    <Space style={{ marginTop: 4 }}>
+                        <Tag color={record.category.startsWith('professional') ? 'gold' : 'blue'} style={{ fontSize: '10px' }}>
+                            {record.category.replace('_', ' ').toUpperCase()}
+                        </Tag>
+                        <Text type="secondary" style={{ fontSize: '11px' }}>
+                            Uploaded {new Date(record.uploadedAt).toLocaleDateString()}
+                        </Text>
+                    </Space>
                 </Space>
             ),
-        },
-        {
-            title: 'Category',
-            dataIndex: 'category',
-            key: 'category',
-            render: text => <Tag>{text?.toUpperCase() || 'OTHER'}</Tag>
-        },
-        {
-            title: 'Uploaded At',
-            dataIndex: 'uploadedAt',
-            key: 'uploadedAt',
-            render: text => new Date(text).toLocaleDateString()
         },
         {
             title: 'Actions',
@@ -219,6 +242,7 @@ const DocumentDashboard = () => {
                         icon={<RobotOutlined />}
                         onClick={() => viewInsights(record)}
                         style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+                        disabled={record.category === 'professional_report' || record.category === 'assessment'}
                     >
                         Insights
                     </Button>
@@ -240,29 +264,70 @@ const DocumentDashboard = () => {
                 <Title level={2} style={{ color: 'white' }}>Financial Document Intelligence</Title>
                 <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>
                     Upload bank statements, ITRs, and GST returns. Our AI will extract, classify, and validate financial data instantly.
+                    {(user?.role === 'ca' || user?.role === 'financial_planner') && " Professionals can also upload reports and assessments."}
                 </Paragraph>
             </div>
 
             <Row gutter={24}>
                 <Col span={24}>
-                    <InsightCard title="Document Upload">
+                    <InsightCard title="Upload New Document">
+                        <div style={{ marginBottom: 20 }}>
+                            <Text style={{ color: 'white', display: 'block', marginBottom: 8 }}>Select Document Category:</Text>
+                            <Select
+                                value={uploadCategory}
+                                onChange={setUploadCategory}
+                                style={{ width: 300 }}
+                                dropdownStyle={{ background: '#1c1c1c' }}
+                            >
+                                {categories.map(cat => (
+                                    <Select.Option key={cat.value} value={cat.value}>
+                                        {cat.label}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </div>
                         <Dragger {...uploadProps} style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.1)' }}>
                             <p className="ant-upload-drag-icon">
                                 <InboxOutlined style={{ color: '#00B0F0' }} />
                             </p>
-                            <p className="ant-upload-text" style={{ color: 'white' }}>Click or drag file to this area to upload</p>
+                            <p className="ant-upload-text" style={{ color: 'white' }}>Click or drag file here</p>
                             <p className="ant-upload-hint" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                                Support for PDF, JPG, PNG. Securely encrypted and processed.
+                                Support for PDF, JPG, PNG. Category: <Tag color="blue">{uploadCategory.toUpperCase()}</Tag>
                             </p>
                         </Dragger>
                     </InsightCard>
                 </Col>
             </Row>
 
-            <InsightCard title="My Documents" bordered={false}>
+            <InsightCard
+                title="My Documents"
+                bordered={false}
+                extra={
+                    <Space size="middle">
+                        <Input.Search
+                            placeholder="Search by name..."
+                            onSearch={setSearchText}
+                            onChange={e => setSearchText(e.target.value)}
+                            style={{ width: 250 }}
+                            allowClear
+                        />
+                        <Select
+                            defaultValue="all"
+                            style={{ width: 180 }}
+                            onChange={setFilterCategory}
+                            dropdownStyle={{ background: '#1c1c1c' }}
+                        >
+                            <Select.Option value="all">All Categories</Select.Option>
+                            {categories.map(cat => (
+                                <Select.Option key={cat.value} value={cat.value}>{cat.label}</Select.Option>
+                            ))}
+                        </Select>
+                    </Space>
+                }
+            >
                 <Table
                     columns={columns}
-                    dataSource={documents}
+                    dataSource={filteredDocuments}
                     rowKey="id"
                     pagination={{ pageSize: 5 }}
                     loading={loading}
@@ -328,10 +393,34 @@ const DocumentDashboard = () => {
                             </Card>
                         )}
 
-                        <Card type="inner" title="Extracted Financial Data">
-                            <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 8, maxHeight: 300, overflow: 'auto' }}>
-                                {JSON.stringify(insights.extractedData, null, 2)}
-                            </pre>
+                        <Card type="inner" title="Extracted Financial Data" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                            <Descriptions column={2} bordered size="small" style={{ background: 'transparent' }}>
+                                {Object.entries(insights.extractedData || {}).map(([key, value]) => {
+                                    if (typeof value === 'object' && value !== null) return null;
+                                    return (
+                                        <Descriptions.Item key={key} label={<span style={{ color: 'rgba(255,255,255,0.6)' }}>{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>}>
+                                            <span style={{ color: 'white' }}>{value?.toString() || 'N/A'}</span>
+                                        </Descriptions.Item>
+                                    );
+                                })}
+                            </Descriptions>
+
+                            {insights.extractedData?.loanEmis && insights.extractedData.loanEmis.length > 0 && (
+                                <div style={{ marginTop: 16 }}>
+                                    <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>Detected Loan EMIs:</Text>
+                                    <Table
+                                        size="small"
+                                        pagination={false}
+                                        dataSource={insights.extractedData.loanEmis}
+                                        rowKey={(record, index) => index}
+                                        columns={[
+                                            { title: 'Amount', dataIndex: 'emiAmount', key: 'emiAmount', render: val => `₹${val}` },
+                                            { title: 'Date', dataIndex: 'emiDate', key: 'emiDate' },
+                                            { title: 'Institution', dataIndex: 'institution', key: 'institution' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
                         </Card>
 
                         {insights.suggestedFocus && (

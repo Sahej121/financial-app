@@ -21,8 +21,8 @@ const LogoWrapper = styled.div`
 const Logo = () => {
   return (
     <LogoWrapper>
-      <LogoImage 
-        src="/images/logo.svg"
+      <LogoImage
+        src="/logo_refined.svg"
         alt="CreditLeliya Logo"
       />
     </LogoWrapper>

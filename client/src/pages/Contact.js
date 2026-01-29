@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Form, Input, Button, Layout, message, Row, Col } from 'antd';
+import { Form, Input, Button, Layout, message, Row, Col } from 'antd';
 import styled from 'styled-components';
 import { MailOutlined, PhoneOutlined, EnvironmentOutlined, SendOutlined } from '@ant-design/icons';
 import useScrollReveal from '../hooks/useScrollReveal';
@@ -101,7 +101,7 @@ const StyledInput = styled(Input)`
   height: 56px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 16px;
   color: white;
   font-size: 1rem;
   transition: all 0.3s ease;
@@ -115,7 +115,7 @@ const StyledInput = styled(Input)`
 const StyledTextArea = styled(TextArea)`
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 16px;
   color: white;
   font-size: 1rem;
   transition: all 0.3s ease;
@@ -128,8 +128,8 @@ const StyledTextArea = styled(TextArea)`
 
 const SubmitButton = styled(Button)`
   height: 56px;
-  border-radius: 12px;
-  font-weight: 600;
+  border-radius: 16px;
+  font-weight: 700; // Increased weight for consistency
   font-size: 1.1rem;
   background: var(--primary-color);
   border: none;

@@ -32,7 +32,7 @@ const RegisterContainer = styled.div`
     position: absolute;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at center, rgba(114, 46, 209, 0.1) 0%, rgba(0,0,0,1) 70%);
+    background: radial-gradient(circle at center, rgba(0, 176, 240, 0.08) 0%, rgba(0,0,0,1) 70%);
     top: -50%;
     left: -50%;
   }
@@ -55,39 +55,103 @@ const StyledCard = styled(Card)`
 `;
 
 const StyledInput = styled(Input)`
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: white !important;
-  height: 50px;
-  border-radius: 12px;
+  height: 56px;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   
   &::placeholder { color: rgba(255, 255, 255, 0.3); }
-  &:hover, &:focus { border-color: #722ed1 !important; background: rgba(255, 255, 255, 0.08) !important; }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+  }
 `;
 
 const StyledInputPassword = styled(Input.Password)`
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px;
-  height: 50px;
+  border-radius: 16px;
+  height: 56px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
   input { background: transparent !important; color: white !important; }
-  &:hover, &:focus-within { border-color: #722ed1 !important; }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+  }
 `;
 
 const StyledButton = styled(Button)`
-  height: 50px;
-  border-radius: 12px;
-  font-weight: 600;
+  height: 56px;
+  border-radius: 16px;
+  font-weight: 700;
   font-size: 16px;
+  transition: all 0.3s ease;
+
+  &.ant-btn-primary {
+    background: linear-gradient(135deg, #00B0F0 0%, #0070C0 100%);
+    border: none;
+    box-shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(0, 176, 240, 0.3);
+    }
+  }
+
+  &.ant-btn-default {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
 `;
 
 const StyledSteps = styled(Steps)`
-  margin-bottom: 40px;
-  .ant-steps-item-process .ant-steps-item-icon { background: #722ed1; border-color: #722ed1; }
-  .ant-steps-item-finish .ant-steps-item-icon { border-color: #722ed1; color: #722ed1; }
-  .ant-steps-item-finish .ant-steps-item-tail::after { background-color: #722ed1 !important; }
-  .ant-steps-item-title { color: rgba(255, 255, 255, 0.8) !important; }
-  .ant-steps-item-description { color: rgba(255, 255, 255, 0.4) !important; }
+  margin-bottom: 48px;
+  
+  .ant-steps-item-process .ant-steps-item-icon { 
+    background: #00B0F0 !important; 
+    border-color: #00B0F0 !important; 
+  }
+  
+  .ant-steps-item-finish .ant-steps-item-icon { 
+    border-color: #00B0F0 !important; 
+    color: #00B0F0 !important; 
+  }
+  
+  .ant-steps-item-finish .ant-steps-item-tail::after { 
+    background-color: #00B0F0 !important; 
+  }
+  
+  .ant-steps-item-title { 
+    color: rgba(255, 255, 255, 0.6) !important; 
+    font-weight: 600 !important;
+  }
+  
+  .ant-steps-item-active .ant-steps-item-title {
+    color: white !important;
+  }
 `;
 
 const CARegister = () => {
@@ -208,21 +272,21 @@ const CARegister = () => {
 
         <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
           <Form.Item name="experience" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Years of Experience</Text>} rules={[{ required: true }]}>
-            <InputNumber min={0} max={50} style={{ width: '100%', borderRadius: '12px', height: '50px', paddingTop: '10px' }} />
+            <InputNumber min={0} max={50} style={{ width: '100%', borderRadius: '16px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
           </Form.Item>
           <Form.Item name="consultationFee" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Consultation Fee (₹)</Text>} rules={[{ required: true }]}>
-            <InputNumber min={500} max={10000} style={{ width: '100%', borderRadius: '12px', height: '50px', paddingTop: '10px' }} />
+            <InputNumber min={500} max={10000} style={{ width: '100%', borderRadius: '16px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
           </Form.Item>
           <Form.Item name="description" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Professional Description</Text>} rules={[{ required: true, max: 500 }]}>
-            <TextArea rows={4} style={{ borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <TextArea rows={4} style={{ borderRadius: '16px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px' }} />
           </Form.Item>
           <Form.Item name="qualifications" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Qualifications</Text>} rules={[{ required: true }]}>
-            <Select mode="multiple" size="large" style={{ width: '100%' }}>
+            <Select mode="multiple" size="large" style={{ width: '100%' }} dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
               {qualifications.map(qual => <Option key={qual} value={qual}>{qual}</Option>)}
             </Select>
           </Form.Item>
           <Form.Item name="languages" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Languages</Text>} rules={[{ required: true }]}>
-            <Select mode="multiple" size="large">
+            <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
               {languages.map(lang => <Option key={lang} value={lang}>{lang}</Option>)}
             </Select>
           </Form.Item>
@@ -268,10 +332,10 @@ const CARegister = () => {
           <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
             {currentStep > 0 && <StyledButton onClick={prev}>Previous</StyledButton>}
             {currentStep < steps.length - 1 &&
-              <StyledButton type="primary" onClick={next} style={{ background: '#722ed1', border: 'none' }}>Next</StyledButton>
+              <StyledButton type="primary" onClick={next}>Next Step</StyledButton>
             }
             {currentStep === steps.length - 1 &&
-              <StyledButton type="primary" htmlType="submit" loading={loading} style={{ background: '#722ed1', border: 'none' }}>Complete Registration</StyledButton>
+              <StyledButton type="primary" htmlType="submit" loading={loading}>Complete Registration</StyledButton>
             }
           </div>
         </Form>

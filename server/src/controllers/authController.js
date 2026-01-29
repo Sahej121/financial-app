@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const { User, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const validator = require('validator');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const zxcvbn = require('zxcvbn');
+const { validationResult } = require('express-validator');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -42,9 +46,22 @@ exports.auth = async (req, res, next) => {
 };
 
 exports.register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { name, email, password, role = 'user' } = req.body;
-    console.log('Register Payload:', JSON.stringify(req.body, null, 2));
+
+    // Password strength check
+    const strength = zxcvbn(password);
+    if (strength.score < 2) {
+      return res.status(400).json({
+        error: 'Password is too weak',
+        suggestions: strength.feedback.suggestions
+      });
+    }
 
     // Validate role is allowed
     const allowedRoles = ['user', 'premium', 'ca', 'financial_planner', 'admin'];
@@ -101,13 +118,13 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { email, password } = req.body;
-
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
 
     // Find user
     const user = await User.findOne({ where: { email } });
@@ -323,5 +340,73 @@ exports.updateSettings = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user = await User.findOne({ where: { [Op.or]: [{ googleId }, { email }] } });
+
+    if (!user) {
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        googleId,
+        role: 'user'
+      });
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    const jwtToken = generateToken(user);
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        picture
+      },
+      token: jwtToken
+    });
+  } catch (error) {
+    res.status(400).json({ error: 'Google authentication failed: ' + error.message });
+  }
+};
+
+exports.appleLogin = async (req, res) => {
+  try {
+    const { identityToken, user: appleUserData } = req.body;
+    const decodedToken = jwt.decode(identityToken);
+    const appleId = decodedToken.sub;
+    const email = decodedToken.email;
+
+    let user = await User.findOne({ where: { [Op.or]: [{ appleId }, { email }] } });
+
+    if (!user) {
+      user = await User.create({
+        name: appleUserData?.name?.firstName || email?.split('@')[0] || 'Apple User',
+        email,
+        appleId,
+        role: 'user'
+      });
+    } else if (!user.appleId) {
+      user.appleId = appleId;
+      await user.save();
+    }
+
+    const jwtToken = generateToken(user);
+    res.json({ user, token: jwtToken });
+  } catch (error) {
+    res.status(400).json({ error: 'Apple authentication failed: ' + error.message });
   }
 };

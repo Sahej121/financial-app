@@ -1,5 +1,6 @@
-const { Meeting, User, Document, DocumentInsight, ActivityLog } = require('../models');
+const { Meeting, User, Document, DocumentInsight, ActivityLog, FinancialPlanningSubmission } = require('../models');
 const { Op } = require('sequelize');
+const zoomService = require('../services/zoomService');
 
 // Get user's meetings (for clients)
 exports.getUserMeetings = async (req, res) => {
@@ -187,6 +188,10 @@ exports.getProfessionalMeetings = async (req, res) => {
           as: 'documents',
           attributes: ['id', 'fileName', 'uploadedAt', 'status'],
           through: { attributes: [] }
+        },
+        {
+          model: FinancialPlanningSubmission,
+          as: 'submission'
         }
       ],
       order: [['startsAt', 'ASC']]
@@ -492,28 +497,25 @@ exports.generateZoomLink = async (req, res) => {
       });
     }
 
-    // TODO: Integrate with Zoom API to create actual meeting
-    // For now, we'll create mock URLs
-    const zoomMeetingId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const baseUrl = `https://zoom.us/j/${zoomMeetingId}`;
+    // Use actual Zoom API to create meeting
+    const zoomDetails = await zoomService.createMeeting(
+      meeting.title || 'Financial Consultation',
+      meeting.startsAt.toISOString(),
+      Math.round((new Date(meeting.endsAt) - new Date(meeting.startsAt)) / 60000)
+    );
 
     const updateData = {
-      zoomMeetingId,
-      zoomJoinUrl: `${baseUrl}?pwd=example`,
-      zoomStartUrl: `${baseUrl}?role=1&pwd=example`,
-      zoomPassword: 'meetingPass123'
+      zoomMeetingId: zoomDetails.id.toString(),
+      zoomJoinUrl: zoomDetails.joinUrl,
+      zoomStartUrl: zoomDetails.startUrl,
+      zoomPassword: zoomDetails.password
     };
 
     await meeting.update(updateData);
 
     res.json({
       success: true,
-      zoomDetails: {
-        meetingId: zoomMeetingId,
-        joinUrl: updateData.zoomJoinUrl,
-        startUrl: updateData.zoomStartUrl,
-        password: updateData.zoomPassword
-      },
+      zoomDetails,
       message: 'Zoom meeting link generated successfully'
     });
   } catch (error) {

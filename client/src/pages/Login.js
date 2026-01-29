@@ -8,17 +8,79 @@ import AuthLayout from '../components/auth/AuthLayout';
 import styled from 'styled-components';
 
 // --- Styled Components for Form Elements ---
+const StyledInput = styled(Input)`
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  height: 56px;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::placeholder { color: rgba(255, 255, 255, 0.3); }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+  }
+`;
+
+const StyledInputPassword = styled(Input.Password)`
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px;
+  height: 56px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  input { background: transparent !important; color: white !important; }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+  }
+`;
+
+const StyledButton = styled(Button)`
+  height: 56px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &.ant-btn-primary {
+    background: linear-gradient(135deg, #00B0F0 0%, #0070C0 100%);
+    border: none;
+    box-shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(0, 176, 240, 0.3);
+    }
+  }
+`;
+
 const SOCIAL_BUTTON_STYLE = {
-  height: 50,
-  borderRadius: 12,
-  background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.15)',
+  height: 56,
+  borderRadius: 16,
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.1)',
   color: 'white',
-  fontWeight: 600,
+  fontWeight: 700,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 10,
+  gap: 12,
   width: '100%',
   transition: 'all 0.3s ease'
 };
@@ -60,15 +122,15 @@ const Login = () => {
         size="large"
       >
         <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
-          <Input
-            prefix={<UserOutlined style={{ color: 'rgba(255,255,255,1)' }} />}
+          <StyledInput
+            prefix={<UserOutlined style={{ color: '#00B0F0' }} />}
             placeholder="Email Address"
           />
         </Form.Item>
 
         <Form.Item name="password" rules={[{ required: true }]}>
-          <Input.Password
-            prefix={<LockOutlined style={{ color: 'rgba(255,255,255,1)' }} />}
+          <StyledInputPassword
+            prefix={<LockOutlined style={{ color: '#00B0F0' }} />}
             placeholder="Password"
           />
         </Form.Item>
@@ -80,9 +142,9 @@ const Login = () => {
         </div>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block size="large">
+          <StyledButton type="primary" htmlType="submit" loading={loading} block>
             Sign In
-          </Button>
+          </StyledButton>
         </Form.Item>
       </Form>
 

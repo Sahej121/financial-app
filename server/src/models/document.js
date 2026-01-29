@@ -47,7 +47,7 @@ module.exports = (sequelize) => {
     },
 
     category: {
-      type: DataTypes.ENUM('tax_documents', 'financial_statements', 'bank_statements', 'invoices', 'receipts', 'contracts', 'other'),
+      type: DataTypes.ENUM('tax_documents', 'financial_statements', 'bank_statements', 'invoices', 'receipts', 'contracts', 'professional_report', 'assessment', 'other'),
       allowNull: false,
       defaultValue: 'other'
     },

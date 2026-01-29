@@ -1,6 +1,7 @@
 const ocrService = require('./ocrService');
 const classificationService = require('./classificationService');
 const extractionService = require('./extractionService');
+const systemExtractionService = require('./systemExtractionService');
 const validationService = require('./validationService');
 const { Document, DocumentInsight, FinancialPlanningSubmission } = require('../models');
 const path = require('path');
@@ -35,7 +36,16 @@ class DocumentAnalysisService {
             const documentType = classification.type || document.category || 'other';
 
             // 4. Extraction
-            const analysis = await extractionService.extractFinancialData(text, documentType);
+            // Try lightweight system extraction first
+            let analysis = await systemExtractionService.extractBasicData(text, documentType);
+
+            // If system extraction is not enough, fallback to AI
+            if (!analysis.canSkipAI) {
+                console.log(`System extraction insufficient for ${documentId}, calling AI...`);
+                analysis = await extractionService.extractFinancialData(text, documentType);
+            } else {
+                console.log(`System extraction successful for ${documentId}, skipping AI API.`);
+            }
 
             // 5. Validation
             const validation = await validationService.validateData(analysis.extractedData, documentType);

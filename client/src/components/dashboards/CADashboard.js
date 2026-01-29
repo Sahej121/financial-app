@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Popover, Descriptions, Badge, Typography, Statistic, List, Divider, Card, DatePicker, Radio } from 'antd';
-import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, InfoCircleOutlined, WarningOutlined, SafetyCertificateOutlined, FileTextOutlined, CheckCircleOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Popover, Descriptions, Badge, Typography, Statistic, List, Divider, Card, DatePicker, Radio, Tabs } from 'antd';
+import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, InfoCircleOutlined, WarningOutlined, SafetyCertificateOutlined, FileTextOutlined, CheckCircleOutlined, PlusOutlined, MinusCircleOutlined, CloseOutlined, AuditOutlined } from '@ant-design/icons';
 import { Column, Pie } from '@ant-design/plots';
 import moment from 'moment';
 import api from '../../services/api';
+import gstApi from '../../services/gstApi';
 import ClientSnapshot from '../analyst/ClientSnapshot';
 import DocumentInsightsPanel from '../analyst/DocumentInsightsPanel';
+import ClientSubmissionReport from '../analyst/ClientSubmissionReport';
+import DocumentPreviewModal from '../analyst/DocumentPreviewModal';
+import CAVerificationPanel from '../gst/CAVerificationPanel';
 import {
   DashboardContainer,
   GridContainer,
@@ -19,9 +23,25 @@ import {
 const { Option } = Select;
 const { TextArea } = Input;
 const { Text, Title } = Typography;
+const { TabPane } = Tabs;
+
+// Helper to download CSV
+const downloadCSV = (content, fileName) => {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 const CADashboard = () => {
-  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState({
     meetings: [],
     documents: [],
@@ -32,6 +52,11 @@ const CADashboard = () => {
     },
     aiInsights: []
   });
+
+  const [pendingGSTFilings, setPendingGSTFilings] = useState([]);
+  const [gstLoading, setGstLoading] = useState(false);
+  const [verificationModalVisible, setVerificationModalVisible] = useState(false);
+  const [selectedFiling, setSelectedFiling] = useState(null);
 
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [selectedMeetingInsights, setSelectedMeetingInsights] = useState(null);
@@ -50,21 +75,33 @@ const CADashboard = () => {
   const [completionForm] = Form.useForm();
 
   const [activityLogs, setActivityLogs] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+
+  // Document Preview State
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (isRefresh = false) => {
     try {
-      setLoading(true);
-      const [meetingsRes, documentsRes, logsRes] = await Promise.all([
+      if (isRefresh) setRefreshing(true);
+      if (isRefresh) setRefreshing(true);
+
+      const [meetingsRes, documentsRes, logsRes, gstRes] = await Promise.all([
         api.get('/meetings/professional?role=ca&upcoming=true'),
         api.get('/documents/pending?role=ca'),
-        api.get('/activity-logs?limit=8')
+        api.get('/activity-logs?limit=8'),
+        gstApi.getPendingFilings().catch(err => {
+          console.error('Failed to load GST filings:', err);
+          return [];
+        })
       ]);
 
       setActivityLogs(logsRes.data.logs || []);
+      setPendingGSTFilings(gstRes || []);
 
       const meetings = meetingsRes.data.meetings || [];
       const documents = documentsRes.data.documents || [];
@@ -78,11 +115,46 @@ const CADashboard = () => {
           urgentAttention: documents.filter(d => d.priority === 'urgent').length
         }
       });
+
+      if (isRefresh) message.success('Dashboard synchronized with latest filings');
     } catch (error) {
       console.error('Error loading dashboard:', error);
       message.error('Failed to load dashboard data');
     } finally {
-      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleGSTReport = () => {
+    try {
+      message.loading({ content: 'Generating GST Compliance Report...', key: 'gst_report' });
+
+      let csv = 'GST COMPLIANCE & STATUS REPORT\n';
+      csv += `Generated by: CA Workspace | Date: ${moment().format('MMMM Do YYYY, h:mm:ss a')}\n\n`;
+
+      csv += '--- WORKLOAD SUMMARY ---\n';
+      csv += `Pending Document Reviews,${data.stats.pendingReviews}\n`;
+      csv += `Urgent Filings/Notices,${data.stats.urgentAttention}\n`;
+      csv += `Scheduled Consultations,${data.stats.scheduledMeetings}\n\n`;
+
+      csv += '--- DOCUMENT STATUS QUEUE ---\n';
+      csv += 'Client,Document Name,Type,Status,Priority,Date Received\n';
+      data.documents.forEach(doc => {
+        csv += `${doc.owner?.name || 'Unknown'},${doc.fileName},${doc.fileType},${doc.status},${doc.priority},${moment(doc.createdAt).format('YYYY-MM-DD')}\n`;
+      });
+      csv += '\n';
+
+      csv += '--- UPCOMING CONSULTATIONS ---\n';
+      csv += 'Client,Case ID,Objective,Time\n';
+      data.meetings.forEach(m => {
+        csv += `${m.client?.name || 'N/A'},${m.referenceNumber || 'N/A'},${m.engagementPurpose},${moment(m.startsAt).format('YYYY-MM-DD HH:mm')}\n`;
+      });
+
+      downloadCSV(csv, `GST_Compliance_Report_${moment().format('YYYYMMDD')}.csv`);
+      message.success({ content: 'GST Report exported successfully', key: 'gst_report' });
+    } catch (error) {
+      console.error('Export failed:', error);
+      message.error({ content: 'Failed to generate report', key: 'gst_report' });
     }
   };
 
@@ -90,8 +162,7 @@ const CADashboard = () => {
     try {
       setAiLoading(true);
       setAiModalVisible(true);
-      // Assuming submissionId is linked to meeting or requires specific lookup
-      // For now, fetching by submissionId if it exists in meeting
+      setSelectedSubmission(meeting.submission);
       const res = await api.get(`/documents/submission/${meeting.submissionId}/snapshot`);
       setSelectedMeetingInsights(res.data.insights || []);
     } catch (error) {
@@ -117,25 +188,9 @@ const CADashboard = () => {
     }
   };
 
-  const handleViewDocument = async (docId, fileName) => {
-    try {
-      message.loading({ content: 'Opening document...', key: 'docView' });
-      const response = await api.get(`/documents/${docId}/download`, {
-        responseType: 'blob'
-      });
-
-      const contentType = response.headers['content-type'] || 'application/pdf';
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
-
-      window.open(url, '_blank');
-      message.success({ content: 'Document opened', key: 'docView', duration: 2 });
-
-      // Auto-revoke after some time to manage memory
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-    } catch (error) {
-      console.error('View error:', error);
-      message.error({ content: 'Failed to open document', key: 'docView' });
-    }
+  const handlePreview = (record) => {
+    setPreviewDoc(record);
+    setPreviewVisible(true);
   };
 
   // --- Charts Config ---
@@ -376,8 +431,8 @@ const CADashboard = () => {
           <Button
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => handleViewDocument(record.id, record.fileName)}
-            style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+            onClick={() => handlePreview(record)}
+            style={{ background: 'rgba(0, 176, 240, 0.1)', color: '#00B0F0', borderColor: 'rgba(0, 176, 240, 0.3)' }}
           />
           <Button
             type="primary"
@@ -390,13 +445,83 @@ const CADashboard = () => {
     }
   ];
 
+  const gstFilingColumns = [
+    {
+      title: 'Client',
+      dataIndex: ['gstProfile', 'businessName'],
+      key: 'client',
+      render: (text, record) => (
+        <Space>
+          <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#52c41a' }} />
+          <span style={{ fontWeight: 600, color: 'white' }}>{text || record.gstProfile?.legalName}</span>
+        </Space>
+      )
+    },
+    {
+      title: 'Return Type',
+      dataIndex: 'returnType',
+      key: 'returnType',
+      render: (type) => <Tag color="blue">{type}</Tag>
+    },
+    {
+      title: 'Period',
+      dataIndex: 'period',
+      key: 'period',
+      render: (period) => {
+        const month = period.substring(0, 2);
+        const year = period.substring(2);
+        const date = moment(`${year}-${month}-01`);
+        return date.isValid() ? date.format('MMM YYYY') : period;
+      }
+    },
+    {
+      title: 'Due Date',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
+      render: (date) => (
+        <span style={{ color: moment(date).isBefore(moment()) ? '#ff4d4f' : 'inherit' }}>
+          {moment(date).format('DD MMM YYYY')}
+        </span>
+      )
+    },
+    {
+      title: 'Value',
+      dataIndex: 'totalInvoiceValue',
+      key: 'value',
+      render: (val) => `₹${Number(val).toLocaleString()}`
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          icon={<SafetyCertificateOutlined />}
+          size="small"
+          onClick={() => {
+            setSelectedFiling(record);
+            setVerificationModalVisible(true);
+          }}
+          style={{ background: '#52c41a', border: 'none' }}
+        >
+          Review & Sign
+        </Button>
+      )
+    }
+  ];
+
+
   return (
     <DashboardContainer>
       <Header>
         <h1>CA Workspace</h1>
         <div className="actions">
-          <ActionButton onClick={loadDashboardData}><ReloadOutlined /> Refresh</ActionButton>
-          <ActionButton>GST Report</ActionButton>
+          <ActionButton onClick={() => loadDashboardData(true)} disabled={refreshing}>
+            <ReloadOutlined spin={refreshing} /> {refreshing ? 'Refreshing...' : 'Refresh'}
+          </ActionButton>
+          <ActionButton onClick={handleGSTReport}>
+            <FileTextOutlined /> GST Report
+          </ActionButton>
         </div>
       </Header>
 
@@ -454,6 +579,21 @@ const CADashboard = () => {
               size="small"
               rowKey="id"
               scroll={{ x: 'max-content' }}
+            />
+          </TableContainer>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
+        <Col span={24}>
+          <TableContainer title={<span><AuditOutlined style={{ marginRight: 8, color: '#00B0F0' }} /> GST Filing Reviews</span>}>
+            <Table
+              dataSource={pendingGSTFilings}
+              columns={gstFilingColumns}
+              pagination={false}
+              size="small"
+              rowKey="id"
+              locale={{ emptyText: 'No pending filings for review' }}
             />
           </TableContainer>
         </Col>
@@ -530,21 +670,71 @@ const CADashboard = () => {
       </Modal>
 
       <Modal
-        title="AI Financial Intelligence - Call Prep"
+        title={
+          <Space>
+            <RobotOutlined style={{ color: '#00B0F0' }} />
+            <span>AI Financial Intelligence - Client Prep Kit</span>
+          </Space>
+        }
         visible={aiModalVisible}
         onCancel={() => setAiModalVisible(false)}
         footer={null}
-        width={1000}
-        bodyStyle={{ background: '#000', padding: '24px' }}
+        width={1100}
+        bodyStyle={{ background: '#000', padding: '24px', minHeight: '80vh' }}
+        closeIcon={<CloseOutlined style={{ color: 'white' }} />}
       >
-        <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
-        <div style={{ marginTop: '24px' }}>
-          <DocumentInsightsPanel
-            documents={selectedMeetingInsights?.map(i => i.document) || []}
-            insights={selectedMeetingInsights || []}
-          />
-        </div>
+        <Tabs defaultActiveKey="1" className="ai-prep-tabs">
+          <TabPane
+            tab={<span><RobotOutlined /> AI Snapshot</span>}
+            key="1"
+          >
+            <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
+            <div style={{ marginTop: '24px' }}>
+              <DocumentInsightsPanel
+                documents={selectedMeetingInsights?.map(i => i.document) || []}
+                insights={selectedMeetingInsights || []}
+              />
+            </div>
+          </TabPane>
+          <TabPane
+            tab={<span><FileTextOutlined /> Client Form Choices</span>}
+            key="2"
+          >
+            {selectedSubmission ? (
+              <ClientSubmissionReport submission={selectedSubmission} />
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center' }}>
+                <FileTextOutlined style={{ fontSize: '48px', color: 'rgba(255,255,255,0.2)', marginBottom: '16px' }} />
+                <p style={{ color: 'rgba(255,255,255,0.4)' }}>No form submission data found for this consultation.</p>
+              </div>
+            )}
+          </TabPane>
+        </Tabs>
+
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          .ai-prep-tabs .ant-tabs-nav::before {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+          }
+          .ai-prep-tabs .ant-tabs-tab {
+            color: rgba(255,255,255,0.6);
+          }
+          .ai-prep-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: #00B0F0 !important;
+          }
+          .ai-prep-tabs .ant-tabs-ink-bar {
+            background: #00B0F0;
+          }
+        `}} />
       </Modal>
+
+      <DocumentPreviewModal
+        visible={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        documentId={previewDoc?.id}
+        fileName={previewDoc?.fileName}
+        fileType={previewDoc?.fileType}
+      />
 
       <Modal
         title={
@@ -575,7 +765,9 @@ const CADashboard = () => {
                 </Text>
               </div>
               <Text strong style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>PRIMARY OBJECTIVE</Text>
-              <Title level={5} style={{ color: 'white', margin: 0 }}>{selectedBriefing.objective}</Title>
+              <Title level={5} style={{ color: 'white', margin: 0 }}>
+                {typeof selectedBriefing.objective === 'object' ? JSON.stringify(selectedBriefing.objective) : selectedBriefing.objective}
+              </Title>
             </div>
 
             <Row gutter={16} style={{ marginBottom: '20px' }}>
@@ -642,10 +834,10 @@ const CADashboard = () => {
               <Text strong style={{ color: '#52c41a', fontSize: '12px', display: 'block', marginBottom: '8px' }}>🚀 SUGGESTED CALL AGENDA</Text>
               <List
                 size="small"
-                dataSource={selectedBriefing.agenda}
+                dataSource={Array.isArray(selectedBriefing.agenda) ? selectedBriefing.agenda : []}
                 renderItem={(item, idx) => (
                   <List.Item style={{ border: 'none', padding: '4px 0', color: 'rgba(255,255,255,0.85)' }}>
-                    • {item}
+                    • {typeof item === 'object' ? JSON.stringify(item) : item}
                   </List.Item>
                 )}
               />
@@ -655,10 +847,10 @@ const CADashboard = () => {
               <Text strong style={{ color: '#00B0F0', fontSize: '12px', display: 'block', marginBottom: '8px' }}>🤖 AI-GENERATED DIAGNOSTIC QUESTIONS</Text>
               <List
                 size="small"
-                dataSource={selectedBriefing.diagnosticQuestions}
+                dataSource={Array.isArray(selectedBriefing.diagnosticQuestions) ? selectedBriefing.diagnosticQuestions : []}
                 renderItem={(item, idx) => (
-                  <List.Item style={{ border: 'none', padding: '4px 0', color: 'rgba(255,255,255,0.7)' }}>
-                    {idx + 1}. {item}
+                  <List.Item style={{ border: 'none', padding: '4px 0', color: 'rgba(255,255,255,0.85)' }}>
+                    ? {typeof item === 'object' ? JSON.stringify(item) : item}
                   </List.Item>
                 )}
               />
@@ -812,6 +1004,31 @@ const CADashboard = () => {
             Categorize Case & Close Consultation
           </Button>
         </Form>
+      </Modal>
+
+      <Modal
+        title={
+          <Space>
+            <SafetyCertificateOutlined style={{ color: '#52c41a' }} />
+            <span>Professional GST Filing Verification</span>
+          </Space>
+        }
+        visible={verificationModalVisible}
+        onCancel={() => setVerificationModalVisible(false)}
+        footer={null}
+        width={1000}
+        bodyStyle={{ background: '#141414', color: 'white', padding: 0 }}
+        destroyOnClose
+      >
+        {selectedFiling && (
+          <CAVerificationPanel
+            filing={selectedFiling}
+            onComplete={() => {
+              setVerificationModalVisible(false);
+              loadDashboardData(true);
+            }}
+          />
+        )}
       </Modal>
 
     </DashboardContainer>

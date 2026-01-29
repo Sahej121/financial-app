@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import styled from 'styled-components';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title } = Typography;
 
 const SnapshotCard = styled(Card)`
   background: rgba(20, 20, 20, 0.6);
@@ -36,11 +36,6 @@ const MetricCard = styled.div`
   height: 100%;
 `;
 
-const StyledTag = styled(Tag)`
-  border-radius: 6px;
-  padding: 2px 8px;
-  margin-right: 0;
-`;
 
 const ClientSnapshot = ({ insights, loading }) => {
     if (loading) return <Card loading={true} />;
@@ -119,7 +114,7 @@ const ClientSnapshot = ({ insights, loading }) => {
                             dataSource={allRedFlags}
                             renderItem={item => (
                                 <List.Item style={{ border: 'none', padding: '4px 0', color: 'rgba(255,255,255,0.8)' }}>
-                                    • {item}
+                                    • {typeof item === 'object' ? JSON.stringify(item) : item}
                                 </List.Item>
                             )}
                         />
@@ -133,7 +128,7 @@ const ClientSnapshot = ({ insights, loading }) => {
                             dataSource={allSuggestedFocus}
                             renderItem={item => (
                                 <List.Item style={{ border: 'none', padding: '4px 0', color: 'rgba(255,255,255,0.8)' }}>
-                                    • {item}
+                                    • {typeof item === 'object' ? JSON.stringify(item) : item}
                                 </List.Item>
                             )}
                         />

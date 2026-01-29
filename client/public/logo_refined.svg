@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Background (Transparent for dark theme compatibility) -->
+  <path d="M250 30L450 100V240C450 350 370 440 250 470C130 440 50 350 50 240V100L250 30Z" fill="rgba(255, 255, 255, 0.05)"/>
+  
+  <!-- Inner Border - App Primary Color (#00B0F0) -->
+  <path d="M250 50L420 110V235C420 330 350 410 250 435C150 410 80 330 80 235V110L250 50Z" fill="none" stroke="#00B0F0" stroke-width="6"/>
+  
+  <!-- Graph Line - App Primary Color (#00B0F0) -->
+  <path d="M150 300L200 250L250 320L300 220L350 180" stroke="#00B0F0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Graph Points - App Primary Color (#00B0F0) -->
+  <circle cx="150" cy="300" r="8" fill="#00B0F0"/>
+  <circle cx="200" cy="250" r="8" fill="#00B0F0"/>
+  <circle cx="250" cy="320" r="8" fill="#00B0F0"/>
+  <circle cx="300" cy="220" r="8" fill="#00B0F0"/>
+  <circle cx="350" cy="180" r="8" fill="#00B0F0"/>
+  
+  <!-- Text - White for contrast on dark theme -->
+  <text x="250" y="280" font-family="'Inter', sans-serif" font-size="48" font-weight="bold" fill="#00B0F0" text-anchor="middle">CreditLeliya</text>
+  <text x="250" y="320" font-family="'Inter', sans-serif" font-size="24" fill="#FFFFFF" text-anchor="middle">.COM</text>
+</svg>

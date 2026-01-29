@@ -5,13 +5,66 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import AuthLayout from '../components/auth/AuthLayout';
 
+import styled from 'styled-components';
+
 const { Title, Text } = Typography;
+
+const StyledInput = styled(Input)`
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  height: 56px;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::placeholder { color: rgba(255, 255, 255, 0.3); }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+  }
+`;
+
+const StyledButton = styled(Button)`
+  height: 56px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &.ant-btn-primary {
+    background: linear-gradient(135deg, #00B0F0 0%, #0070C0 100%);
+    border: none;
+    box-shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(0, 176, 240, 0.3);
+    }
+  }
+
+  &.ant-btn-default {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+`;
 
 const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   const onFinish = async (values) => {
     setError(null);
@@ -41,9 +94,9 @@ const ForgotPassword = () => {
             We've sent a password reset link to your email address. Please check your inbox.
           </Text>
           <Link to="/login">
-            <Button type="default" size="large" ghost style={{ borderRadius: '12px', height: '48px', width: '100%', borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}>
+            <StyledButton block style={{ borderColor: 'rgba(255,255,255,0.3)' }}>
               Back to Login
-            </Button>
+            </StyledButton>
           </Link>
         </div>
       ) : (
@@ -52,16 +105,16 @@ const ForgotPassword = () => {
 
           <Form onFinish={onFinish} layout="vertical" size="large">
             <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}>
-              <Input
-                prefix={<MailOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
+              <StyledInput
+                prefix={<MailOutlined style={{ color: '#00B0F0' }} />}
                 placeholder="Email Address"
               />
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} block size="large">
+              <StyledButton type="primary" htmlType="submit" loading={loading} block>
                 Send Reset Link
-              </Button>
+              </StyledButton>
             </Form.Item>
 
             <div style={{ textAlign: 'center', marginTop: 24 }}>

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Space, Dropdown, Avatar } from 'antd';
-import { HomeOutlined, BankOutlined, CreditCardOutlined, TeamOutlined, QuestionCircleOutlined, UserOutlined, LoginOutlined, DashboardOutlined, LogoutOutlined, SettingOutlined, SunOutlined, MoonOutlined, RocketOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, Space, Dropdown } from 'antd';
+import { HomeOutlined, BankOutlined, CreditCardOutlined, TeamOutlined, UserOutlined, DashboardOutlined, LogoutOutlined, SettingOutlined, RocketOutlined, FileTextOutlined, AuditOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/userSlice';
-import { useTheme } from '../../contexts/ThemeContext';
 import styled from 'styled-components';
 
 const { Header } = Layout;
@@ -108,20 +107,23 @@ const Navbar = () => {
   };
 
   const menuItems = [
-    { key: '/', icon: <HomeOutlined />, label: 'Home' },
-    ...(token && user ? [{ key: getDashboardPath(), icon: <DashboardOutlined />, label: 'Dashboard' }] : []),
-    { key: '/planning', icon: <BankOutlined />, label: 'Planning' },
-    { key: '/ca-selection', icon: <TeamOutlined />, label: 'Expert CA' },
-    { key: '/credit-card', icon: <CreditCardOutlined />, label: 'Cards' },
-    { key: '/documents', icon: <FileTextOutlined />, label: 'Docs AI' },
+    { key: '/', icon: <HomeOutlined style={{ color: '#00B0F0' }} />, label: 'Home' },
+    ...(token && user ? [
+      { key: getDashboardPath(), icon: <DashboardOutlined style={{ color: '#00B0F0' }} />, label: 'Dashboard' },
+      { key: '/documents', icon: <FileTextOutlined style={{ color: '#00B0F0' }} />, label: 'Docs AI' },
+      { key: '/gst', icon: <AuditOutlined style={{ color: '#00B0F0' }} />, label: 'GST Filing' }
+    ] : []),
+    { key: '/planning', icon: <BankOutlined style={{ color: '#00B0F0' }} />, label: 'Planning' },
+    { key: '/ca-selection', icon: <TeamOutlined style={{ color: '#00B0F0' }} />, label: 'Expert CA' },
+    { key: '/credit-card', icon: <CreditCardOutlined style={{ color: '#00B0F0' }} />, label: 'Cards' },
   ];
 
   const userMenu = (
     <Menu style={{ background: '#1c1c1c', border: '1px solid #333' }}>
-      <Menu.Item key="dashboard" icon={<DashboardOutlined />} onClick={() => navigate(getDashboardPath())}>
+      <Menu.Item key="dashboard" icon={<DashboardOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate(getDashboardPath())}>
         <span style={{ color: '#fff' }}>Dashboard</span>
       </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />} onClick={() => navigate('/settings')}>
+      <Menu.Item key="settings" icon={<SettingOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate('/settings')}>
         <span style={{ color: '#fff' }}>Settings</span>
       </Menu.Item>
       <Menu.Divider style={{ borderTop: '1px solid #333' }} />
@@ -134,17 +136,27 @@ const Navbar = () => {
   return (
     <StyledHeader>
       <LogoContainer to="/">
-        <RocketOutlined style={{ fontSize: 28, color: '#fff', marginRight: 12 }} />
+        <img src="/logo_refined.svg" alt="Logo" style={{ height: 48, marginRight: 12, objectFit: 'contain' }} />
         <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '1px' }}>CreditLeliya</span>
       </LogoContainer>
 
       <StyledMenu
         mode="horizontal"
         selectedKeys={[location.pathname]}
-        items={menuItems.map(item => ({
-          ...item,
-          label: <Link to={item.key}>{item.label}</Link>
-        }))}
+        items={menuItems
+          .filter(item => {
+            // Hide specific links for Analysts and CAs
+            if (user?.role === 'ca' || user?.role === 'financial_planner') {
+              if (['/planning', '/ca-selection'].includes(item.key)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .map(item => ({
+            ...item,
+            label: <Link to={item.key}>{item.label}</Link>
+          }))}
       />
 
       <Space>

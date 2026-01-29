@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Card, Row, Col } from 'antd';
+import { Card, Row } from 'antd';
 
 // Premium Theme Colors referencing CSS variables for consistency
 // ... rest of colors ...
@@ -187,26 +187,33 @@ export const Header = styled.div`
 `;
 
 export const ActionButton = styled.button`
-  background: rgba(255,255,255,0.05);
+  background: rgba(0, 176, 240, 0.08);
   color: white;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 10px 20px;
-  border-radius: 12px;
+  border: 1px solid rgba(0, 176, 240, 0.3);
+  padding: 10px 24px;
+  border-radius: 14px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
 
   &:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: white;
-    transform: translateY(-1px);
+    background: rgba(0, 176, 240, 0.15);
+    border-color: #00B0F0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 176, 240, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
   
   svg {
     font-size: 16px;
+    color: #00B0F0;
   }
 `;

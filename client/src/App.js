@@ -8,6 +8,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 import RoleBasedRoute from './components/auth/RoleBasedRoute';
 import UserDashboard from './components/dashboards/UserDashboard';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import CADashboard from './components/dashboards/CADashboard';
 import FinancialPlannerDashboard from './components/dashboards/FinancialPlannerDashboard';
 import Navbar from './components/common/Navbar';
@@ -28,6 +29,10 @@ import FinancialAnalystRegister from './components/auth/FinancialAnalystRegister
 import FinancialPlanning from './pages/FInancialPlanning';
 import CASelectionPage from './pages/CASelectionPage';
 import DocumentDashboard from './pages/DocumentDashboard';
+import GSTDashboard from './pages/GSTDashboard';
+import GSTInvoiceManagement from './pages/GSTInvoiceManagement';
+import GSTRFilingWizard from './pages/GSTRFilingWizard';
+import ITCReconciliation from './pages/ITCReconciliation';
 import styled from 'styled-components';
 
 const { Content } = Layout;
@@ -40,7 +45,7 @@ const StyledLayout = styled(Layout)`
 `;
 
 const MainContent = styled(Content)`
-padding - top: 64px; // Height of the fixed navbar
+  padding-top: 72px; // Height of the fixed navbar
 `;
 
 function App() {
@@ -102,88 +107,125 @@ function App() {
           }
         }}
       >
-        <Router>
-          <StyledLayout>
-            <Navbar />
-            <MainContent>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
-                <Route path="/ca-register" element={<CARegister />} />
-                <Route path="/analyst-register" element={<FinancialAnalystRegister />} />
+        <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || "google_client_id_placeholder"}>
+          <Router>
+            <StyledLayout>
+              <Navbar />
+              <MainContent>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+                  <Route path="/ca-register" element={<CARegister />} />
+                  <Route path="/analyst-register" element={<FinancialAnalystRegister />} />
 
-                {/* Public Routes */}
-                <Route path="/ca-selection" element={<CASelectionPage />} />
-                <Route path="/credit-card" element={<CreditCard />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/planning" element={<FinancialPlanning />} />
+                  {/* Public Routes */}
+                  <Route path="/ca-selection" element={<CASelectionPage />} />
+                  <Route path="/credit-card" element={<CreditCard />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/planning" element={<FinancialPlanning />} />
 
-                {/* Dashboard Routes - Role-based */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <RoleBasedRoute allowedRoles={['user', 'admin']}>
-                      <UserDashboard />
-                    </RoleBasedRoute>
-                  }
-                />
-                <Route
-                  path="/ca-dashboard"
-                  element={
-                    <RoleBasedRoute allowedRoles={['ca']}>
-                      <CADashboard />
-                    </RoleBasedRoute>
-                  }
-                />
-                <Route
-                  path="/financial-planner-dashboard"
-                  element={
-                    <RoleBasedRoute allowedRoles={['financial_planner']}>
-                      <FinancialPlannerDashboard />
-                    </RoleBasedRoute>
-                  }
-                />
+                  {/* Dashboard Routes - Role-based */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <RoleBasedRoute allowedRoles={['user', 'admin']}>
+                        <UserDashboard />
+                      </RoleBasedRoute>
+                    }
+                  />
+                  <Route
+                    path="/ca-dashboard"
+                    element={
+                      <RoleBasedRoute allowedRoles={['ca']}>
+                        <CADashboard />
+                      </RoleBasedRoute>
+                    }
+                  />
+                  <Route
+                    path="/financial-planner-dashboard"
+                    element={
+                      <RoleBasedRoute allowedRoles={['financial_planner']}>
+                        <FinancialPlannerDashboard />
+                      </RoleBasedRoute>
+                    }
+                  />
 
-                {/* Protected Routes */}
-                <Route
-                  path="/profile"
-                  element={
-                    <PrivateRoute>
-                      <Profile />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <PrivateRoute>
-                      <Settings />
-                    </PrivateRoute>
-                  }
-                />
+                  {/* Protected Routes */}
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute>
+                        <Profile />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <PrivateRoute>
+                        <Settings />
+                      </PrivateRoute>
+                    }
+                  />
 
-                {/* AI Document Dashboard */}
-                <Route
-                  path="/documents"
-                  element={
-                    <PrivateRoute>
-                      <DocumentDashboard />
-                    </PrivateRoute>
-                  }
-                />
-              </Routes>
-            </MainContent>
-          </StyledLayout>
-        </Router>
+                  {/* AI Document Dashboard */}
+                  <Route
+                    path="/documents"
+                    element={
+                      <PrivateRoute>
+                        <DocumentDashboard />
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* GST Routes */}
+                  <Route
+                    path="/gst"
+                    element={
+                      <PrivateRoute>
+                        <GSTDashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/gst/invoices"
+                    element={
+                      <PrivateRoute>
+                        <GSTInvoiceManagement />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/gst/filing"
+                    element={
+                      <PrivateRoute>
+                        <GSTRFilingWizard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/gst/itc"
+                    element={
+                      <PrivateRoute>
+                        <ITCReconciliation />
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              </MainContent>
+            </StyledLayout>
+          </Router>
+        </GoogleOAuthProvider>
       </ConfigProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
+

@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
-const apiLimiter = require('./middleware/rateLimiter');
+const { apiLimiter } = require('./middleware/rateLimiter');
 const { sequelize } = require('./models');
 require('dotenv').config();
 
@@ -22,13 +22,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 sequelize.authenticate()
   .then(() => {
     console.log('Connected to SQLite database');
-    return sequelize.sync({ force: false, alter: true }); // Create tables if they don't exist
+    // Using alter: false by default for SQLite stability in dev
+    // If schema changes are needed, run with DB_ALTER=true
+    const shouldAlter = process.env.DB_ALTER === 'true';
+    return sequelize.sync({ force: false, alter: shouldAlter });
   })
   .then(() => {
     console.log('Database synchronized');
   })
   .catch(err => {
     console.error('Database connection error:', err);
+    console.log('Attempting to start server anyway...');
   });
 
 // Routes

@@ -37,7 +37,11 @@ async function seedCreditCards() {
         benefits: card.benefits,
         ratings: card.ratings,
         welcomeOffer: card.welcomeOffer,
-        specialRemarks: card.special_remarks
+        specialRemarks: card.special_remarks,
+        applicationUrl: card.application_url || null,
+        hiddenCharges: card.hidden_charges || 'N/A',
+        minIncomeRequired: card.min_income || 0,
+        eligibility: card.eligibility || { min_age: 18, max_age: 70, credit_score_min: 600, employment_type: ["Salaried", "Self-employed"] }
       });
     }
 

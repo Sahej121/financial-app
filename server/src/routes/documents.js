@@ -24,7 +24,7 @@ router.post('/upload',
 // Get user's own documents (clients)
 router.get('/user',
   auth,
-  requireRole(['user', 'premium']),
+  requireRole(['user', 'premium', 'ca', 'financial_planner']),
   documentController.getUserDocuments
 );
 
@@ -59,5 +59,6 @@ router.get('/:documentId/download',
 router.post('/:documentId/analyze', auth, documentAnalysisController.analyzeDocument);
 router.get('/:documentId/insights', auth, documentAnalysisController.getDocumentInsights);
 router.get('/submission/:submissionId/snapshot', auth, documentAnalysisController.getSubmissionSnapshot);
+router.get('/submission/:submissionId/briefing', auth, documentAnalysisController.getSubmissionBriefing);
 
 module.exports = router;

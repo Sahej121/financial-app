@@ -1,11 +1,53 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message, Alert, Typography } from 'antd';
+import { Form, Input, Button, Alert, Typography } from 'antd';
 import { LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import AuthLayout from '../components/auth/AuthLayout';
 
+import styled from 'styled-components';
+
 const { Text } = Typography;
+
+const StyledInputPassword = styled(Input.Password)`
+background: rgba(255, 255, 255, 0.03)!important;
+border: 1px solid rgba(255, 255, 255, 0.1)!important;
+border - radius: 16px;
+height: 56px;
+transition: all 0.4s cubic - bezier(0.4, 0, 0.2, 1);
+
+  input { background: transparent!important; color: white!important; }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05)!important;
+    border - color: rgba(255, 255, 255, 0.2)!important;
+}
+  
+  &: focus - within {
+    background: rgba(255, 255, 255, 0.05)!important;
+    border - color: #00B0F0!important;
+    box - shadow: 0 0 20px rgba(0, 176, 240, 0.2)!important;
+}
+`;
+
+const StyledButton = styled(Button)`
+height: 56px;
+border - radius: 16px;
+font - weight: 700;
+font - size: 16px;
+transition: all 0.3s ease;
+
+  &.ant - btn - primary {
+    background: linear - gradient(135deg, #00B0F0 0 %, #0070C0 100 %);
+    border: none;
+    box - shadow: 0 10px 20px rgba(0, 176, 240, 0.2);
+
+    &:hover {
+        transform: translateY(-2px);
+        box - shadow: 0 15px 30px rgba(0, 176, 240, 0.3);
+    }
+}
+`;
 
 const ResetPassword = () => {
     const [loading, setLoading] = useState(false);
@@ -18,7 +60,7 @@ const ResetPassword = () => {
         setError(null);
         setLoading(true);
         try {
-            await axios.put(`/api/auth/reset-password/${resetToken}`, { password: values.password });
+            await axios.put(`/ api / auth / reset - password / ${resetToken} `, { password: values.password });
             setSuccess(true);
             setTimeout(() => navigate('/login'), 3000);
         } catch (err) {
@@ -54,8 +96,8 @@ const ResetPassword = () => {
                                 { min: 6, message: 'Password must be at least 6 characters!' }
                             ]}
                         >
-                            <Input.Password
-                                prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
+                            <StyledInputPassword
+                                prefix={<LockOutlined style={{ color: '#00B0F0' }} />}
                                 placeholder="New Password"
                             />
                         </Form.Item>
@@ -75,16 +117,16 @@ const ResetPassword = () => {
                                 }),
                             ]}
                         >
-                            <Input.Password
-                                prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
+                            <StyledInputPassword
+                                prefix={<LockOutlined style={{ color: '#00B0F0' }} />}
                                 placeholder="Confirm New Password"
                             />
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading} block size="large">
+                            <StyledButton type="primary" htmlType="submit" loading={loading} block>
                                 Reset Password
-                            </Button>
+                            </StyledButton>
                         </Form.Item>
                     </Form>
                 </>

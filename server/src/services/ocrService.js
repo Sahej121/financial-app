@@ -1,4 +1,4 @@
-const { PDFParse } = require('pdf-parse');
+const pdf = require('pdf-parse');
 const Tesseract = require('tesseract.js');
 const fs = require('fs');
 
@@ -29,9 +29,8 @@ exports.extractText = async (filePath, mimeType) => {
 
 async function extractTextFromPDF(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
-    const parser = new PDFParse({ data: dataBuffer });
     try {
-        const result = await parser.getText();
+        const result = await pdf(dataBuffer);
 
         // If result returns very little text, it might be a scanned PDF
         if (result.text.trim().length < 50) {
@@ -50,9 +49,6 @@ async function extractTextFromPDF(filePath) {
     } catch (error) {
         console.error('PDF extraction error:', error);
         throw new Error('Failed to parse PDF content');
-    } finally {
-        // Free memory - important in v2
-        await parser.destroy();
     }
 }
 
