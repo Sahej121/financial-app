@@ -9,6 +9,8 @@
     "seed": "node src/seeds/seedCreditCards.js"
   },
   "dependencies": {
+    "@sentry/node": "^10.38.0",
+    "@sentry/profiling-node": "^10.38.0",
     "apple-auth": "^1.0.9",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.8.2",
@@ -35,11 +37,15 @@
     "passport-google-oauth20": "^2.0.0",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.16.0",
+    "pg": "^8.18.0",
+    "pg-hstore": "^2.3.4",
     "razorpay": "^2.9.6",
+    "redis": "^5.10.0",
     "sequelize": "^6.32.0",
     "sqlite3": "^5.1.7",
     "tesseract.js": "^7.0.0",
     "validator": "^13.9.0",
+    "winston": "^3.19.0",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {

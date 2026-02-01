@@ -199,33 +199,33 @@ function App() {
                   <Route
                     path="/gst"
                     element={
-                      <PrivateRoute>
+                      <RoleBasedRoute allowedRoles={['ca']}>
                         <GSTDashboard />
-                      </PrivateRoute>
+                      </RoleBasedRoute>
                     }
                   />
                   <Route
                     path="/gst/invoices"
                     element={
-                      <PrivateRoute>
+                      <RoleBasedRoute allowedRoles={['ca']}>
                         <GSTInvoiceManagement />
-                      </PrivateRoute>
+                      </RoleBasedRoute>
                     }
                   />
                   <Route
                     path="/gst/filing"
                     element={
-                      <PrivateRoute>
+                      <RoleBasedRoute allowedRoles={['ca']}>
                         <GSTRFilingWizard />
-                      </PrivateRoute>
+                      </RoleBasedRoute>
                     }
                   />
                   <Route
                     path="/gst/itc"
                     element={
-                      <PrivateRoute>
+                      <RoleBasedRoute allowedRoles={['ca']}>
                         <ITCReconciliation />
-                      </PrivateRoute>
+                      </RoleBasedRoute>
                     }
                   />
                 </Routes>

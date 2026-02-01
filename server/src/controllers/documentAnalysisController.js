@@ -1,4 +1,5 @@
 const documentAnalysisService = require('../services/documentAnalysisService');
+const decisionPackService = require('../services/decisionPackService');
 const briefingService = require('../services/briefingService');
 const { Document, DocumentInsight } = require('../models');
 
@@ -74,9 +75,19 @@ exports.getSubmissionSnapshot = async (req, res) => {
             include: [{ model: Document, as: 'document' }]
         });
 
+        // Also fetch the Decision Pack (Form-based intelligence)
+        let decisionPack = null;
+        try {
+            // We use getPack which handles generation if needed/missing
+            decisionPack = await decisionPackService.getPack(submissionId);
+        } catch (err) {
+            console.error('Failed to fetch decision pack for snapshot:', err.message);
+        }
+
         res.json({
             success: true,
-            insights
+            insights,
+            decisionPack
         });
     } catch (error) {
         console.error('Get snapshot error:', error);

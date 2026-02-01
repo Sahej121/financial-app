@@ -10,6 +10,7 @@ const {
   Meeting,
   Document
 } = require('../models');
+const decisionPackService = require('../services/decisionPackService');
 const { Op } = require('sequelize');
 
 // Submit financial planning form
@@ -264,6 +265,11 @@ exports.submitFinancialPlan = async (req, res) => {
         clientNotes: `Risk Score: ${riskScore}.`
       }).catch(err => console.error('Auto-meeting creation error:', err));
     }
+
+    // Trigger AI Decision Pack Generation (Async)
+    decisionPackService.generatePack(submission.id)
+      .then(pack => console.log(`Decision Pack generated for submission ${submission.id}`))
+      .catch(err => console.error(`Decision Pack generation failed for ${submission.id}:`, err));
 
     res.status(201).json({
       success: true,

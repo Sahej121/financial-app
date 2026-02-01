@@ -1,10 +1,12 @@
+const logger = require('../utils/logger');
+
 /**
  * Validation & Normalization Service
  * Cross-verifies extracted data and calculates confidence scores
  */
 
 exports.validateData = async (extractedData, documentType) => {
-    console.log(`Validating data for ${documentType}`);
+    logger.info('Validating data', { documentType });
 
     const validation = {
         isValid: true,

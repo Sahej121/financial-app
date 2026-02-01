@@ -110,7 +110,6 @@ const Navbar = () => {
     { key: '/', icon: <HomeOutlined style={{ color: '#00B0F0' }} />, label: 'Home' },
     ...(token && user ? [
       { key: getDashboardPath(), icon: <DashboardOutlined style={{ color: '#00B0F0' }} />, label: 'Dashboard' },
-      { key: '/documents', icon: <FileTextOutlined style={{ color: '#00B0F0' }} />, label: 'Docs AI' },
       { key: '/wealth-monitor', icon: <RocketOutlined style={{ color: '#00B0F0' }} />, label: 'Wealth Monitor' },
       { key: '/gst', icon: <AuditOutlined style={{ color: '#00B0F0' }} />, label: 'GST Filing' }
     ] : []),
@@ -146,6 +145,9 @@ const Navbar = () => {
         selectedKeys={[location.pathname]}
         items={menuItems
           .filter(item => {
+            if (item.key === '/gst' && user?.role !== 'ca') {
+              return false;
+            }
             // Hide specific links for Analysts and CAs
             if (user?.role === 'ca' || user?.role === 'financial_planner') {
               if (['/planning', '/ca-selection'].includes(item.key)) {

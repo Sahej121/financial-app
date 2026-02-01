@@ -1,13 +1,14 @@
-const { PDFParse } = require('pdf-parse');
+const pdf = require('pdf-parse');
 const Tesseract = require('tesseract.js');
 const fs = require('fs');
+const logger = require('../utils/logger');
 
 /**
  * OCR Service
  * Handles text extraction from documents (PDF, Images)
  */
 exports.extractText = async (filePath, mimeType) => {
-    console.log(`Starting OCR for ${filePath} (${mimeType})`);
+    logger.info('Starting OCR', { filePath, mimeType });
 
     try {
         if (mimeType === 'application/pdf') {
@@ -22,7 +23,7 @@ exports.extractText = async (filePath, mimeType) => {
             };
         }
     } catch (error) {
-        console.error('OCR Service Error:', error);
+        logger.error('OCR Service Error', { error: error.message, filePath });
         throw error;
     }
 };
@@ -30,12 +31,11 @@ exports.extractText = async (filePath, mimeType) => {
 async function extractTextFromPDF(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
     try {
-        const parser = new PDFParse({ data: dataBuffer });
-        const result = await parser.getText();
+        const result = await pdf(dataBuffer);
 
         // If result returns very little text, it might be a scanned PDF
         if (result.text.trim().length < 50) {
-            console.log('PDF seems to be scanned, falling back to OCR (not fully implemented)');
+            logger.warn('PDF seems to be scanned, falling back to OCR (not fully implemented)', { filePath });
             // In a real implementation: convert PDF to images -> Tesseract
             return {
                 text: "[SCANNED PDF DETECTED] - Text extraction requires OCR pipeline.",

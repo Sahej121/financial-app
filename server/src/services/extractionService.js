@@ -1,5 +1,8 @@
 const { OpenAI } = require('openai');
 const Groq = require('groq-sdk');
+const logger = require('../utils/logger');
+const systemExtractionService = require('./systemExtractionService');
+const { DocumentInsight, FinancialPlanningSubmission, User } = require('../models');
 
 /**
  * Multi-Provider Financial Data Extraction Service
@@ -257,36 +260,49 @@ function localHeuristicParse(text, documentType) {
 }
 
 /**
- * Main extraction function
+ * Main extraction function - Gated by Confidence
  */
 exports.extractFinancialData = async (text, documentType) => {
-    console.log(`[ExtractionService] Starting extraction for document type: ${documentType}`);
+    logger.info('Starting extraction', { documentType });
 
-    // 1. Try Local Heuristic Parse First
+    // 1. Try Local Heuristic Parse First (Deterministic Core)
     const heuristicResult = localHeuristicParse(text, documentType);
-    console.log(`[ExtractionService] Heuristic confidence score: ${heuristicResult.confidenceScore}`);
+    logger.info('Heuristic confidence score', { score: heuristicResult.confidenceScore });
 
-    // If confidence is high enough, return immediately
-    if (heuristicResult.confidenceScore >= 0.7) {
-        console.log('[ExtractionService] Local heuristic extraction sufficient. Skipping AI.');
+    // GATE 1: High Confidence (>0.85) -> FULLY DETERMINISTIC, NO LLM
+    if (heuristicResult.confidenceScore >= 0.85) {
+        logger.info('DETERMINISTIC HIGH CONFIDENCE: Skipping LLM (Authority Layer 1)');
         heuristicResult._meta = {
             provider: 'local_heuristic',
             analyzedAt: new Date().toISOString(),
-            documentType
+            documentType,
+            gating: 'High confidence bypass (Authority: 1)'
         };
         return heuristicResult;
     }
 
+    // GATE 2: Low/Critical Uncertainty (<0.40) -> ANALYST ONLY, NO LLM
+    if (heuristicResult.confidenceScore < 0.40) {
+        console.log('[ExtractionService] LOW CONFIDENCE: Escalating directly to analyst. LLM PROHIBITED.');
+        const mock = getMockAnalysis(documentType);
+        mock.confidenceScore = heuristicResult.confidenceScore;
+        mock.summary = "ESCALATED TO ANALYST: Confidence below 0.40. LLM usage blocked for safety.";
+        mock._meta = {
+            provider: 'none',
+            analyzedAt: new Date().toISOString(),
+            gating: 'Low confidence escalation (Analyst required)'
+        };
+        return mock;
+    }
+
+    // GATE 3: Medium Confidence (0.40 - 0.85) -> LIMITED LLM for clarification/explanation
     const provider = getActiveProvider();
-    console.log(`[ExtractionService] Heuristic insufficient. Using provider: ${provider}`);
+    console.log(`[ExtractionService] MEDIUM CONFIDENCE range: Using ${provider} for read-only UX assistance.`);
 
     if (provider === 'mock') {
-        console.warn('[ExtractionService] No AI provider configured. Returning combined result.');
         const mock = getMockAnalysis(documentType);
-        // Merge heuristic findings into mock if they exist
         if (heuristicResult.confidenceScore > 0) {
             mock.extractedData = { ...mock.extractedData, ...heuristicResult.extractedData };
-            mock._meta.heuristicFallback = true;
         }
         return mock;
     }
@@ -297,51 +313,23 @@ exports.extractFinancialData = async (text, documentType) => {
         let result;
         if (provider === 'groq') {
             result = await callGroq(prompt);
-            console.log('[ExtractionService] Groq analysis completed successfully');
         } else {
             result = await callOpenAI(prompt);
-            console.log('[ExtractionService] OpenAI analysis completed successfully');
         }
 
-        // Merge heuristic findings if AI missed something or to validate
-        if (heuristicResult.confidenceScore > 0.4) {
-            // Keep AI as source of truth but flag heuristic agreement/disagreement if needed
-            // For now, just ensure we didn't lose heuristic info if AI failed to find it
-            result._heuristicMetadata = heuristicResult.extractedData;
-        }
-
-        // Add metadata
+        // Add Gating Metadata and ensure confidence reflects deterministic inputs
         result._meta = {
             provider,
             analyzedAt: new Date().toISOString(),
             documentType,
-            heuristicConfidence: heuristicResult.confidenceScore
+            heuristicConfidence: heuristicResult.confidenceScore,
+            gating: heuristicResult.confidenceScore >= 0.65 ? 'Limited LLM Explanation' : 'Analyst Required - Summarization only'
         };
 
         return result;
     } catch (error) {
         console.error(`[ExtractionService] ${provider} API error:`, error.message);
-
-        // Try fallback to other provider
-        if (provider === 'groq' && getOpenAIClient()) {
-            console.log('[ExtractionService] Falling back to OpenAI...');
-            try {
-                const result = await callOpenAI(prompt);
-                result._meta = { provider: 'openai_fallback', analyzedAt: new Date().toISOString() };
-                return result;
-            } catch (fallbackError) {
-                console.error('[ExtractionService] OpenAI fallback also failed:', fallbackError.message);
-            }
-        }
-
-        // Return heuristic + mock as last resort
-        console.warn('[ExtractionService] All providers failed. Returning heuristic + mock.');
-        const mock = getMockAnalysis(documentType);
-        if (heuristicResult.confidenceScore > 0) {
-            mock.extractedData = { ...mock.extractedData, ...heuristicResult.extractedData };
-            mock.summary = `(Local Extraction) ${heuristicResult.summary} | AI Fallback failed.`;
-        }
-        return mock;
+        return heuristicResult;
     }
 };
 

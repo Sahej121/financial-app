@@ -35,8 +35,7 @@ module.exports = (sequelize) => {
 
     assignedRole: {
       type: DataTypes.ENUM('ca', 'financial_planner'),
-      allowNull: true,
-      comment: 'Role of the assigned professional'
+      allowNull: true
     },
 
     // Document status and review

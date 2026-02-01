@@ -1,0 +1,14 @@
+2026-02-02 03:03:36 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769981616489-bs_2025.pdf"}}
+2026-02-02 03:03:36 [error] : Analysis failed {"metadata":{"documentId":19,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:03:36 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769981616501-Computation_2024-25.pdf"}}
+2026-02-02 03:03:36 [error] : Analysis failed {"metadata":{"documentId":21,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:03:36 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769981616499-DtlStatement_04122025042358.pdf"}}
+2026-02-02 03:03:36 [error] : Analysis failed {"metadata":{"documentId":20,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:06:11 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769981771724-Computation_2024-25.pdf"}}
+2026-02-02 03:06:11 [error] : Analysis failed {"metadata":{"documentId":22,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:14:19 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769982259498-Computation_2024-25.pdf"}}
+2026-02-02 03:14:19 [error] : Analysis failed {"metadata":{"documentId":23,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:14:19 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769982259521-DtlStatement_04122025042358.pdf"}}
+2026-02-02 03:14:19 [error] : Analysis failed {"metadata":{"documentId":24,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:14:19 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769982259530-bs_2025.pdf"}}
+2026-02-02 03:14:19 [error] : Analysis failed {"metadata":{"documentId":25,"error":"Failed to parse PDF content: pdf is not a function"}}

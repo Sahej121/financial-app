@@ -35,7 +35,7 @@ import {
 } from '@ant-design/icons';
 import styled, { keyframes } from 'styled-components';
 import moment from 'moment';
-import { DecisionReadinessCard } from '../components/moat';
+import { DecisionReadinessCard, DecisionPackViewer } from '../components/moat';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -219,6 +219,9 @@ const FinancialPlanning = () => {
   const [scores, setScores] = useState(null);
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [isProcessingInsights, setIsProcessingInsights] = useState(false);
+  const [packData, setPackData] = useState(null);
+  const [packModalVisible, setPackModalVisible] = useState(false);
+  const [fetchingPack, setFetchingPack] = useState(false);
 
   // Restore state logic
   useEffect(() => {
@@ -344,7 +347,10 @@ const FinancialPlanning = () => {
           <Upload.Dragger
             multiple
             name="file"
-            action={`${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/documents/upload`}
+            action="/api/documents/upload"
+            data={{
+              category: planningPurpose === 'business_expansion' ? 'financial_statements' : 'bank_statements'
+            }}
             headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
             onChange={(info) => {
               if (info.file.status === 'done') {
@@ -366,32 +372,72 @@ const FinancialPlanning = () => {
 
   const investmentSteps = [
     {
-      title: 'Goals',
+      title: 'Goals & Profile',
       content: (
         <FormSection>
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item name="targetAmount" label={<span style={{ color: 'white' }}>Target Amount</span>} rules={[{ required: true }]}>
+              <Form.Item name="monthlyIncome" label={<span style={{ color: 'white' }}>Monthly Income</span>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 1,00,00,000" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="achievementTimeline" label={<span style={{ color: 'white' }}>Time Horizon</span>} rules={[{ required: true }]}>
-                <Select size="large" placeholder="Select timeline">
-                  <Option value="1_3_years">Short (1-3 Years)</Option>
-                  <Option value="3_5_years">Medium (3-5 Years)</Option>
-                  <Option value="5_10_years">Long (5-10 Years)</Option>
-                  <Option value="10_plus_years">Retirement (10+ Years)</Option>
+              <Form.Item name="monthlySavings" label={<span style={{ color: 'white' }}>Monthly Savings</span>} rules={[{ required: true }]}>
+                <StyledInput prefix="₹" placeholder="e.g. 30,000" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="incomeStability" label={<span style={{ color: 'white' }}>Income Stability</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="very_stable">Very Stable</Option>
+                  <Option value="stable">Stable</Option>
+                  <Option value="variable">Variable</Option>
                 </Select>
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item name="riskPreference" label={<span style={{ color: 'white' }}>Risk Tolerance</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="stability">Conservative (Stability)</Option>
+                  <Option value="balanced">Balanced</Option>
+                  <Option value="aggressive">Aggressive (High Risk)</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="investmentExperience" label={<span style={{ color: 'white' }}>Experience</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="none">No Experience</Option>
+                  <Option value="beginner">Beginner</Option>
+                  <Option value="experienced">Experienced</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="achievementTimeline" label={<span style={{ color: 'white' }}>Time Horizon</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="1_3_years">1-3 Years</Option>
+                  <Option value="3_7_years">3-7 Years</Option>
+                  <Option value="over_7_years">7+ Years</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="hasHealthInsurance" label={<span style={{ color: 'white' }}>Health Insurance?</span>} valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="hasLifeInsurance" label={<span style={{ color: 'white' }}>Life Insurance?</span>} valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
             <Col span={24}>
-              <Form.Item name="incomeType" label={<span style={{ color: 'white' }}>Source of Funds</span>} rules={[{ required: true }]}>
-                <Select size="large" placeholder="Income Source">
-                  <Option value="salary">Salary</Option>
-                  <Option value="business">Business Income</Option>
-                  <Option value="inheritance">Inheritance</Option>
-                  <Option value="savings">Savings</Option>
+              <Form.Item name="successPriority" label={<span style={{ color: 'white' }}>What is most important?</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="peace_of_mind">Capital Protection (Peace of Mind)</Option>
+                  <Option value="maximizing_returns">High Growth (Max Returns)</Option>
+                  <Option value="predictable_income">Regular Income</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -409,7 +455,7 @@ const FinancialPlanning = () => {
         <FormSection>
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item name="businessType" label={<span style={{ color: 'white' }}>Business Type</span>} rules={[{ required: true }]}>
+              <Form.Item name="businessType" label={<span style={{ color: 'white' }}>Business Structure</span>} rules={[{ required: true }]}>
                 <Select size="large">
                   <Option value="sole_proprietor">Sole Proprietorship</Option>
                   <Option value="partnership">Partnership</Option>
@@ -418,8 +464,44 @@ const FinancialPlanning = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
+              <Form.Item name="industryType" label={<span style={{ color: 'white' }}>Industry</span>} rules={[{ required: true }]}>
+                <StyledInput placeholder="e.g. Retail, Tech, Mfg" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
               <Form.Item name="annualRevenue" label={<span style={{ color: 'white' }}>Annual Revenue</span>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 50,00,000" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="profitMargin" label={<span style={{ color: 'white' }}>Profit Margin (%)</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="30+">30% +</Option>
+                  <Option value="15-30">15-30%</Option>
+                  <Option value="5-15">5-15%</Option>
+                  <Option value="0-5">0-5%</Option>
+                  <Option value="negative">Negative</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="cashReserves" label={<span style={{ color: 'white' }}>Cash Reserves (Months)</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="6+">6 Months +</Option>
+                  <Option value="3-6">3-6 Months</Option>
+                  <Option value="1-3">1-3 Months</Option>
+                  <Option value="<1">Less than 1 Month</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="employeeCount" label={<span style={{ color: 'white' }}>Employee Count</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="1-10">1-10</Option>
+                  <Option value="11-50">11-50</Option>
+                  <Option value="51-200">51-200</Option>
+                  <Option value="200+">200+</Option>
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -434,6 +516,15 @@ const FinancialPlanning = () => {
             <Col span={12}>
               <Form.Item name="fundingRequired" label={<span style={{ color: 'white' }}>Funding Required</span>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 25,00,000" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="expansionTimeline" label={<span style={{ color: 'white' }}>Expansion Timeline</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="immediate">Immediate (0-3 Months)</Option>
+                  <Option value="short_term">Short Term (3-6 Months)</Option>
+                  <Option value="planned">Planned (6+ Months)</Option>
+                </Select>
               </Form.Item>
             </Col>
           </Row>
@@ -459,6 +550,36 @@ const FinancialPlanning = () => {
                 <StyledInput prefix="₹" placeholder="e.g. 50,000" />
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item name="monthlyIncome" label={<span style={{ color: 'white' }}>Monthly Income</span>} rules={[{ required: true }]}>
+                <StyledInput prefix="₹" placeholder="e.g. 1,00,000" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="monthlyExpenses" label={<span style={{ color: 'white' }}>Monthly Expenses</span>} rules={[{ required: true }]}>
+                <StyledInput prefix="₹" placeholder="e.g. 40,000" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="incomeStability" label={<span style={{ color: 'white' }}>Income Stability</span>} rules={[{ required: true }]}>
+                <Select size="large">
+                  <Option value="very_stable">Very Stable (Govt/MNC)</Option>
+                  <Option value="stable">Stable (Pvt)</Option>
+                  <Option value="variable">Variable (Business/Freelance)</Option>
+                  <Option value="unstable">Unstable</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="debtTypes" label={<span style={{ color: 'white' }}>Types of Debt</span>} rules={[{ required: true }]}>
+                <Select mode="multiple" size="large" placeholder="Select all that apply">
+                  <Option value="personal_loan">Personal Loan</Option>
+                  <Option value="credit_card">Credit Card</Option>
+                  <Option value="business_loan">Business Loan</Option>
+                  <Option value="home_loan">Home Loan</Option>
+                </Select>
+              </Form.Item>
+            </Col>
             <Col span={24}>
               <Form.Item name="settlementGoal" label={<span style={{ color: 'white' }}>Primary Goal</span>} rules={[{ required: true }]}>
                 <Select size="large">
@@ -475,7 +596,7 @@ const FinancialPlanning = () => {
     commonSteps.documents
   ];
 
-  // Final confirmation/preview step - REFACTORED to remove slots
+  // Final confirmation/preview step - REFACTORED to show actual data summary
   const previewStep = {
     title: 'Review',
     content: (
@@ -483,30 +604,42 @@ const FinancialPlanning = () => {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={{ color: 'white', marginBottom: 16 }}>Ready for your analysis?</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginBottom: 0 }}>
-            Our AI will analyze your profile and generate tailored insights.
+            Here is a summary of the data we'll use for your analysis.
           </p>
         </div>
 
-        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 24, borderRadius: 16, marginBottom: 24 }}>
-          <Row gutter={[24, 24]}>
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 32, borderRadius: 24, marginBottom: 24 }}>
+          <Row gutter={[32, 32]}>
             <Col span={12}>
               <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Purpose</div>
-              <div style={{ color: 'white', fontSize: '1.1rem', fontWeight: 600, textTransform: 'capitalize' }}>
+              <div style={{ color: 'white', fontSize: '1.2rem', fontWeight: 600, textTransform: 'capitalize' }}>
                 {planningPurpose?.replace('_', ' ')}
               </div>
             </Col>
             <Col span={12}>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Documents</div>
-              <div style={{ color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>
-                {uploadedDocumentIds.length} Uploaded
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Monthly Income</div>
+              <div style={{ color: 'var(--primary-color)', fontSize: '1.2rem', fontWeight: 600 }}>
+                {form.getFieldValue('monthlyIncome') || 'Not provided'}
               </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Documents</div>
+              <div style={{ color: 'white', fontSize: '1.2rem', fontWeight: 600 }}>
+                {uploadedDocumentIds.length} file(s) attached
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Status</div>
+              <Tag color={form.getFieldsValue(true).monthlyIncome ? 'success' : 'warning'}>
+                {form.getFieldsValue(true).monthlyIncome ? 'Data Ready' : 'Incomplete'}
+              </Tag>
             </Col>
           </Row>
         </div>
 
         <Alert
-          message="Next Step: Get AI Insights"
-          description="We'll generate your Decision Readiness Score immediately. You can choose to consult with an expert afterwards."
+          message="Final Step: Get AI Insights"
+          description="Clicking 'Get Insights' will calculate your MOAT scores and generate a strategic plan based on the data above."
           type="info"
           showIcon
           style={{ background: 'rgba(24, 144, 255, 0.1)', border: '1px solid #1890ff' }}
@@ -553,6 +686,32 @@ const FinancialPlanning = () => {
     }
   };
 
+  const handleGetDeepInsights = async () => {
+    if (!submissionData?.id) return;
+
+    try {
+      setFetchingPack(true);
+      const response = await api.get(`/decision-packs/${submissionData.id}`);
+      setPackData(response.data.data);
+      setPackModalVisible(true);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        try {
+          await api.post(`/decision-packs/${submissionData.id}/generate`);
+          const retryRes = await api.get(`/decision-packs/${submissionData.id}`);
+          setPackData(retryRes.data.data);
+          setPackModalVisible(true);
+          return;
+        } catch (e) {
+          console.error('Retry generation failed', e);
+        }
+      }
+      message.error(err.response?.data?.error || 'Failed to fetch deep insights');
+    } finally {
+      setFetchingPack(false);
+    }
+  };
+
   const next = async () => {
     try {
       if (currentStep === 0 && !planningPurpose) {
@@ -560,7 +719,10 @@ const FinancialPlanning = () => {
         return;
       }
 
-      await form.validateFields();
+      // If we are on the Review step, we don't need to validate current fields
+      if (currentStep < steps.length - 1) {
+        await form.validateFields();
+      }
 
       // Submit Logic
       if (currentStep === steps.length - 1) {
@@ -570,7 +732,7 @@ const FinancialPlanning = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           // Save and Redirect
-          const formData = form.getFieldsValue();
+          const formData = form.getFieldsValue(true);
           const stateToSave = {
             formData,
             purpose: planningPurpose,
@@ -592,12 +754,11 @@ const FinancialPlanning = () => {
 
         // 2. Submit Data
         try {
-          const formData = form.getFieldsValue();
+          const formData = form.getFieldsValue(true);
           const payload = {
             ...formData,
             planningPurpose,
             documentIds: uploadedDocumentIds,
-            // No consultationSlot here
           };
 
           const response = await api.post('/financial-planning/submit', payload);
@@ -651,29 +812,88 @@ const FinancialPlanning = () => {
             ) : (
               <>
                 <h1 style={{ color: 'white', marginBottom: 8 }}>Analysis Complete</h1>
-                <p style={{ color: 'var(--text-secondary)' }}>Here represents your decision readiness.</p>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: 32 }}>Here represents your decision readiness.</p>
 
-                <div style={{ maxWidth: 400, margin: '40px auto' }}>
+                <div style={{ maxWidth: 450, margin: '0 auto 40px' }}>
                   <DecisionReadinessCard
                     scores={scores}
                     purpose={planningPurpose}
                   />
+
+                  {scores?.primaryScore !== undefined && (
+                    <div style={{
+                      marginTop: 24,
+                      padding: '20px 24px',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      textAlign: 'left'
+                    }}>
+                      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>
+                        AI Assessment Summary
+                      </div>
+                      <p style={{ color: 'white', fontSize: '1.05rem', lineHeight: '1.6', margin: 0 }}>
+                        {scores.primaryScore >= 80 ? "Your financial foundation is robust, showing strong discipline and readiness for growth. Minor optimizations can further shield your assets." :
+                          scores.primaryScore >= 60 ? "You are on the right track with a healthy balance. Some moderate risks were identified that could be mitigated for better stability." :
+                            scores.primaryScore >= 40 ? "Your profile shows significant gaps or high liabilities that need attention to ensure your long-term financial security." :
+                              "Significant financial stressors detected. Immediate restructuring is recommended to protect your capital and reduce liability."}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ marginTop: 40, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 30 }}>
-                  <h3 style={{ color: 'white' }}>Want expert clarification?</h3>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 24 }}>
-                    Schedule a 1-on-1 with a financial analyst to discuss these insights.
-                  </p>
-                  <Button
-                    type="primary"
-                    size="large"
-                    shape="round"
-                    style={{ height: 50, padding: '0 40px', fontSize: 16 }}
-                    onClick={() => setBookingModalVisible(true)}
-                  >
-                    Book Consultation
-                  </Button>
+                <div style={{ marginTop: 40, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 40 }}>
+                  <Row gutter={[32, 32]} justify="center">
+                    <Col xs={24} md={11}>
+                      <div style={{ background: 'rgba(0, 176, 240, 0.05)', padding: 32, borderRadius: 24, border: '1px solid rgba(0, 176, 240, 0.1)', height: '100%' }}>
+                        <h3 style={{ color: 'white', marginBottom: 12 }}>Expert Clarification</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 24, fontSize: '0.95rem' }}>
+                          Schedule a 1-on-1 with a professional analyst to deep-dive into these results and receive personalized advice.
+                        </p>
+                        <Button
+                          type="primary"
+                          size="large"
+                          shape="round"
+                          style={{ height: 50, padding: '0 40px', fontSize: 16 }}
+                          onClick={() => setBookingModalVisible(true)}
+                        >
+                          Book consultation
+                        </Button>
+                      </div>
+                    </Col>
+                    <Col xs={24} md={11}>
+                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: 32, borderRadius: 24, border: '1px solid rgba(255, 255, 255, 0.08)', height: '100%' }}>
+                        <h3 style={{ color: 'white', marginBottom: 12 }}>Deep AI Insights</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 24, fontSize: '0.95rem' }}>
+                          Unlock comprehensive AI-generated strategic roadmaps and stress-testing reports. A small processing fee applies for full insights.
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                          <Button
+                            type="default"
+                            size="large"
+                            shape="round"
+                            loading={fetchingPack}
+                            style={{ height: 50, padding: '0 30px', fontSize: 16, background: 'var(--primary-color)', color: 'black', border: 'none' }}
+                            onClick={handleGetDeepInsights}
+                          >
+                            Get AI insights
+                          </Button>
+                          <Button
+                            type="text"
+                            size="large"
+                            shape="round"
+                            style={{ height: 50, color: 'rgba(255,255,255,0.5)', fontSize: 15 }}
+                            onClick={() => {
+                              setShowInsights(false);
+                              setCurrentStep(1);
+                            }}
+                          >
+                            Refine Profile
+                          </Button>
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
                 </div>
               </>
             )}
@@ -709,6 +929,26 @@ const FinancialPlanning = () => {
             ))}
           </div>
         </Modal>
+
+        {/* Deep AI Insights Modal */}
+        <Modal
+          title={null}
+          visible={packModalVisible}
+          onCancel={() => setPackModalVisible(false)}
+          footer={null}
+          width={1000}
+          centered
+          bodyStyle={{
+            background: '#111',
+            padding: '40px',
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            borderRadius: '24px'
+          }}
+          closeIcon={<span style={{ color: 'white', fontSize: '20px' }}>×</span>}
+        >
+          <DecisionPackViewer pack={packData} />
+        </Modal>
       </PageContainer>
     );
   }
@@ -733,7 +973,7 @@ const FinancialPlanning = () => {
           </div>
         </div>
 
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" preserve={true}>
           {steps[currentStep].content}
 
           <div style={{ textAlign: 'center' }}>

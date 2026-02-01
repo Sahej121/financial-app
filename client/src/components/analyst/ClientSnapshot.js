@@ -37,9 +37,12 @@ const MetricCard = styled.div`
 `;
 
 
-const ClientSnapshot = ({ insights, loading }) => {
+const ClientSnapshot = ({ insights, decisionPack, loading }) => {
     if (loading) return <Card loading={true} />;
-    if (!insights || insights.length === 0) {
+    const hasInsights = insights && insights.length > 0;
+    const hasDecisionPack = decisionPack && decisionPack.scores;
+
+    if (!hasInsights && !hasDecisionPack) {
         return (
             <SnapshotCard>
                 <Alert
@@ -52,12 +55,29 @@ const ClientSnapshot = ({ insights, loading }) => {
         );
     }
 
-    // Aggregate insights from multiple documents
-    const allRedFlags = insights.flatMap(i => i.redFlags || []);
-    const allSuggestedFocus = insights.flatMap(i => i.suggestedFocus || []);
+    // Aggregate insights from multiple sources
+    // Decision Pack is primary, document insights are supplementary
 
-    // Find a bank statement for high-level metrics
-    const bankInsight = insights.find(i => i.insightType === 'bank_statement')?.extractedData || {};
+    // Red Flags
+    const packRedFlags = decisionPack?.redFlags?.map(f => f.detail || f) || [];
+    const docRedFlags = insights?.flatMap(i => i.redFlags || []) || [];
+    const allRedFlags = [...packRedFlags, ...docRedFlags];
+
+    // Recommended Focus
+    const packQuestions = decisionPack?.recommendedQuestions?.map(q => q.question) || [];
+    const docFocus = insights?.flatMap(i => i.suggestedFocus || []) || [];
+    const allSuggestedFocus = [...packQuestions, ...docFocus];
+
+    // Financial Metrics - Prefer Decision Pack
+    const metrics = {
+        avgMonthlyBalance: decisionPack?.financialSnapshot?.savings?.monthly ||
+            (insights?.find(i => i.insightType === 'bank_statement')?.extractedData?.avgMonthlyBalance) || 0,
+        incomeStability: decisionPack?.financialSnapshot?.income?.stability ?
+            (decisionPack.financialSnapshot.income.stability === 'very_stable' ? 'High (Stable)' : 'Variable') :
+            (insights?.find(i => i.insightType === 'bank_statement')?.extractedData?.salaryDetected ? 'High (Salary)' : 'Not Detected'),
+        obligations: decisionPack?.financialSnapshot?.expenses?.emi ||
+            (insights?.find(i => i.insightType === 'bank_statement')?.extractedData?.emiCount || 0)
+    };
 
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -73,8 +93,8 @@ const ClientSnapshot = ({ insights, loading }) => {
                     <Col xs={24} md={8}>
                         <MetricCard>
                             <Statistic
-                                title={<span style={{ color: 'rgba(255,255,255,0.6)' }}>Avg Monthly Balance</span>}
-                                value={bankInsight.avgMonthlyBalance || 0}
+                                title={<span style={{ color: 'rgba(255,255,255,0.6)' }}>Avg Monthly Savings</span>}
+                                value={metrics.avgMonthlyBalance}
                                 prefix={<DollarCircleOutlined style={{ color: '#52c41a' }} />}
                                 valueStyle={{ color: 'white', fontWeight: 800 }}
                             />
@@ -84,7 +104,7 @@ const ClientSnapshot = ({ insights, loading }) => {
                         <MetricCard>
                             <Statistic
                                 title={<span style={{ color: 'rgba(255,255,255,0.6)' }}>Income Stability</span>}
-                                value={bankInsight.salaryDetected ? 'High (Salary)' : 'Variable'}
+                                value={metrics.incomeStability}
                                 prefix={<CheckCircleOutlined style={{ color: '#1890ff' }} />}
                                 valueStyle={{ color: 'white', fontWeight: 800, fontSize: '18px' }}
                             />
@@ -93,9 +113,8 @@ const ClientSnapshot = ({ insights, loading }) => {
                     <Col xs={24} md={8}>
                         <MetricCard>
                             <Statistic
-                                title={<span style={{ color: 'rgba(255,255,255,0.6)' }}>EMI / Obligations</span>}
-                                value={bankInsight.emiCount || 0}
-                                suffix="Detect"
+                                title={<span style={{ color: 'rgba(255,255,255,0.6)' }}>Monthly Obligations (EMI)</span>}
+                                value={metrics.obligations}
                                 prefix={<InfoCircleOutlined style={{ color: '#fa8c16' }} />}
                                 valueStyle={{ color: 'white', fontWeight: 800 }}
                             />

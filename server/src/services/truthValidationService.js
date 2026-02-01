@@ -247,15 +247,31 @@ class TruthValidationService {
 
         const required = requiredDocs[purpose] || requiredDocs.investment;
         const uploadedCategories = documents.map(d => d.category);
+        const processingDocs = documents.filter(d => d.aiProcessingStatus === 'processing' || d.aiProcessingStatus === 'pending');
 
         for (const docType of required) {
-            if (!uploadedCategories.includes(docType)) {
+            // Check if we have the category
+            const hasCategory = uploadedCategories.includes(docType);
+
+            // Check if we have a document still processing that could be this type
+            const hasProcessingMatch = processingDocs.length > 0;
+
+            // Check if there's an 'other' document that might be a bank statement (fallback)
+            const hasPossibleMatch = documents.some(d =>
+                d.category === 'other' &&
+                (d.fileName.toLowerCase().includes('statement') || d.fileName.toLowerCase().includes('bank'))
+            );
+
+            if (!hasCategory && !hasProcessingMatch && !hasPossibleMatch) {
                 flags.push({
                     type: 'MISSING_DOCUMENT',
                     severity: 'medium',
                     message: `Recommended document not uploaded: ${docType.replace(/_/g, ' ')}`,
                     missingType: docType
                 });
+            } else if (!hasCategory && hasProcessingMatch) {
+                // If it's processing, we don't flag as missing, but maybe add a note
+                console.log(`Document of type ${docType} is still processing for submission ${submission.id}`);
             }
         }
 

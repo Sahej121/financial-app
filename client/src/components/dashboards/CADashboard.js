@@ -164,7 +164,10 @@ const CADashboard = () => {
       setAiModalVisible(true);
       setSelectedSubmission(meeting.submission);
       const res = await api.get(`/documents/submission/${meeting.submissionId}/snapshot`);
-      setSelectedMeetingInsights(res.data.insights || []);
+      setSelectedMeetingInsights({
+        insights: res.data.insights || [],
+        decisionPack: res.data.decisionPack || null
+      });
     } catch (error) {
       console.error('Error loading AI insights:', error);
       message.error('Failed to load AI intelligence for this client');
@@ -688,11 +691,15 @@ const CADashboard = () => {
             tab={<span><RobotOutlined /> AI Snapshot</span>}
             key="1"
           >
-            <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
+            <ClientSnapshot
+              insights={selectedMeetingInsights?.insights || []}
+              decisionPack={selectedMeetingInsights?.decisionPack}
+              loading={aiLoading}
+            />
             <div style={{ marginTop: '24px' }}>
               <DocumentInsightsPanel
-                documents={selectedMeetingInsights?.map(i => i.document) || []}
-                insights={selectedMeetingInsights || []}
+                documents={selectedMeetingInsights?.insights?.map(i => i.document) || []}
+                insights={selectedMeetingInsights?.insights || []}
               />
             </div>
           </TabPane>

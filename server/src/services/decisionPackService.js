@@ -12,6 +12,9 @@
 const { DocumentInsight, FinancialPlanningSubmission, Document, User } = require('../models');
 const scoringService = require('./scoringService');
 const truthValidationService = require('./truthValidationService');
+const demandIntelligenceService = require('./demandIntelligenceService');
+const cache = require('../utils/cache');
+const logger = require('../utils/logger');
 
 class DecisionPackService {
     /**
@@ -259,6 +262,9 @@ class DecisionPackService {
             // Run validation
             const validation = await truthValidationService.validate(submissionId);
 
+            // Run Demand Intelligence Analysis (New Layer)
+            const demandIntelligence = await demandIntelligenceService.analyzeDemandIntent(submissionId);
+
             // Build the pack
             const pack = {
                 meta: {
@@ -289,7 +295,8 @@ class DecisionPackService {
                     isValid: validation.isValid,
                     flagCount: validation.flagCount,
                     coverage: scores.dataCompletenessScore
-                }
+                },
+                demandIntelligence: demandIntelligence
             };
 
             // Save pack to submission
@@ -298,6 +305,9 @@ class DecisionPackService {
                 decisionPackGeneratedAt: new Date(),
                 decisionPackStatus: 'ready'
             });
+
+            // Cache the result for 1 hour
+            await cache.setCache(`decision_pack:${submissionId}`, pack, 3600);
 
             return pack;
 
@@ -311,6 +321,13 @@ class DecisionPackService {
      * Get existing pack or generate new one
      */
     async getPack(submissionId) {
+        // Try cache first
+        const cachedPack = await cache.getCache(`decision_pack:${submissionId}`);
+        if (cachedPack) {
+            logger.info('Serving decision pack from cache', { submissionId });
+            return cachedPack;
+        }
+
         const submission = await FinancialPlanningSubmission.findByPk(submissionId);
         if (!submission) throw new Error('Submission not found');
 

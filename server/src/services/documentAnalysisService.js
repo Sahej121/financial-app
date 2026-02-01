@@ -3,6 +3,7 @@ const classificationService = require('./classificationService');
 const extractionService = require('./extractionService');
 const systemExtractionService = require('./systemExtractionService');
 const validationService = require('./validationService');
+const logger = require('../utils/logger');
 const { Document, DocumentInsight, FinancialPlanningSubmission } = require('../models');
 const path = require('path');
 
@@ -17,7 +18,7 @@ class DocumentAnalysisService {
         if (!document) throw new Error('Document not found');
 
         try {
-            console.log(`Starting analysis pipeline for document ${documentId}`);
+            logger.info('Starting analysis pipeline', { documentId, submissionId });
 
             // 1. Update status to processing
             await document.update({ aiProcessingStatus: 'processing' });
@@ -41,10 +42,10 @@ class DocumentAnalysisService {
 
             // If system extraction is not enough, fallback to AI
             if (!analysis.canSkipAI) {
-                console.log(`System extraction insufficient for ${documentId}, calling AI...`);
+                logger.info('System extraction insufficient, calling AI', { documentId });
                 analysis = await extractionService.extractFinancialData(text, documentType);
             } else {
-                console.log(`System extraction successful for ${documentId}, skipping AI API.`);
+                logger.info('System extraction successful, skipping AI API', { documentId });
             }
 
             // 5. Validation
@@ -73,7 +74,7 @@ class DocumentAnalysisService {
             return insight;
 
         } catch (error) {
-            console.error(`Analysis failed for document ${documentId}:`, error);
+            logger.error('Analysis failed', { documentId, error: error.message });
             await document.update({
                 aiProcessingStatus: 'failed',
                 aiError: error.message

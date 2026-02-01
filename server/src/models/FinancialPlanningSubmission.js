@@ -19,8 +19,7 @@ module.exports = (sequelize) => {
     // ===== MOAT: Purpose Selection =====
     planningPurpose: {
       type: DataTypes.ENUM('investment', 'business_expansion', 'loan_settlement'),
-      allowNull: true,
-      comment: 'Primary purpose: investment, business expansion, or loan settlement'
+      allowNull: true
     },
 
     // ===== MOAT: Decision Readiness Scores (0-100) =====

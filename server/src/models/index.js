@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 const config = require('../config/database');
 const path = require('path');
 
-// Create Sequelize instance with SQLite
+// Create Sequelize instance with PostgreSQL
 const sequelize = new Sequelize(config);
 
 // Import models
@@ -24,6 +24,7 @@ const GSTFiling = require('./GSTFiling');
 const HSNCode = require('./HSNCode');
 const ITCRecord = require('./ITCRecord');
 const WealthMonitor = require('./WealthMonitor');
+const DecisionAuditLog = require('./DecisionAuditLog');
 
 // Initialize models
 const models = {
@@ -44,7 +45,8 @@ const models = {
   GSTFiling: GSTFiling(sequelize),
   HSNCode: HSNCode(sequelize),
   ITCRecord: ITCRecord(sequelize),
-  WealthMonitor: WealthMonitor(sequelize)
+  WealthMonitor: WealthMonitor(sequelize),
+  DecisionAuditLog: DecisionAuditLog(sequelize)
 };
 
 // Set up associations
