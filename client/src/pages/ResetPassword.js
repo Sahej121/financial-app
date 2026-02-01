@@ -60,7 +60,7 @@ const ResetPassword = () => {
         setError(null);
         setLoading(true);
         try {
-            await axios.put(`/ api / auth / reset - password / ${resetToken} `, { password: values.password });
+            await axios.put(`/api/auth/reset-password/${resetToken}`, { password: values.password });
             setSuccess(true);
             setTimeout(() => navigate('/login'), 3000);
         } catch (err) {

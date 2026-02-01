@@ -8,6 +8,7 @@ const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const zxcvbn = require('zxcvbn');
 const { validationResult } = require('express-validator');
+const mailService = require('../services/mailService');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -97,20 +98,22 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       phone: req.body.phone,
-      caNumber: req.body.caNumber
+      caNumber: req.body.caNumber,
+      isVerified: true
     });
 
     // Generate token
     const token = generateToken(user);
 
     res.status(201).json({
+      success: true,
+      token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role
-      },
-      token
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -142,31 +145,60 @@ exports.login = async (req, res) => {
     const token = generateToken(user);
 
     res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otpCode } = req.body;
+
+    if (!email || !otpCode) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    const user = await User.findOne({
+      where: {
+        email,
+        otpCode,
+        otpExpire: { [Op.gt]: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    // OTP is valid, clear it
+    user.otpCode = null;
+    user.otpExpire = null;
+    user.isVerified = true;
+    await user.save();
+
+    // Generate final token
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: 'Verification successful',
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         twoFactorAuth: user.twoFactorAuth,
-        emailNotifications: user.emailNotifications,
-        pushNotifications: user.pushNotifications,
-        marketingEmails: user.marketingEmails,
-        darkTheme: user.darkTheme,
         clientType: user.clientType,
         residentStatus: user.residentStatus,
-        pan: user.pan,
-        aadhaar: user.aadhaar,
-        city: user.city,
-        state: user.state,
-        industry: user.industry,
-        turnoverBand: user.turnoverBand,
-        incomeSources: user.incomeSources,
-        accountingMethod: user.accountingMethod,
-        hasPastNotices: user.hasPastNotices,
-        hasPendingFilings: user.hasPendingFilings,
-        hasLoans: user.hasLoans,
-        hasCryptoForeignAssets: user.hasCryptoForeignAssets,
-        isCashHeavy: user.isCashHeavy,
         riskScore: user.riskScore
       },
       token
@@ -194,19 +226,18 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    // Ideally, send email here. For now, we return the token for testing.
-    // In production, you would use nodemailer to send currentUrl + /reset-password/ + resetToken
-
-    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
-
-    console.log(`Reset Token: ${resetToken}`);
-    console.log(`Reset URL: ${resetUrl}`);
-
-    res.status(200).json({
-      success: true,
-      data: 'Email sent (Mocked: Check server console for link)',
-      resetUrl // Including this for easier testing by the user
-    });
+    // Send real email link
+    try {
+      await mailService.sendResetLink(email, resetToken);
+      res.status(200).json({
+        success: true,
+        data: 'Password reset link sent to your email'
+      });
+    } catch (mailError) {
+      // If mail fails, at least we logged it to console in dev
+      console.error('Mail sending failed:', mailError);
+      res.status(500).json({ error: 'Failed to send reset email. Please try again later.' });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -164,7 +164,7 @@ const FeedbackForm = () => {
             Send Us Your Feedback
           </StyledTitle>
           <Paragraph style={{ fontSize: '18px', color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
-            We value your opinion! Help us improve our services by sharing your thoughts, 
+            We value your opinion! Help us improve our services by sharing your thoughts,
             suggestions, or reporting any issues you've encountered.
           </Paragraph>
         </HeaderSection>
@@ -183,7 +183,7 @@ const FeedbackForm = () => {
                   label="Your Name"
                   rules={[{ required: true, message: 'Please enter your name' }]}
                 >
-                  <Input 
+                  <Input
                     prefix={<UserOutlined />}
                     placeholder="Enter your full name"
                     size="large"
@@ -199,7 +199,7 @@ const FeedbackForm = () => {
                     { type: 'email', message: 'Please enter a valid email' }
                   ]}
                 >
-                  <Input 
+                  <Input
                     prefix={<MailOutlined />}
                     placeholder="Enter your email address"
                     size="large"
@@ -214,7 +214,7 @@ const FeedbackForm = () => {
                   name="phone"
                   label="Phone Number (Optional)"
                 >
-                  <Input 
+                  <Input
                     prefix={<PhoneOutlined />}
                     placeholder="Enter your phone number"
                     size="large"
@@ -257,7 +257,7 @@ const FeedbackForm = () => {
               name="rating"
               label="Overall Experience Rating"
             >
-              <Rate 
+              <Rate
                 style={{ fontSize: '24px' }}
                 tooltips={['Terrible', 'Bad', 'Normal', 'Good', 'Excellent']}
               />
@@ -308,7 +308,7 @@ const FeedbackForm = () => {
             <Col xs={24} md={8}>
               <ContactItem>
                 <PhoneOutlined />
-                <span>+91 98765 43210</span>
+                <span>+91 7827381313</span>
               </ContactItem>
             </Col>
             <Col xs={24} md={8}>

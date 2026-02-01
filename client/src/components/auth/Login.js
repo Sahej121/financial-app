@@ -17,7 +17,14 @@ const Login = () => {
   const onFinish = async (values) => {
     try {
       const result = await dispatch(login(values)).unwrap();
-      // Navigate to appropriate dashboard based on user role
+
+      // Check for redirect path
+      if (location.state?.from) {
+        navigate(location.state.from, { replace: true });
+        return;
+      }
+
+      // Otherwise navigate to appropriate dashboard based on user role
       const dashboardPath = getDashboardPath(result.user.role);
       navigate(dashboardPath, { replace: true });
     } catch (err) {
@@ -92,7 +99,13 @@ const Login = () => {
               onSuccess={credentialResponse => {
                 dispatch(googleLogin({ token: credentialResponse.credential }))
                   .unwrap()
-                  .then(result => navigate(getDashboardPath(result.user.role)));
+                  .then(result => {
+                    if (location.state?.from) {
+                      navigate(location.state.from, { replace: true });
+                    } else {
+                      navigate(getDashboardPath(result.user.role));
+                    }
+                  });
               }}
               onError={() => console.log('Login Failed')}
               useOneTap
@@ -106,7 +119,13 @@ const Login = () => {
                 if (!response.error) {
                   dispatch(appleLogin(response))
                     .unwrap()
-                    .then(result => navigate(getDashboardPath(result.user.role)));
+                    .then(result => {
+                      if (location.state?.from) {
+                        navigate(location.state.from, { replace: true });
+                      } else {
+                        navigate(getDashboardPath(result.user.role));
+                      }
+                    });
                 }
               }}
               render={(props) => (

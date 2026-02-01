@@ -119,11 +119,11 @@ const Register = () => {
     try {
       const { confirmPassword, ...userData } = values;
       await dispatch(register(userData)).unwrap();
-      navigate('/dashboard', { replace: true });
     } catch (err) {
       // Redux handles errors
     }
   };
+
 
   return (
     <AuthLayout

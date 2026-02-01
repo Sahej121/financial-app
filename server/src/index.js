@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
 const routes = require('./routes');
@@ -11,12 +12,16 @@ const app = express();
 app.set('trust proxy', 1); // Trust first proxy (needed for rate limiter behind proxy)
 
 // Middleware
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(apiLimiter);
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// [REMOVED] Public static serving of uploads is disabled for security.
+// Use authenticated /api/documents/:documentId/download route instead.
 
 // Connect to SQLite with Sequelize
 sequelize.authenticate()

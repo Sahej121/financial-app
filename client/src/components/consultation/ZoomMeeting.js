@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Space, message, Modal, Spin } from 'antd';
+import { Card, Button, Space, message, Modal, Spin, Form, Rate, Input } from 'antd';
 import styled from 'styled-components';
 import { 
   VideoCameraOutlined, 
@@ -120,6 +120,59 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
     }
   };
 
+  // Post-meeting feedback state
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackForm] = Form.useForm();
+
+  const submitFeedback = async (values) => {
+    if (!meetingDetails?.id) {
+      message.error('Meeting not found. Cannot submit feedback.');
+      setFeedbackVisible(false);
+      if (typeof onMeetingEnd === 'function') onMeetingEnd();
+      return;
+    }
+
+    setFeedbackLoading(true);
+    try {
+      const payload = {
+        status: 'completed',
+        rating: values.rating,
+        feedback: values.comments
+      };
+
+      const res = await fetch(`/api/meetings/${meetingDetails.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success !== false) {
+        message.success('Thanks for your feedback!');
+      } else {
+        throw new Error(data.message || 'Failed to submit feedback');
+      }
+    } catch (err) {
+      console.error('Feedback submission error:', err);
+      message.error('Could not submit feedback. You can provide it later from your dashboard.');
+    } finally {
+      setFeedbackLoading(false);
+      setFeedbackVisible(false);
+      if (typeof onMeetingEnd === 'function') onMeetingEnd();
+    }
+  };
+
+  const skipFeedback = () => {
+    setFeedbackVisible(false);
+    if (typeof onMeetingEnd === 'function') onMeetingEnd();
+  };
+    } catch (error) {
+      console.error('Error initializing Zoom:', error);
+      message.error('Failed to initialize Zoom client');
+    }
+  };
+
   const joinMeeting = (ZoomMtg, meeting) => {
     ZoomMtg.join({
       meetingNumber: meeting.id,
@@ -172,7 +225,8 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
           method: 'PUT'
         });
       }
-      onMeetingEnd();
+      // Prompt for feedback before finalizing meeting end
+      setFeedbackVisible(true);
     } catch (error) {
       console.error('Error ending meeting:', error);
       message.error('Failed to end meeting');
@@ -222,6 +276,29 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
           </a>
         </p>
       </ParticipantCard>
+      
+      <Modal
+        title="How was your meeting?"
+        visible={feedbackVisible}
+        onCancel={skipFeedback}
+        footer={null}
+        centered
+      >
+        <Form form={feedbackForm} layout="vertical" onFinish={submitFeedback}>
+          <Form.Item name="rating" label="Overall rating" initialValue={5}>
+            <Rate />
+          </Form.Item>
+
+          <Form.Item name="comments" label="Comments">
+            <Input.TextArea rows={4} placeholder="Share your experience, suggestions or issues..." />
+          </Form.Item>
+
+          <Form.Item style={{ textAlign: 'right' }}>
+            <Button style={{ marginRight: 8 }} onClick={skipFeedback}>Skip</Button>
+            <Button type="primary" htmlType="submit" loading={feedbackLoading}>Submit</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </MeetingContainer>
   );
 };

@@ -13,6 +13,7 @@ const { authLimiter } = require('../middleware/rateLimiter');
 // Auth routes
 router.post('/auth/register', authLimiter, registerValidation, authController.register);
 router.post('/auth/login', authLimiter, loginValidation, authController.login);
+router.post('/auth/verify-otp', authLimiter, authController.verifyOTP);
 router.post('/auth/google', authController.googleLogin);
 router.post('/auth/apple', authController.appleLogin);
 router.post('/auth/forgot-password', authController.forgotPassword);
@@ -100,5 +101,17 @@ router.use('/gst', gstRouter);
 const paymentRouter = require('./payment');
 router.use('/payments', paymentRouter);
 
+// ===== MOAT: Decision Pack Routes =====
+const decisionPackController = require('../controllers/decisionPackController');
+const { auth } = require('../middleware/authValidator');
+
+// Decision Pack endpoints (all require authentication)
+router.get('/decision-packs/:submissionId', authController.auth, decisionPackController.getPack);
+router.post('/decision-packs/:submissionId/generate', authController.auth, decisionPackController.generatePack);
+router.get('/decision-packs/:submissionId/scores', authController.auth, decisionPackController.getScores);
+router.get('/decision-packs/:submissionId/validate', authController.auth, decisionPackController.validateSubmission);
+router.post('/decision-packs/:submissionId/feedback', authController.auth, decisionPackController.submitFeedback);
+
 module.exports = router;
+
 

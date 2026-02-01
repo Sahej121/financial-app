@@ -144,6 +144,18 @@ module.exports = (sequelize) => {
     resetPasswordExpire: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    otpCode: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    otpExpire: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   });
 

@@ -15,6 +15,153 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
+
+    // ===== MOAT: Purpose Selection =====
+    planningPurpose: {
+      type: DataTypes.ENUM('investment', 'business_expansion', 'loan_settlement'),
+      allowNull: true,
+      comment: 'Primary purpose: investment, business expansion, or loan settlement'
+    },
+
+    // ===== MOAT: Decision Readiness Scores (0-100) =====
+    expansionReadinessScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Business expansion readiness score (0-100)'
+    },
+    loanSafetyScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Loan safety/repayment capacity score (0-100)'
+    },
+    investmentCapacityScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Investment capacity score (0-100)'
+    },
+    dataCompletenessScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'How complete is the user data (0-100)'
+    },
+
+    // ===== MOAT: Truth Validation =====
+    isDataVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Whether cross-validation passed'
+    },
+    validationFlags: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      comment: 'Array of validation warnings/red flags from truth layer'
+    },
+
+    // ===== MOAT: Decision Pack =====
+    decisionPackStatus: {
+      type: DataTypes.ENUM('pending', 'generating', 'ready', 'failed'),
+      defaultValue: 'pending'
+    },
+    decisionPackUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'URL to generated decision pack PDF'
+    },
+    decisionPackGeneratedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    decisionPackData: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Full decision pack JSON for dashboard display'
+    },
+
+    // ===== MOAT: Business Expansion Fields =====
+    expansionType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'new_location, new_product, market_expansion, etc.'
+    },
+    fundingRequired: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    expansionTimeline: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    businessType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'sole_proprietor, partnership, llp, pvt_ltd, public_ltd'
+    },
+    industryType: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    annualRevenue: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    employeeCount: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    profitMargin: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    cashReserves: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    existingLoans: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Array of existing business loan types'
+    },
+
+    // ===== MOAT: Loan Settlement Fields =====
+    debtTypes: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Array of debt types: home_loan, personal_loan, etc.'
+    },
+    totalDebtAmount: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    monthlyEMI: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    monthlyExpenses: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    settlementGoal: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'reduce_emi, debt_free, consolidate, negotiate'
+    },
+    settlementTimeline: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+
+    // ===== MOAT: Analyst Feedback =====
+    analystFeedback: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Analyst confirmation/rejection of AI signals'
+    },
+    outcomeTracking: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Track actual outcomes for ML feedback loop'
+    },
+
     // Step 1: Goal Identification (Legacy primaryGoal removed)
     planningType: {
       type: DataTypes.STRING,

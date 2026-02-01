@@ -197,7 +197,7 @@ const CARegister = () => {
       const { confirmPassword, ...userData } = values;
 
       // 1. Create User Account
-      const result = await dispatch(register({
+      const authResult = await dispatch(register({
         name: userData.name,
         email: userData.email,
         phone: userData.phone,
@@ -206,9 +206,11 @@ const CARegister = () => {
         role: 'ca'
       })).unwrap();
 
+      const userId = authResult.userId;
+
       // 2. Create CA Profile (linked to User)
       const caProfileData = {
-        userId: result.user.id, // Link to User record
+        userId: userId,
         name: userData.name,
         email: userData.email,
         caNumber: userData.caNumber,
@@ -222,23 +224,17 @@ const CARegister = () => {
         availability: userData.availability
       };
 
-      const response = await api.post('/cas', caProfileData);
-
-      if (response.data.error) {
-        throw new Error(response.data.error);
-      }
+      await api.post('/cas', caProfileData);
 
       message.success('Registration successful!');
       navigate('/ca-dashboard', { replace: true });
     } catch (error) {
       console.error('Registration error:', error);
-      // Display error to user
       const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
-      if (!errorMessage.includes('action')) {
-        message.error(errorMessage);
-      }
+      message.error(errorMessage);
     }
   };
+
 
   const steps = [
     { title: 'Basic Info' },

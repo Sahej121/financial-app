@@ -390,7 +390,7 @@ const GSTDashboard = () => {
                             name="phone"
                             label="Business Phone"
                         >
-                            <Input placeholder="+91 9876543210" />
+                            <Input placeholder="+91 7827381313" />
                         </Form.Item>
 
                         <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>

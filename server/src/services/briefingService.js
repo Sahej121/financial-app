@@ -51,12 +51,17 @@ class BriefingService {
         const systemBriefing = systemBriefingService.generateSystemBriefing(submission, insights);
 
         // Logic to determine if we need AI
-        // If we have red flags from insights or complex liabilities, we might still want AI
-        const needsAISynthesis = insights.some(i => i.redFlags && i.redFlags.length > 0) ||
-            (submission.liabilities && Object.keys(submission.liabilities).length > 2);
+        // We only call AI if:
+        // 1. We have NO system briefing info at all
+        // 2. The analyst specifically needs deep synthesis of complex data
+        // 3. There are clear "Low confidence" flags from local extraction
+        const hasLowConfidenceInsights = insights.some(i => i.confidenceScore < 0.5);
+        const hasComplexData = (submission.liabilities && Object.keys(submission.liabilities).length > 4) ||
+            (submission.assets && Object.keys(submission.assets).length > 6);
 
-        if (!needsAISynthesis) {
-            console.log(`[BriefingService] System briefing sufficient for ${submissionId}, skipping AI.`);
+        // If system briefing exists and data isn't overly complex, prefer system over AI
+        if (!hasLowConfidenceInsights && !hasComplexData && systemBriefing.criticalRisks.length > 0) {
+            console.log(`[BriefingService] Everything in our power to use system briefing for ${submissionId}. Skipping AI.`);
             return systemBriefing;
         }
 

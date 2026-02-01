@@ -1,0 +1,114 @@
+.analyst-feedback-form {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    margin-top: 24px;
+}
+
+.analyst-feedback-form .ant-card-head {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analyst-feedback-form .ant-card-head-title {
+    color: white;
+}
+
+.signals-section {
+    margin-bottom: 24px;
+}
+
+.signals-section h4 {
+    color: white;
+    margin-bottom: 8px;
+}
+
+.signals-instruction {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.signals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.signal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    gap: 12px;
+}
+
+.signal-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.signal-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+}
+
+.signal-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.confirm-btn.ant-btn-primary {
+    background: #52c41a;
+    border-color: #52c41a;
+}
+
+.reject-btn.ant-btn-primary {
+    background: #f5222d;
+    border-color: #f5222d;
+}
+
+.outcome-radio {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.outcome-radio .ant-radio-button-wrapper {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.outcome-radio .ant-radio-button-wrapper:hover {
+    color: #667eea;
+}
+
+.outcome-radio .ant-radio-button-wrapper-checked {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+}
+
+.analyst-feedback-form .ant-form-item-label>label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.analyst-feedback-form textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.analyst-feedback-form textarea:focus {
+    border-color: #667eea;
+}
+
+.analyst-feedback-form textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}

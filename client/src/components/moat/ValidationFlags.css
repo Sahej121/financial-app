@@ -1,0 +1,84 @@
+.validation-flags {
+    margin-bottom: 24px;
+}
+
+.validation-flags.validation-passed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(82, 196, 26, 0.1);
+    border: 1px solid rgba(82, 196, 26, 0.3);
+    border-radius: 12px;
+    color: #52c41a;
+    font-weight: 500;
+}
+
+.validation-banner {
+    margin-bottom: 16px;
+    border-radius: 12px;
+}
+
+.flags-collapse {
+    background: transparent;
+    border: none;
+}
+
+.flags-collapse .ant-collapse-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px !important;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.flags-collapse .ant-collapse-header {
+    color: white !important;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.flag-item {
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 12px !important;
+}
+
+.flag-item.flag-high {
+    background: rgba(245, 34, 45, 0.1);
+    border-left: 3px solid #f5222d;
+}
+
+.flag-item.flag-medium {
+    background: rgba(250, 173, 20, 0.1);
+    border-left: 3px solid #faad14;
+}
+
+.flag-item.flag-low {
+    background: rgba(24, 144, 255, 0.1);
+    border-left: 3px solid #1890ff;
+}
+
+.flag-content {
+    width: 100%;
+}
+
+.flag-type {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.flag-message {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}

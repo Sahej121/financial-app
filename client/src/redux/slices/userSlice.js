@@ -26,11 +26,23 @@ export const login = createAsyncThunk(
     try {
       const response = await api.post('/auth/login', credentials);
       if (response.data?.token) {
-        try {
-          localStorage.setItem('token', response.data.token);
-        } catch (error) {
-          console.error('Failed to store token:', error);
-        }
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
+  }
+);
+
+export const verifyOTP = createAsyncThunk(
+  'user/verifyOTP',
+  async (otpData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/verify-otp', otpData);
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
       }
       return response.data;
     } catch (error) {
@@ -90,13 +102,18 @@ const userSlice = createSlice({
     })(),
     token: localStorage.getItem('token'),
     loading: false,
+    otpRequired: false,
+    tempEmail: null,
     isVerified: false,
     isInitializing: !!localStorage.getItem('token'),
     error: null
-  }, reducers: {
+  },
+  reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.otpRequired = false;
+      state.tempEmail = null;
       state.isVerified = false;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -116,9 +133,8 @@ const userSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isVerified = true;
-        state.error = null;
-        // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
+        state.error = null;
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -132,11 +148,26 @@ const userSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isVerified = true;
-        state.error = null;
-        // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(verifyOTP.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(verifyOTP.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.otpRequired = false;
+        state.tempEmail = null;
+        state.isVerified = true;
+        state.error = null;
+      })
+      .addCase(verifyOTP.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       })

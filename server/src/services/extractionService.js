@@ -171,16 +171,124 @@ async function callOpenAI(prompt) {
 }
 
 /**
+ * Local Heuristic Parsing
+ * Uses regex and keyword matching to extract data without AI
+ */
+function localHeuristicParse(text, documentType) {
+    const result = {
+        extractedData: {
+            documentType
+        },
+        confidenceScore: 0.0,
+        _isHeuristic: true
+    };
+
+    // Clean text for better matching
+    const cleanText = text.replace(/\s+/g, ' ');
+
+    // Common patterns
+    const amountPatterns = [
+        /(?:Total|Amount|Balance|Sum|Paid|Net|Due|INR|Rs\.?)\s*:?\s*(?:Rs\.?|INR)?\s*([\d,]+(?:\.\d{2})?)/i,
+        /([\d,]+(?:\.\d{2})?)\s*(?:Total|Amount|Balance|Paid|Net|Due)/i
+    ];
+
+    const datePatterns = [
+        /(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/,
+        /(?:\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})/i
+    ];
+
+    // Extraction by document type
+    if (documentType === 'wealth_monitor') {
+        // Extract amount
+        for (const pattern of amountPatterns) {
+            const match = cleanText.match(pattern);
+            if (match) {
+                result.extractedData.amount = parseFloat(match[1].replace(/,/g, ''));
+                result.confidenceScore += 0.4;
+                break;
+            }
+        }
+
+        // Extract merchant
+        const merchantMatch = cleanText.match(/(?:From|Merchant|Store|Seller|Vendor|Billed by)\s*:?\s*([A-Z0-9\s,&.-]{3,30}?)(?=\s+(?:Total|Amount|Balance|Date|Paid|Rs|INR|Sum|$))/i);
+        if (merchantMatch) {
+            result.extractedData.merchantName = merchantMatch[1].trim();
+            result.confidenceScore += 0.3;
+        }
+
+        // Simple categorization
+        if (cleanText.match(/restaurant|food|cafe|dinner|lunch|order|swiggy|zomato/i)) {
+            result.extractedData.category = 'Food';
+            result.extractedData.isAvoidable = true;
+        } else if (cleanText.match(/uber|ola|uber|travel|flight|indigo|air|rail|train/i)) {
+            result.extractedData.category = 'Travel';
+        }
+
+    } else if (documentType === 'bank_statements') {
+        // Extract balance
+        const balanceMatch = cleanText.match(/(?:Balance|Avail|Clear)\s*:?\s*(?:Rs\.?|INR)?\s*([\d,]+(?:\.\d{2})?)/i);
+        if (balanceMatch) {
+            result.extractedData.avgMonthlyBalance = parseFloat(balanceMatch[1].replace(/,/g, ''));
+            result.confidenceScore += 0.4;
+        }
+
+        // Extract institution
+        const instMatch = cleanText.match(/(?:HDFC|ICICI|SBI|Axis|KOTAK|Standard Chartered|HSBC|PNB|Bank of [A-Z]+)/i);
+        if (instMatch) {
+            result.extractedData.institution = instMatch[0].trim();
+            result.confidenceScore += 0.2;
+        }
+
+        // Extract account holder
+        const holderMatch = cleanText.match(/(?:Name|Account Holder|Customer|Dear)\s*:?\s*([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+        if (holderMatch) {
+            result.extractedData.accountHolder = holderMatch[1].trim();
+            result.confidenceScore += 0.2;
+        }
+    }
+
+    // Generic metadata
+    result.summary = `Heuristic extraction ${result.confidenceScore > 0.5 ? 'successful' : 'partial'}.`;
+    if (result.confidenceScore < 0.3) {
+        result.redFlags = ["Low confidence in local extraction. AI analysis recommended."];
+    }
+
+    return result;
+}
+
+/**
  * Main extraction function
  */
 exports.extractFinancialData = async (text, documentType) => {
+    console.log(`[ExtractionService] Starting extraction for document type: ${documentType}`);
+
+    // 1. Try Local Heuristic Parse First
+    const heuristicResult = localHeuristicParse(text, documentType);
+    console.log(`[ExtractionService] Heuristic confidence score: ${heuristicResult.confidenceScore}`);
+
+    // If confidence is high enough, return immediately
+    if (heuristicResult.confidenceScore >= 0.7) {
+        console.log('[ExtractionService] Local heuristic extraction sufficient. Skipping AI.');
+        heuristicResult._meta = {
+            provider: 'local_heuristic',
+            analyzedAt: new Date().toISOString(),
+            documentType
+        };
+        return heuristicResult;
+    }
+
     const provider = getActiveProvider();
-    console.log(`[ExtractionService] Using provider: ${provider} for document type: ${documentType}`);
+    console.log(`[ExtractionService] Heuristic insufficient. Using provider: ${provider}`);
 
     if (provider === 'mock') {
-        console.warn('[ExtractionService] No AI provider configured. Add GROQ_API_KEY or OPENAI_API_KEY to .env');
-        console.warn('[ExtractionService] Get free Groq API key at: https://console.groq.com');
-        return getMockAnalysis(documentType);
+        console.warn('[ExtractionService] No AI provider configured. Returning combined result.');
+        const mock = getMockAnalysis(documentType);
+        // Merge heuristic findings into mock if they exist
+        if (heuristicResult.confidenceScore > 0) {
+            mock.extractedData = { ...mock.extractedData, ...heuristicResult.extractedData };
+            mock._meta.heuristicFallback = true;
+        }
+        return mock;
     }
 
     const prompt = buildPrompt(text, documentType);
@@ -195,11 +303,19 @@ exports.extractFinancialData = async (text, documentType) => {
             console.log('[ExtractionService] OpenAI analysis completed successfully');
         }
 
+        // Merge heuristic findings if AI missed something or to validate
+        if (heuristicResult.confidenceScore > 0.4) {
+            // Keep AI as source of truth but flag heuristic agreement/disagreement if needed
+            // For now, just ensure we didn't lose heuristic info if AI failed to find it
+            result._heuristicMetadata = heuristicResult.extractedData;
+        }
+
         // Add metadata
         result._meta = {
             provider,
             analyzedAt: new Date().toISOString(),
-            documentType
+            documentType,
+            heuristicConfidence: heuristicResult.confidenceScore
         };
 
         return result;
@@ -218,9 +334,14 @@ exports.extractFinancialData = async (text, documentType) => {
             }
         }
 
-        // Return mock as last resort
-        console.warn('[ExtractionService] All providers failed. Returning mock analysis.');
-        return getMockAnalysis(documentType);
+        // Return heuristic + mock as last resort
+        console.warn('[ExtractionService] All providers failed. Returning heuristic + mock.');
+        const mock = getMockAnalysis(documentType);
+        if (heuristicResult.confidenceScore > 0) {
+            mock.extractedData = { ...mock.extractedData, ...heuristicResult.extractedData };
+            mock.summary = `(Local Extraction) ${heuristicResult.summary} | AI Fallback failed.`;
+        }
+        return mock;
     }
 };
 

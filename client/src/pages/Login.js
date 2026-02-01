@@ -93,20 +93,12 @@ const Login = () => {
 
   const onFinish = async (values) => {
     try {
-      const result = await dispatch(login(values)).unwrap();
-      if (result && result.user && result.user.role) {
-        switch (result.user.role) {
-          case 'ca': navigate('/ca-dashboard', { replace: true }); break;
-          case 'financial_planner': navigate('/financial-planner-dashboard', { replace: true }); break;
-          default: navigate('/dashboard', { replace: true });
-        }
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      await dispatch(login(values)).unwrap();
     } catch (err) {
       // Redux handles error
     }
   };
+
 
   return (
     <AuthLayout

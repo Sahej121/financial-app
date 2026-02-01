@@ -65,12 +65,12 @@ const StyledInput = styled(Input)`
   &::placeholder { color: rgba(255, 255, 255, 0.3); }
   
   &:hover {
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
   }
   
   &:focus {
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     border-color: #00B0F0 !important;
     box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
   }
@@ -155,167 +155,161 @@ const StyledSteps = styled(Steps)`
 `;
 
 const FinancialAnalystRegister = () => {
-    const [form] = Form.useForm();
-    const [currentStep, setCurrentStep] = React.useState(0);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const { loading, error } = useSelector((state) => state.user);
+  const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = React.useState(0);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.user);
 
-    const specializations = [
-        'Equity Research', 'Mutual Funds', 'Technical Analysis', 'Fundamental Analysis',
-        'Derivatives', 'Portfolio Management', 'Retirement Planning', 'Wealth Management',
-        'Crypto Assets', 'Fixed Income', 'Insurance Planning', 'Estate Planning'
-    ];
+  const specializations = [
+    'Equity Research', 'Mutual Funds', 'Technical Analysis', 'Fundamental Analysis',
+    'Derivatives', 'Portfolio Management', 'Retirement Planning', 'Wealth Management',
+    'Crypto Assets', 'Fixed Income', 'Insurance Planning', 'Estate Planning'
+  ];
 
-    const certifications = ['CFA', 'CFP', 'CWM', 'NISM', 'FRM', 'CIIA', 'CAIA', 'MBA (Finance)'];
-    const languages = ['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Gujarati', 'Malayalam', 'Punjabi', 'Marathi', 'Urdu'];
+  const certifications = ['CFA', 'CFP', 'CWM', 'NISM', 'FRM', 'CIIA', 'CAIA', 'MBA (Finance)'];
+  const languages = ['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Gujarati', 'Malayalam', 'Punjabi', 'Marathi', 'Urdu'];
 
-    const next = async () => {
-        try {
-            let fieldsToValidate = [];
-            if (currentStep === 0) {
-                fieldsToValidate = ['name', 'email', 'phone', 'password', 'confirmPassword'];
-            } else if (currentStep === 1) {
-                fieldsToValidate = ['experience', 'description', 'qualifications'];
-            }
+  const next = async () => {
+    try {
+      let fieldsToValidate = [];
+      if (currentStep === 0) {
+        fieldsToValidate = ['name', 'email', 'phone', 'password', 'confirmPassword'];
+      } else if (currentStep === 1) {
+        fieldsToValidate = ['experience', 'description', 'qualifications'];
+      }
 
-            await form.validateFields(fieldsToValidate);
-            setCurrentStep(currentStep + 1);
-        } catch (error) {
-            console.log('Validation failed:', error);
-        }
-    };
+      await form.validateFields(fieldsToValidate);
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      console.log('Validation failed:', error);
+    }
+  };
 
-    const prev = () => {
-        setCurrentStep(currentStep - 1);
-    };
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
+  };
 
-    const onFinish = async (values) => {
-        try {
-            const { confirmPassword, ...userData } = values;
-            const result = await dispatch(register({
-                name: userData.name,
-                email: userData.email,
-                phone: userData.phone,
-                password: userData.password,
-                role: 'financial_planner'
-            })).unwrap();
+  const onFinish = async (values) => {
+    try {
+      const { confirmPassword, ...userData } = values;
+      const authResult = await dispatch(register({
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password,
+        role: 'financial_planner'
+      })).unwrap();
 
-            const analystProfileData = {
-                userId: result.user.id, // Link to User record
-                name: userData.name,
-                email: userData.email,
-                phone: userData.phone,
-                experience: userData.experience,
-                specializations: userData.specializations,
-                description: userData.description,
-                qualifications: userData.qualifications,
-                languages: userData.languages,
-                availability: userData.availability
-            };
+      const userId = authResult.userId;
 
-            const response = await api.post('/financial-planners', analystProfileData);
+      const analystProfileData = {
+        userId: userId,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        experience: userData.experience,
+        specializations: userData.specializations,
+        description: userData.description,
+        qualifications: userData.qualifications,
+        languages: userData.languages,
+        availability: userData.availability
+      };
 
-            if (response.data.error) {
-                throw new Error(response.data.error);
-            }
+      await api.post('/financial-planners', analystProfileData);
 
-            message.success('Registration successful!');
-            navigate('/financial-planner-dashboard', { replace: true });
-        } catch (error) {
-            console.error('Registration error:', error);
-            const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
+      message.success('Registration successful!');
+      navigate('/financial-planner-dashboard', { replace: true });
+    } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
+      message.error(errorMessage);
+    }
+  };
 
-            if (errorMessage.includes('already registered')) {
-                message.error('This email is already registered. Please Login or use a different email.');
-            } else {
-                message.error(errorMessage);
-            }
-        }
-    };
 
-    const steps = [
-        { title: 'Basic Info' },
-        { title: 'Professional Details' },
-        { title: 'Expertise' }
-    ];
+  const steps = [
+    { title: 'Basic Info' },
+    { title: 'Professional Details' },
+    { title: 'Expertise' }
+  ];
 
-    return (
-        <RegisterContainer>
-            <StyledCard bordered={false}>
-                <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                    <Title level={2} style={{ color: 'white', marginBottom: 8 }}>Analyst Registration</Title>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)' }}>Become a certified financial advisor</Text>
-                </div>
+  return (
+    <RegisterContainer>
+      <StyledCard bordered={false}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <Title level={2} style={{ color: 'white', marginBottom: 8 }}>Analyst Registration</Title>
+          <Text style={{ color: 'rgba(255,255,255,0.6)' }}>Become a certified financial advisor</Text>
+        </div>
 
-                {error && <Alert message={error} type="error" style={{ marginBottom: 24, borderRadius: '12px' }} />}
+        {error && <Alert message={error} type="error" style={{ marginBottom: 24, borderRadius: '12px' }} />}
 
-                <StyledSteps current={currentStep}>
-                    {steps.map(item => <Step key={item.title} title={item.title} />)}
-                </StyledSteps>
+        <StyledSteps current={currentStep}>
+          {steps.map(item => <Step key={item.title} title={item.title} />)}
+        </StyledSteps>
 
-                <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
-                        <Form.Item name="name" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Full Name</Text>} rules={[{ required: true }]}>
-                            <StyledInput prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
-                        </Form.Item>
-                        <Form.Item name="email" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Email</Text>} rules={[{ required: true, type: 'email' }]}>
-                            <StyledInput prefix={<MailOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
-                        </Form.Item>
-                        <Form.Item name="phone" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Phone Number</Text>} rules={[{ required: true, pattern: /^[0-9]{10}$/ }]}>
-                            <StyledInput prefix={<PhoneOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} addonBefore={<span style={{ color: 'black' }}>+91</span>} />
-                        </Form.Item>
-                        <Form.Item name="password" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Password</Text>} rules={[{ required: true, min: 6 }]}>
-                            <StyledInputPassword prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
-                        </Form.Item>
-                        <Form.Item name="confirmPassword" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Confirm Password</Text>} dependencies={['password']} rules={[{ required: true }, ({ getFieldValue }) => ({ validator(_, value) { if (!value || getFieldValue('password') === value) return Promise.resolve(); return Promise.reject(new Error('Passwords do not match')); } })]}>
-                            <StyledInputPassword prefix={<SafetyOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
-                        </Form.Item>
-                    </div>
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+          <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
+            <Form.Item name="name" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Full Name</Text>} rules={[{ required: true }]}>
+              <StyledInput prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
+            </Form.Item>
+            <Form.Item name="email" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Email</Text>} rules={[{ required: true, type: 'email' }]}>
+              <StyledInput prefix={<MailOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
+            </Form.Item>
+            <Form.Item name="phone" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Phone Number</Text>} rules={[{ required: true, pattern: /^[0-9]{10}$/ }]}>
+              <StyledInput prefix={<PhoneOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} addonBefore={<span style={{ color: 'black' }}>+91</span>} />
+            </Form.Item>
+            <Form.Item name="password" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Password</Text>} rules={[{ required: true, min: 6 }]}>
+              <StyledInputPassword prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
+            </Form.Item>
+            <Form.Item name="confirmPassword" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Confirm Password</Text>} dependencies={['password']} rules={[{ required: true }, ({ getFieldValue }) => ({ validator(_, value) { if (!value || getFieldValue('password') === value) return Promise.resolve(); return Promise.reject(new Error('Passwords do not match')); } })]}>
+              <StyledInputPassword prefix={<SafetyOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />} />
+            </Form.Item>
+          </div>
 
-                    <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-                        <Form.Item name="experience" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Years of Experience</Text>} rules={[{ required: true }]}>
-                            <InputNumber min={0} max={50} style={{ width: '100%', borderRadius: '16px', height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
-                        </Form.Item>
-                        <Form.Item name="description" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Professional Bio</Text>} rules={[{ required: true, max: 500 }]}>
-                            <TextArea rows={4} style={{ borderRadius: '16px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px' }} />
-                        </Form.Item>
-                        <Form.Item name="qualifications" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Certifications</Text>} rules={[{ required: true }]}>
-                            <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
-                                {certifications.map(c => <Option key={c} value={c}>{c}</Option>)}
-                            </Select>
-                        </Form.Item>
-                    </div>
+          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+            <Form.Item name="experience" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Years of Experience</Text>} rules={[{ required: true }]}>
+              <InputNumber min={0} max={50} style={{ width: '100%', borderRadius: '16px', height: '56px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            </Form.Item>
+            <Form.Item name="description" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Professional Bio</Text>} rules={[{ required: true, max: 500 }]}>
+              <TextArea rows={4} style={{ borderRadius: '16px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.95)', padding: '12px' }} />
+            </Form.Item>
+            <Form.Item name="qualifications" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Certifications</Text>} rules={[{ required: true }]}>
+              <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
+                {certifications.map(c => <Option key={c} value={c}>{c}</Option>)}
+              </Select>
+            </Form.Item>
+          </div>
 
-                    <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-                        <Form.Item name="specializations" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Core Competencies</Text>} rules={[{ required: true }]}>
-                            <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
-                                {specializations.map(s => <Option key={s} value={s}>{s}</Option>)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="languages" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Languages</Text>} rules={[{ required: true }]}>
-                            <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
-                                {languages.map(l => <Option key={l} value={l}>{l}</Option>)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="availability" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Availability Status</Text>} rules={[{ required: true }]}>
-                            <Select size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
-                                <Option value="Available Now">Available Now</Option>
-                                <Option value="High Demand">High Demand</Option>
-                                <Option value="Weekend Only">Weekend Only</Option>
-                            </Select>
-                        </Form.Item>
-                    </div>
+          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+            <Form.Item name="specializations" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Core Competencies</Text>} rules={[{ required: true }]}>
+              <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
+                {specializations.map(s => <Option key={s} value={s}>{s}</Option>)}
+              </Select>
+            </Form.Item>
+            <Form.Item name="languages" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Languages</Text>} rules={[{ required: true }]}>
+              <Select mode="multiple" size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
+                {languages.map(l => <Option key={l} value={l}>{l}</Option>)}
+              </Select>
+            </Form.Item>
+            <Form.Item name="availability" label={<Text style={{ color: 'rgba(255,255,255,0.8)' }}>Availability Status</Text>} rules={[{ required: true }]}>
+              <Select size="large" dropdownStyle={{ background: '#1c1c1c', border: '1px solid #333' }}>
+                <Option value="Available Now">Available Now</Option>
+                <Option value="High Demand">High Demand</Option>
+                <Option value="Weekend Only">Weekend Only</Option>
+              </Select>
+            </Form.Item>
+          </div>
 
-                    <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                        {currentStep > 0 && <StyledButton onClick={prev}>Previous</StyledButton>}
-                        {currentStep < steps.length - 1 && <StyledButton type="primary" onClick={next}>Next Step</StyledButton>}
-                        {currentStep === steps.length - 1 && <StyledButton type="primary" htmlType="submit" loading={loading}>Complete Registration</StyledButton>}
-                    </div>
-                </Form>
-            </StyledCard>
-        </RegisterContainer>
-    );
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            {currentStep > 0 && <StyledButton onClick={prev}>Previous</StyledButton>}
+            {currentStep < steps.length - 1 && <StyledButton type="primary" onClick={next}>Next Step</StyledButton>}
+            {currentStep === steps.length - 1 && <StyledButton type="primary" htmlType="submit" loading={loading}>Complete Registration</StyledButton>}
+          </div>
+        </Form>
+      </StyledCard>
+    </RegisterContainer>
+  );
 };
 
 export default FinancialAnalystRegister;

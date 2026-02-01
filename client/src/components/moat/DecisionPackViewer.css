@@ -1,0 +1,165 @@
+.decision-pack-viewer {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.pack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pack-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pack-title h2 {
+    margin: 0;
+    color: white;
+    font-size: 24px;
+}
+
+.pack-title .anticon {
+    font-size: 28px;
+    color: #667eea;
+}
+
+.pack-summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+
+.summary-card .ant-card-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    font-size: 20px;
+    color: white;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.score-card .ant-progress {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.pack-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+.pack-section .ant-card-head {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pack-section .ant-card-head-title {
+    color: white;
+}
+
+.pack-section .ant-descriptions-item-label {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pack-section .ant-descriptions-item-content {
+    color: white;
+}
+
+.strengths-section .ant-list-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.questions-section .question-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 0;
+}
+
+.question-number {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.2);
+    border-radius: 50%;
+    font-weight: 600;
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+.question-content {
+    flex: 1;
+}
+
+.question-text {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+.pack-footer {
+    text-align: center;
+    padding: 16px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+}
+
+.empty-pack {
+    padding: 60px 20px;
+}
+
+.empty-pack .ant-empty-description {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pack-summary-row {
+        grid-template-columns: 1fr;
+    }
+}

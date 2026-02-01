@@ -1,0 +1,131 @@
+.decision-readiness-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.decision-readiness-card .ant-card-body {
+    padding: 0;
+}
+
+.score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.score-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.primary-score-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.score-format {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.score-format .anticon {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.score-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+}
+
+.score-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 12px 0 8px 0;
+}
+
+.secondary-scores {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.score-item {
+    margin-bottom: 8px;
+}
+
+.score-item:last-child {
+    margin-bottom: 0;
+}
+
+.score-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+}
+
+.score-item-header .anticon {
+    font-size: 14px;
+}
+
+.completeness-warning {
+    background: rgba(250, 173, 20, 0.15);
+    border: 1px solid rgba(250, 173, 20, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #faad14;
+    margin-bottom: 16px;
+}
+
+.generate-pack-btn {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.generate-pack-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.generate-pack-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Progress bar customization */
+.decision-readiness-card .ant-progress-inner {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.decision-readiness-card .ant-progress-text {
+    color: white;
+}

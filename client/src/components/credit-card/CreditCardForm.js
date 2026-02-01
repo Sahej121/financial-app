@@ -351,6 +351,7 @@ const CreditCardForm = () => {
             <InputNumber
               min={18}
               max={80}
+              type='text'
               placeholder="Enter your age"
             />
           </Form.Item>
