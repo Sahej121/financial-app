@@ -203,6 +203,14 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: '0-100 health metrics summary'
+    },
+    transactionId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'transactions',
+        key: 'id'
+      }
     }
   }, {
     tableName: 'meetings',
@@ -229,10 +237,14 @@ module.exports = (sequelize) => {
       foreignKey: 'meetingId',
       otherKey: 'documentId'
     });
-    // Link to financial planning submission
     Meeting.belongsTo(models.FinancialPlanningSubmission, {
       foreignKey: 'submissionId',
       as: 'submission'
+    });
+    // Link to Transaction
+    Meeting.belongsTo(models.Transaction, {
+      foreignKey: 'transactionId',
+      as: 'transaction'
     });
   };
 

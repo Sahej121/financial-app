@@ -1,4 +1,4 @@
-const pdf = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const Tesseract = require('tesseract.js');
 const fs = require('fs');
 const logger = require('../utils/logger');
@@ -30,38 +30,57 @@ exports.extractText = async (filePath, mimeType) => {
 
 async function extractTextFromPDF(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
+    let parser = null;
     try {
-        const result = await pdf(dataBuffer);
+        parser = new PDFParse({ data: dataBuffer });
+        const result = await parser.getText();
+        const text = result.text.trim();
+        const numpages = result.total; // result.total is page count in v2
 
-        // If result returns very little text, it might be a scanned PDF
-        if (result.text.trim().length < 50) {
-            logger.warn('PDF seems to be scanned, falling back to OCR (not fully implemented)', { filePath });
-            // In a real implementation: convert PDF to images -> Tesseract
+        // Improved scanned PDF detection
+        // If there's very little text but many pages, it's likely scanned
+        if (text.length < 50 && numpages > 0) {
+            logger.warn('PDF seems to be scanned or image-only', { filePath, pages: numpages });
+
             return {
-                text: "[SCANNED PDF DETECTED] - Text extraction requires OCR pipeline.",
-                confidence: 0.2
+                text: text,
+                isScanned: true,
+                pageCount: numpages,
+                confidence: 0.1,
+                message: "This PDF appears to be a scanned document. Direct text extraction yielded limited results."
             };
         }
 
         return {
-            text: result.text,
-            confidence: 0.95 // Direct extraction usually high confidence
+            text: text,
+            isScanned: false,
+            pageCount: numpages,
+            confidence: text.length > 200 ? 0.95 : 0.8
         };
     } catch (error) {
-        console.error('PDF extraction error:', error);
+        logger.error('PDF extraction error', { error: error.message, filePath });
         throw new Error('Failed to parse PDF content: ' + error.message);
+    } finally {
+        if (parser) {
+            await parser.destroy();
+        }
     }
 }
 
 async function extractTextFromImage(filePath) {
     try {
-        const { data: { text, confidence } } = await Tesseract.recognize(filePath, 'eng');
+        logger.info('Performing OCR on image', { filePath });
+        const { data: { text, confidence } } = await Tesseract.recognize(filePath, 'eng', {
+            logger: m => logger.debug('Tesseract Progress', m)
+        });
+
         return {
             text: text,
-            confidence: confidence / 100
+            confidence: confidence / 100,
+            isScanned: true
         };
     } catch (error) {
-        console.error('OCR extraction error:', error);
+        logger.error('OCR extraction error', { error: error.message, filePath });
         throw new Error('Failed to perform OCR on image');
     }
 }

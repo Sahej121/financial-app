@@ -3,7 +3,7 @@ import { Card, Typography, Space, Button, Divider, Switch, Form, Input, message,
 import { UserOutlined, SafetyOutlined, NotificationOutlined, SettingOutlined, BellOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfile } from '../redux/slices/userSlice';
+import { updateProfile, updateUserSettings } from '../redux/slices/userSlice';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -211,7 +211,8 @@ const Settings = () => {
       const data = await response.json();
       if (response.ok) {
         message.success('Settings saved successfully!');
-        // Update user state if necessary or just keep local settings
+        // Update Redux state with new settings
+        dispatch(updateUserSettings(data.settings));
       } else {
         message.error(data.error || 'Failed to save settings');
       }
@@ -364,33 +365,121 @@ const Settings = () => {
             </SettingItem>
 
             {isChangingPassword && (
-              <div style={{
-                padding: '20px',
-                background: 'linear-gradient(135deg, #fff2e8 0%, #ffe7ba 100%)',
-                borderRadius: '12px',
-                border: '1px solid #ffd591',
-                marginTop: '16px'
-              }}>
-                <Text style={{ color: 'white', fontWeight: '600' }}>
-                  Password change functionality coming soon!
-                </Text>
-                <br />
-                <Text style={{ color: '#8c4a00', fontSize: '14px' }}>
-                  This feature will allow you to securely change your password.
-                </Text>
-                <div style={{ marginTop: '12px' }}>
-                  <ActionButton
-                    onClick={() => setIsChangingPassword(false)}
-                    style={{
-                      background: 'rgba(255, 77, 79, 0.1)',
-                      border: '1px solid rgba(255, 77, 79, 0.2)',
-                      color: '#ff4d4f'
-                    }}
+              <FormContainer>
+                <Form
+                  layout="vertical"
+                  onFinish={async (values) => {
+                    if (values.newPassword !== values.confirmPassword) {
+                      message.error('New passwords do not match');
+                      return;
+                    }
+                    try {
+                      const response = await fetch('/api/auth/change-password', {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                          currentPassword: values.currentPassword,
+                          newPassword: values.newPassword
+                        })
+                      });
+                      const data = await response.json();
+                      if (response.ok) {
+                        message.success('Password changed successfully!');
+                        setIsChangingPassword(false);
+                      } else {
+                        message.error(data.error || 'Failed to change password');
+                      }
+                    } catch (err) {
+                      message.error('An error occurred. Please try again.');
+                    }
+                  }}
+                >
+                  <Form.Item
+                    label="Current Password"
+                    name="currentPassword"
+                    rules={[{ required: true, message: 'Please enter your current password' }]}
                   >
-                    Close
-                  </ActionButton>
-                </div>
-              </div>
+                    <Input.Password
+                      placeholder="Enter current password"
+                      prefix={<LockOutlined style={{ color: 'white' }} />}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        height: '52px',
+                        color: 'white'
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="New Password"
+                    name="newPassword"
+                    rules={[
+                      { required: true, message: 'Please enter your new password' },
+                      { min: 6, message: 'Password must be at least 6 characters' }
+                    ]}
+                  >
+                    <Input.Password
+                      placeholder="Enter new password"
+                      prefix={<LockOutlined style={{ color: 'white' }} />}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        height: '52px',
+                        color: 'white'
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Confirm New Password"
+                    name="confirmPassword"
+                    rules={[
+                      { required: true, message: 'Please confirm your new password' },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('newPassword') === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Passwords do not match'));
+                        }
+                      })
+                    ]}
+                  >
+                    <Input.Password
+                      placeholder="Confirm new password"
+                      prefix={<LockOutlined style={{ color: 'white' }} />}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        height: '52px',
+                        color: 'white'
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <ActionButton htmlType="submit">
+                        Change Password
+                      </ActionButton>
+                      <ActionButton
+                        onClick={() => setIsChangingPassword(false)}
+                        style={{
+                          background: 'rgba(255, 77, 79, 0.1)',
+                          border: '1px solid rgba(255, 77, 79, 0.2)',
+                          color: '#ff4d4f'
+                        }}
+                      >
+                        Cancel
+                      </ActionButton>
+                    </div>
+                  </Form.Item>
+                </Form>
+              </FormContainer>
             )}
 
             <SettingItem>

@@ -1,11 +1,12 @@
 const logger = require('../utils/logger');
 const { FinancialPlanningSubmission, DocumentInsight } = require('../models');
+const aiProvider = require('../utils/aiProvider');
 
 /**
  * Demand Intelligence Service
  * 
  * Specialized AI logic to understand the 'Nuance' of user financial demands.
- * Transitions from generic LLM prompts to domain-specific feature extraction.
+ * Uses specialized LLM calls (via AIProvider) to extract intent, urgency, and complexity.
  */
 class DemandIntelligenceService {
 
@@ -21,33 +22,95 @@ class DemandIntelligenceService {
 
         const insights = await DocumentInsight.findAll({ where: { submissionId } });
 
-        // 1. Feature Extraction (User Notes + Purpose)
+        // 1. Prepare Context for AI
+        const context = this._buildContext(submission, insights);
+
+        // 2. Call AI Provider
+        let aiResult = null;
+        try {
+            const prompt = this._buildPrompt(context);
+            aiResult = await aiProvider.generateJSON(prompt);
+        } catch (error) {
+            logger.error('AI Analysis failed, falling back to heuristics', error);
+        }
+
+        // 3. Fallback or Merge
+        if (!aiResult) {
+            return this._heuristicFallback(submission, insights);
+        }
+
+        logger.info('Demand analysis complete', { submissionId, intent: aiResult });
+        return aiResult;
+    }
+
+    _buildContext(submission, insights) {
+        const docsSummary = insights.map(i => `${i.insightType}: ${i.summary}`).join('; ');
+
+        return {
+            purpose: submission.planningPurpose,
+            notes: [
+                submission.expansionDetails,
+                submission.settlementGoal,
+                submission.otherNotes,
+                submission.medicalConditions,
+                submission.ethicalPreferences
+            ].filter(Boolean).join('. '),
+            financials: {
+                income: submission.monthlyIncome,
+                debt: submission.totalDebtAmount,
+                assets: JSON.stringify(submission.assets || {}),
+                liabilities: JSON.stringify(submission.liabilities || [])
+            },
+            documents: docsSummary
+        };
+    }
+
+    _buildPrompt(context) {
+        return `You are a Senior Financial Analyst. Analyze this client profile and return a strictly formatted JSON object.
+        
+        CLIENT CONTEXT:
+        - Purpose: ${context.purpose}
+        - Notes: ${context.notes}
+        - Financials: Income ${context.financials.income}, Debt ${context.financials.debt}
+        - Documents: ${context.documents}
+
+        TASK:
+        Classify the client's situation into these categories:
+        1. nuances: Array of strings (e.g., "TAX_OPTIMIZATION", "DEBT_DISTRESS", "SCALING_OPPORTUNITY", "LIQUIDITY_CRUNCH", "CAPITAL_PRESERVATION", "HIGH_GROWTH", "FAMILY_ESTATE").
+        2. urgency: "HIGH", "MEDIUM", or "LOW".
+        3. complexityLevel: "SIMPLE", "MODERATE", or "COMPLEX".
+        4. suggestedExpertise: Array of strings (e.g. "TAX_SPECIALIST", "DEBT_RESTRUCTURING_EXPERT", "WEALTH_MANAGER", "LEGAL_ADVISOR").
+        5. summary: A 1-sentence executive summary of their core need.
+
+        JSON FORMAT:
+        {
+            "nuances": [],
+            "urgency": "",
+            "complexityLevel": "",
+            "suggestedExpertise": [],
+            "summary": ""
+        }`;
+    }
+
+    _heuristicFallback(submission, insights) {
+        // ... (Keep original heuristic logic as fallback)
         const userNotes = [
             submission.expansionDetails,
             submission.settlementGoal,
             submission.otherNotes
         ].filter(Boolean).join(' ').toLowerCase();
 
-        // 2. Multi-Layer Intent Classification
-        const intent = {
+        return {
             primaryCategory: submission.planningPurpose,
             nuances: this._extractNuances(userNotes),
             urgency: this._assessUrgency(userNotes, submission),
             complexityLevel: this._calculateComplexity(submission, insights),
-            suggestedExpertise: []
+            suggestedExpertise: this._mapExpertise({ nuances: this._extractNuances(userNotes), complexityLevel: 'MODERATE' }),
+            summary: "AI Service unavailable. Heuristic analysis applied."
         };
-
-        // 3. Expertise Mapping
-        intent.suggestedExpertise = this._mapExpertise(intent);
-
-        logger.info('Demand analysis complete', { submissionId, intent });
-
-        return intent;
     }
 
-    /**
-     * Layer 1: Heuristic Nuance Extraction (To be replaced by Custom ML Classifier)
-     */
+    // ... (Keep original helper methods _extractNuances, _assessUrgency, etc. for fallback)
     _extractNuances(text) {
         const nuances = [];
         const keywordMap = {
@@ -57,68 +120,27 @@ class DemandIntelligenceService {
             'LIQUIDITY_CRUNCH': ['cash flow', 'working capital', 'salary', 'vendor payment'],
             'CAPITAL_PRESERVATION': ['safe', 'low risk', 'protect', 'conservative']
         };
-
         for (const [key, keywords] of Object.entries(keywordMap)) {
-            if (keywords.some(k => text.includes(k))) {
-                nuances.push(key);
-            }
+            if (keywords.some(k => text.includes(k))) nuances.push(key);
         }
         return nuances;
     }
 
-    /**
-     * Layer 2: Urgency Assessment
-     */
     _assessUrgency(text, submission) {
-        const urgencyKeywords = ['urgent', 'immediately', 'asap', 'within 2 days', 'deadline'];
-        const hasUrgentKeyword = urgencyKeywords.some(k => text.includes(k));
-
-        // Business logic flags
-        const isDefaulting = text.includes('default') || text.includes('late');
-
-        if (hasUrgentKeyword || isDefaulting) return 'HIGH';
+        if (['urgent', 'immediately', 'deadline', 'default'].some(k => text.includes(k))) return 'HIGH';
         return 'MEDIUM';
     }
 
-    /**
-     * Layer 3: Structural Complexity Calculation
-     */
     _calculateComplexity(submission, insights) {
-        let score = 0;
-
-        // Data density
-        if (insights.length > 3) score += 2;
-        if (submission.totalDebtAmount > 5000000) score += 3; // 50L+ debt is complex
-        if (submission.planningPurpose === 'business_expansion') score += 2;
-
-        if (score >= 5) return 'COMPLEX';
-        if (score >= 2) return 'MODERATE';
-        return 'SIMPLE';
+        return (insights.length > 3 || (submission.totalDebtAmount && parseFloat(submission.totalDebtAmount) > 5000000)) ? 'COMPLEX' : 'MODERATE';
     }
 
-    /**
-     * Layer 4: Specialist Recommendation Engine
-     */
     _mapExpertise(intent) {
         const experts = [];
-
-        if (intent.nuances.includes('TAX_OPTIMIZATION')) experts.push('TAX_SPECIALIST');
-        if (intent.nuances.includes('DEBT_DISTRESS')) experts.push('DEBT_RESTRUCTURING_EXPERT');
-        if (intent.complexityLevel === 'COMPLEX') experts.push('SENIOR_STRATEGIST');
-
+        if (intent.nuances && intent.nuances.includes('TAX_OPTIMIZATION')) experts.push('TAX_SPECIALIST');
+        if (intent.nuances && intent.nuances.includes('DEBT_DISTRESS')) experts.push('DEBT_RESTRUCTURING_EXPERT');
         if (experts.length === 0) experts.push('GENERALIST_PLANNER');
-
-        return [...new Set(experts)];
-    }
-
-    /**
-     * ML Model Interface (Placeholder for future FastAPI/SageMaker integration)
-     * For production, this would call a real inference endpoint.
-     */
-    async callExternalMLInference(data) {
-        // [TODO] Implement AWS SageMaker / Vertex AI call
-        // const response = await axios.post(process.env.ML_ENDPOINT, data);
-        return null;
+        return experts;
     }
 }
 

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Space, Dropdown } from 'antd';
-import { HomeOutlined, BankOutlined, CreditCardOutlined, TeamOutlined, UserOutlined, DashboardOutlined, LogoutOutlined, SettingOutlined, RocketOutlined, FileTextOutlined, AuditOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, Space, Dropdown, Drawer, Grid } from 'antd';
+import { HomeOutlined, BankOutlined, CreditCardOutlined, TeamOutlined, UserOutlined, DashboardOutlined, LogoutOutlined, SettingOutlined, RocketOutlined, FileTextOutlined, AuditOutlined, MenuOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/userSlice';
 import styled from 'styled-components';
 
 const { Header } = Layout;
+const { useBreakpoint } = Grid;
 
 const StyledHeader = styled(Header)`
   background: rgba(0, 0, 0, 0.5);
@@ -14,6 +15,7 @@ const StyledHeader = styled(Header)`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
   position: fixed;
   width: 100%;
@@ -38,7 +40,7 @@ const LogoContainer = styled(Link)`
   }
 `;
 
-const StyledMenu = styled(Menu)`
+const DesktopMenu = styled(Menu)`
   background: transparent !important;
   border: none;
   flex: 1;
@@ -70,6 +72,21 @@ const StyledMenu = styled(Menu)`
   }
 `;
 
+const MobileMenuButton = styled(Button)`
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover, &:focus {
+    color: var(--primary-color);
+    background: transparent;
+  }
+`;
+
 const SidebarButton = styled(Button)`
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.05);
@@ -88,6 +105,11 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.user);
+  const screens = useBreakpoint();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Consider mobile if screen width is less than lg (992px)
+  const isMobile = !screens.lg;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -118,15 +140,27 @@ const Navbar = () => {
     { key: '/credit-card', icon: <CreditCardOutlined style={{ color: '#00B0F0' }} />, label: 'Cards' },
   ];
 
+  // Filter menu items based on role
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.key === '/gst' && user?.role !== 'ca') return false;
+    if ((user?.role === 'ca' || user?.role === 'financial_planner') && ['/planning', '/ca-selection'].includes(item.key)) return false;
+    return true;
+  });
+
+  const processedMenuItems = filteredMenuItems.map(item => ({
+    ...item,
+    label: <Link to={item.key} onClick={() => setMobileMenuOpen(false)}>{item.label}</Link>
+  }));
+
   const userMenu = (
-    <Menu style={{ background: '#1c1c1c', border: '1px solid #333' }}>
+    <Menu theme="dark" style={{ background: '#1c1c1c', border: '1px solid #333' }}>
       <Menu.Item key="dashboard" icon={<DashboardOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate(getDashboardPath())}>
-        <span style={{ color: '#fff' }}>Dashboard</span>
+        Dashboard
       </Menu.Item>
       <Menu.Item key="settings" icon={<SettingOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate('/settings')}>
-        <span style={{ color: '#fff' }}>Settings</span>
+        Settings
       </Menu.Item>
-      <Menu.Divider style={{ borderTop: '1px solid #333' }} />
+      <Menu.Divider />
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: '#ff4d4f' }}>
         Logout
       </Menu.Item>
@@ -134,56 +168,91 @@ const Navbar = () => {
   );
 
   return (
-    <StyledHeader>
-      <LogoContainer to="/">
-        <img src="/logo_refined.svg" alt="Logo" style={{ height: 48, marginRight: 12, objectFit: 'contain' }} />
-        <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '1px' }}>CreditLeliya</span>
-      </LogoContainer>
+    <>
+      <StyledHeader>
+        <LogoContainer to="/">
+          <img src="/logo_refined.svg" alt="Logo" style={{ height: 48, marginRight: 12, objectFit: 'contain' }} />
+          {!isMobile && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '1px' }}>CreditLeliya</span>}
+        </LogoContainer>
 
-      <StyledMenu
-        mode="horizontal"
-        selectedKeys={[location.pathname]}
-        items={menuItems
-          .filter(item => {
-            if (item.key === '/gst' && user?.role !== 'ca') {
-              return false;
-            }
-            // Hide specific links for Analysts and CAs
-            if (user?.role === 'ca' || user?.role === 'financial_planner') {
-              if (['/planning', '/ca-selection'].includes(item.key)) {
-                return false;
-              }
-            }
-            return true;
-          })
-          .map(item => ({
-            ...item,
-            label: <Link to={item.key}>{item.label}</Link>
-          }))}
-      />
-
-      <Space>
-        {token && user ? (
-          <Dropdown overlay={userMenu} placement="bottomRight" arrow>
-            <SidebarButton icon={<UserOutlined />}>
-              {user.name.split(' ')[0]}
-            </SidebarButton>
-          </Dropdown>
-        ) : (
+        {!isMobile ? (
           <>
-            <Link to="/login">
-              <Button type="text" style={{ color: 'rgba(255,255,255,0.8)' }}>Log In</Button>
-            </Link>
-            <Link to="/register">
-              <Button type="primary" shape="round" style={{ background: 'white', color: 'black', border: 'none', fontWeight: 600 }}>
-                Get Started
-              </Button>
-            </Link>
+            <DesktopMenu
+              mode="horizontal"
+              selectedKeys={[location.pathname]}
+              items={processedMenuItems}
+            />
+            <Space>
+              {token && user ? (
+                <Dropdown overlay={userMenu} placement="bottomRight" arrow>
+                  <SidebarButton icon={<UserOutlined />}>
+                    {user.name.split(' ')[0]}
+                  </SidebarButton>
+                </Dropdown>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button type="text" shape="round" style={{ color: 'rgba(255,255,255,0.8)' }}>Log In</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button type="primary" shape="round" style={{ background: 'white', color: 'black', border: 'none', fontWeight: 600 }}>
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </Space>
           </>
+        ) : (
+          <Space>
+            {token && user && (
+              <Dropdown overlay={userMenu} placement="bottomRight" arrow toggleVisible={true}>
+                <Button type="text" icon={<UserOutlined style={{ color: 'white', fontSize: '20px' }} />} />
+              </Dropdown>
+            )}
+            <MobileMenuButton onClick={() => setMobileMenuOpen(true)}>
+              <MenuOutlined />
+            </MobileMenuButton>
+          </Space>
         )}
-      </Space>
-    </StyledHeader>
+      </StyledHeader>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        title={
+          <LogoContainer to="/" onClick={() => setMobileMenuOpen(false)} style={{ margin: 0 }}>
+            <img src="/logo_refined.svg" alt="Logo" style={{ height: 32, marginRight: 10 }} />
+            <span style={{ fontSize: '20px' }}>CreditLeliya</span>
+          </LogoContainer>
+        }
+        placement="right"
+        onClose={() => setMobileMenuOpen(false)}
+        visible={mobileMenuOpen}
+        bodyStyle={{ padding: 0, background: '#121212' }}
+        headerStyle={{ background: '#121212', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+        width={280}
+      >
+        <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={[location.pathname]}
+          items={processedMenuItems}
+          style={{ background: 'transparent', border: 'none', marginTop: '10px' }}
+        />
+
+        {!token && (
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '10px' }}>
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button block type="default" style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}>Log In</Button>
+            </Link>
+            <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+              <Button block type="primary" style={{ background: 'white', color: 'black', border: 'none' }}>Get Started</Button>
+            </Link>
+          </div>
+        )}
+      </Drawer>
+    </>
   );
 };
 
-export default Navbar; 
+export default Navbar;

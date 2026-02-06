@@ -121,6 +121,12 @@ const userSlice = createSlice({
     updateProfile: (state, action) => {
       state.user = { ...state.user, ...action.payload };
       localStorage.setItem('user', JSON.stringify(state.user));
+    },
+    updateUserSettings: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('user', JSON.stringify(state.user));
+      }
     }
   },
   extraReducers: (builder) => {
@@ -220,5 +226,5 @@ const userSlice = createSlice({
   }
 });
 
-export const { logout, updateProfile } = userSlice.actions;
+export const { logout, updateProfile, updateUserSettings } = userSlice.actions;
 export default userSlice.reducer; 

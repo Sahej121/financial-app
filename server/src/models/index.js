@@ -2,8 +2,13 @@ const { Sequelize } = require('sequelize');
 const config = require('../config/database');
 const path = require('path');
 
-// Create Sequelize instance with PostgreSQL
-const sequelize = new Sequelize(config);
+// Create Sequelize instance
+let sequelize;
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, config);
+} else {
+  sequelize = new Sequelize(config);
+}
 
 // Import models
 const User = require('./user');
@@ -25,6 +30,7 @@ const HSNCode = require('./HSNCode');
 const ITCRecord = require('./ITCRecord');
 const WealthMonitor = require('./WealthMonitor');
 const DecisionAuditLog = require('./DecisionAuditLog');
+const Transaction = require('./Transaction');
 
 // Initialize models
 const models = {
@@ -46,7 +52,8 @@ const models = {
   HSNCode: HSNCode(sequelize),
   ITCRecord: ITCRecord(sequelize),
   WealthMonitor: WealthMonitor(sequelize),
-  DecisionAuditLog: DecisionAuditLog(sequelize)
+  DecisionAuditLog: DecisionAuditLog(sequelize),
+  Transaction: Transaction(sequelize)
 };
 
 // Set up associations

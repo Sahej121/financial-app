@@ -12,11 +12,27 @@ const {
 } = require('../models');
 const decisionPackService = require('../services/decisionPackService');
 const { Op } = require('sequelize');
+const { parseIndianCurrency } = require('../utils/currencyHelper');
 
 // Submit financial planning form
 exports.submitFinancialPlan = async (req, res) => {
   try {
     const userId = req.user.id;
+    const body = req.body;
+
+    // Sanitize numeric fields that might have "Lakh/Cr" suffixes
+    const sanitizedTargetAmount = parseIndianCurrency(body.targetAmount);
+    const sanitizedMonthlySavings = parseIndianCurrency(body.monthlySavings);
+    const sanitizedTotalLiabilityAmount = parseIndianCurrency(body.totalLiabilityAmount);
+
+    // Additional sanitization for MOAT fields
+    const sanitizedFundingRequired = parseIndianCurrency(body.fundingRequired);
+    const sanitizedAnnualRevenue = parseIndianCurrency(body.annualRevenue);
+    const sanitizedTotalDebtAmount = parseIndianCurrency(body.totalDebtAmount);
+    const sanitizedMonthlyEMI = parseIndianCurrency(body.monthlyEMI);
+    const sanitizedMonthlyExpenses = parseIndianCurrency(body.monthlyExpenses);
+    const sanitizedMonthlyIncome = parseIndianCurrency(body.monthlyIncome);
+
     const {
       // Step 0: Purpose
       planningPurpose,
@@ -115,13 +131,14 @@ exports.submitFinancialPlan = async (req, res) => {
       // MOAT: Planning Purpose
       planningPurpose: planningPurpose || null,
 
-      // MOAT: Business Expansion
+      // ... other fields (omitted for brevity in replace tool matches)
+      // I will use a larger match to ensure context
       expansionType: expansionType || null,
-      fundingRequired: fundingRequired || null,
+      fundingRequired: sanitizedFundingRequired,
       expansionTimeline: expansionTimeline || null,
       businessType: businessType || null,
       industryType: industryType || null,
-      annualRevenue: annualRevenue || null,
+      annualRevenue: sanitizedAnnualRevenue,
       employeeCount: employeeCount || null,
       profitMargin: profitMargin || null,
       cashReserves: cashReserves || null,
@@ -129,14 +146,14 @@ exports.submitFinancialPlan = async (req, res) => {
 
       // MOAT: Loan Settlement
       debtTypes: debtTypes || null,
-      totalDebtAmount: totalDebtAmount || null,
-      monthlyEMI: monthlyEMI || null,
-      monthlyExpenses: monthlyExpenses || null,
+      totalDebtAmount: sanitizedTotalDebtAmount,
+      monthlyEMI: sanitizedMonthlyEMI,
+      monthlyExpenses: sanitizedMonthlyExpenses,
       settlementGoal: settlementGoal || null,
       settlementTimeline: settlementTimeline || null,
 
       // Goal
-      targetAmount: targetAmount || null,
+      targetAmount: sanitizedTargetAmount,
       targetTimeline: targetTimeline || null,
 
       // Time Horizon
@@ -151,16 +168,16 @@ exports.submitFinancialPlan = async (req, res) => {
 
       // Income
       incomeType: incomeType || null,
-      monthlyIncome: monthlyIncome || null,
+      monthlyIncome: sanitizedMonthlyIncome,
       incomeStability: incomeStability || null,
-      monthlySavings: monthlySavings || null,
+      monthlySavings: sanitizedMonthlySavings,
 
       // Assets
       assets: assets || {},
 
       // Liabilities
       liabilities: liabilities || [],
-      totalLiabilityAmount: totalLiabilityAmount || null,
+      totalLiabilityAmount: sanitizedTotalLiabilityAmount,
       highestInterestRate: highestInterestRate || null,
       dependents: dependents || null,
 
@@ -190,6 +207,10 @@ exports.submitFinancialPlan = async (req, res) => {
       status: 'submitted',
       decisionPackStatus: 'pending'
     });
+
+    // GENERATE SCORES IMMEDIATELY for instant UI feedback
+    const scoringService = require('../services/scoringService');
+    await scoringService.generateAllScores(submission.id).catch(err => console.error('Immediate scoring error:', err));
 
     console.log('Financial planning submission created:', submission.id);
 
@@ -444,8 +465,25 @@ exports.updateSubmissionStatus = async (req, res) => {
 
     await submission.update(updates);
 
-    // If status changed to 'consultation_scheduled' or 'completed', maybe notify user?
-    // TODO: Add notification logic here
+    // Send email notification
+    if (status === 'consultation_scheduled' || status === 'completed') {
+      const sendEmail = require('../utils/email');
+      const subject = status === 'completed' ? 'Financial Plan Ready' : 'Consultation Scheduled';
+      const message = status === 'completed'
+        ? `Dear User,\n\nYour financial plan is ready! Please log in to your dashboard to view the decision pack.\n\nRegards,\nNeurona Team`
+        : `Dear User,\n\nYour consultation has been actively scheduled. An analyst will contact you shortly.\n\nRegards,\nNeurona Team`;
+
+      // Use submission email if available, or fetch user
+      const recipientEmail = submission.email || (await submission.getUser())?.email;
+
+      if (recipientEmail) {
+        await sendEmail({
+          email: recipientEmail,
+          subject: subject,
+          message: message
+        });
+      }
+    }
 
     res.json({
       success: true,

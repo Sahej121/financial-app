@@ -91,9 +91,25 @@ const Login = () => {
   const [form] = Form.useForm();
   const { loading, error } = useSelector((state) => state.user);
 
+  // Helper to determine dashboard path based on role
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case 'ca':
+        return '/ca-dashboard';
+      case 'financial_planner':
+        return '/financial-planner-dashboard';
+      default:
+        return '/dashboard';
+    }
+  };
+
   const onFinish = async (values) => {
     try {
-      await dispatch(login(values)).unwrap();
+      const result = await dispatch(login(values)).unwrap();
+      // Redirect to appropriate dashboard after successful login
+      const role = result.user?.role || 'user';
+      const targetPath = getDashboardPath(role);
+      navigate(targetPath, { replace: true });
     } catch (err) {
       // Redux handles error
     }

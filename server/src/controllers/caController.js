@@ -3,8 +3,17 @@ const { Op } = require('sequelize');
 
 exports.getCAs = async (req, res) => {
   try {
-    const { experience, minPrice, maxPrice, specialization, sortBy } = req.query;
+    const { experience, minPrice, maxPrice, specialization, sortBy, recommend, planningPurpose } = req.query;
 
+    // INTELLIGENT MATCHING (If explicitly requested)
+    if (recommend === 'true' || planningPurpose) {
+      const recommendationService = require('../services/recommendationService');
+      const userProfile = { planningPurpose };
+      const recommendations = await recommendationService.recommendCAs(userProfile);
+      return res.json(recommendations);
+    }
+
+    // STANDARD FILTERING
     let whereClause = { isActive: true };
 
     if (experience && experience !== 'all') {

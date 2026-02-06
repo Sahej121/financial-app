@@ -9,6 +9,14 @@ module.exports = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'financial_app',
   logging: false,
+  // Add support for DATABASE_URL connection string (common in production)
+  use_env_variable: 'DATABASE_URL',
+  dialectOptions: {
+    ssl: process.env.NODE_ENV === 'production' ? {
+      require: true,
+      rejectUnauthorized: false
+    } : false
+  },
   pool: {
     max: 5,
     min: 0,

@@ -12,6 +12,7 @@ const RoleBasedRoute = ({ children, allowedRoles, requireAuth = true }) => {
   }
 
   // Check authentication
+  console.log('RoleBasedRoute check:', { path: location.pathname, isVerified, userRole: user?.role, allowedRoles });
   if (requireAuth && !isVerified) {
     console.warn('RoleBasedRoute: Access denied - Not verified. Redirecting to login.');
     return <Navigate to="/login" state={{ from: location }} replace />;

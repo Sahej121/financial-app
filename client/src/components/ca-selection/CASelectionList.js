@@ -131,16 +131,25 @@ const CASelectionList = ({ onStartConsultation }) => {
   const fetchCAs = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null); // Clear previous errors
-      const response = await api.get('/cas', {
-        params: { sortBy }
-      });
+      setError(null);
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const planningPurpose = searchParams.get('planningPurpose');
+
+      const params = { sortBy };
+
+      if (planningPurpose) {
+        params.planningPurpose = planningPurpose;
+        params.recommend = 'true';
+      }
+
+      const response = await api.get('/cas', { params });
       setCAs(response.data);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching CAs:', err);
       setError('Failed to load CAs. Please try again.');
-      setCAs([]); // Clear CAs on error or keep previous state if desired
+      setCAs([]);
       setLoading(false);
     }
   }, [sortBy]);

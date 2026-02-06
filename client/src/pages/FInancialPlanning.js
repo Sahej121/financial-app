@@ -36,6 +36,7 @@ import {
 import styled, { keyframes } from 'styled-components';
 import moment from 'moment';
 import { DecisionReadinessCard, DecisionPackViewer } from '../components/moat';
+import { initiatePayment } from '../services/paymentService';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -63,13 +64,27 @@ const PageContainer = styled.div`
 const WizardCard = styled.div`
   max-width: 900px;
   margin: 0 auto;
-  background: rgba(20, 20, 20, 0.5);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 32px;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
   padding: 60px;
+  position: relative;
+  overflow: hidden;
   
+  /* Glow effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(0, 176, 240, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
   @media (max-width: 768px) {
     padding: 30px;
   }
@@ -77,48 +92,78 @@ const WizardCard = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 50px;
   animation: ${slideUp} 0.8s ease-out;
 
   h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    color: white;
   }
 
   p {
-    font-size: 1.25rem;
-    color: var(--text-secondary);
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.5);
     max-width: 600px;
     margin: 0 auto;
+    font-weight: 400;
   }
 `;
 
 const CustomSteps = styled(Steps)`
-  margin-bottom: 60px;
+  margin-bottom: 50px;
   
   .ant-steps-item-process .ant-steps-item-icon {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: #00B0F0;
+    border-color: #00B0F0;
+    box-shadow: 0 0 15px rgba(0, 176, 240, 0.4);
+  }
+  
+  .ant-steps-item-process .ant-steps-item-icon .ant-steps-icon {
+    color: black;
+  }
+
+  .ant-steps-item-wait .ant-steps-item-icon {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .ant-steps-item-wait .ant-steps-item-icon .ant-steps-icon {
+    color: rgba(255, 255, 255, 0.3);
   }
   
   .ant-steps-item-finish .ant-steps-item-icon {
-    background: transparent;
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    background: rgba(0, 176, 240, 0.1);
+    border-color: #00B0F0;
   }
-  
+
+  .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+    color: #00B0F0;
+  }
+
   .ant-steps-item-title {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-size: 14px;
     font-weight: 500;
   }
   
-  .ant-steps-item-active .ant-steps-item-title {
+  .ant-steps-item-process .ant-steps-item-title {
     color: white !important;
-    font-weight: 700;
+    font-weight: 600;
+  }
+  
+  .ant-steps-item-finish .ant-steps-item-title {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .ant-steps-item-tail::after {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after {
+    background-color: #00B0F0 !important;
   }
 `;
 
@@ -127,20 +172,101 @@ const FormSection = styled.div`
 `;
 
 const StyledInput = styled(Input)`
-  height: 60px;
-  background: rgba(255, 255, 255, 0.03);
+  height: 56px;
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 12px;
   color: white;
-  font-size: 1.1rem;
-  padding: 0 24px;
-  transition: all 0.3s;
+  font-size: 16px;
+  padding: 0 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', sans-serif;
 
-  &:hover, &:focus {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--primary-color);
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &:focus {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: #00B0F0;
+    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1);
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.25);
   }
 `;
+
+const StyledSelect = styled(Select)`
+  width: 100%;
+  
+  .ant-select-selector {
+    height: 56px !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 20px !important;
+    transition: all 0.3s !important;
+  }
+  
+  .ant-select-selection-item {
+    color: white !important;
+    font-size: 16px !important;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .ant-select-selection-placeholder {
+    color: rgba(255, 255, 255, 0.25) !important;
+    font-size: 16px;
+  }
+
+  .ant-select-arrow {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  &:hover .ant-select-selector {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  &.ant-select-focused .ant-select-selector {
+    border-color: #00B0F0 !important;
+    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1) !important;
+  }
+  
+  &.ant-select-multiple .ant-select-selection-item {
+    background: rgba(0, 176, 240, 0.2) !important;
+    border: 1px solid rgba(0, 176, 240, 0.3) !important;
+    border-radius: 6px !important;
+  }
+  
+  &.ant-select-multiple .ant-select-selection-item-content {
+    color: #00B0F0 !important;
+    font-weight: 500;
+  }
+  
+  &.ant-select-multiple .ant-select-selection-item-remove {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+`;
+
+// Helper for premium labels
+const FieldLabel = ({ children, required }) => (
+  <span style={{
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: '12px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    marginBottom: '8px',
+    display: 'block'
+  }}>
+    {children} {required && <span style={{ color: '#ff4d4f', marginLeft: 4 }}>*</span>}
+  </span>
+);
 
 
 const TimeSlotCard = styled.div`
@@ -186,7 +312,7 @@ const NextButton = styled(Button)`
   font-size: 1.2rem;
   font-weight: 600;
   padding: 0 48px;
-  background: var(--primary-color);
+  background: #00B0F0;
   border: none;
   color: black;
   box-shadow: 0 8px 25px rgba(0, 176, 240, 0.3);
@@ -197,6 +323,68 @@ const NextButton = styled(Button)`
     background: white;
     color: black;
     box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+  }
+
+  &:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+  }
+`;
+
+const StepHeader = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+`;
+
+const StepIndicator = styled.div`
+  h2 {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h3 {
+    color: white;
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-family: 'Inter', sans-serif;
+  }
+`;
+
+const ProgressBar = styled.div`
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  
+  .fill {
+    height: 100%;
+    background: #00B0F0;
+    box-shadow: 0 0 15px rgba(0, 176, 240, 0.6);
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (max-width: 576px) {
+    width: 100%;
   }
 `;
 
@@ -360,10 +548,16 @@ const FinancialPlanning = () => {
                 message.error(`${info.file.name} upload failed.`);
               }
             }}
-            style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)' }}
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderRadius: '16px',
+              padding: '32px'
+            }}
           >
-            <p className="ant-upload-drag-icon"><UploadOutlined style={{ color: 'var(--primary-color)' }} /></p>
-            <p className="ant-upload-text" style={{ color: 'white' }}>Click or drag PDF/Excel files to this area to upload</p>
+            <p className="ant-upload-drag-icon"><UploadOutlined style={{ color: '#00B0F0', fontSize: 32 }} /></p>
+            <p className="ant-upload-text" style={{ color: 'white', fontSize: '16px', marginTop: 16 }}>Click or drag files to upload</p>
+            <p className="ant-upload-hint" style={{ color: 'rgba(255,255,255,0.4)' }}>Support for PDF, Excel</p>
           </Upload.Dragger>
         </FormSection>
       )
@@ -375,70 +569,70 @@ const FinancialPlanning = () => {
       title: 'Goals & Profile',
       content: (
         <FormSection>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="monthlyIncome" label={<span style={{ color: 'white' }}>Monthly Income</span>} rules={[{ required: true }]}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="monthlyIncome" label={<FieldLabel required>Monthly Income</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 1,00,00,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="monthlySavings" label={<span style={{ color: 'white' }}>Monthly Savings</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="monthlySavings" label={<FieldLabel required>Monthly Savings</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 30,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="incomeStability" label={<span style={{ color: 'white' }}>Income Stability</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="incomeStability" label={<FieldLabel required>Income Stability</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="very_stable">Very Stable</Option>
                   <Option value="stable">Stable</Option>
                   <Option value="variable">Variable</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="riskPreference" label={<span style={{ color: 'white' }}>Risk Tolerance</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="riskPreference" label={<FieldLabel required>Risk Tolerance</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="stability">Conservative (Stability)</Option>
                   <Option value="balanced">Balanced</Option>
                   <Option value="aggressive">Aggressive (High Risk)</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="investmentExperience" label={<span style={{ color: 'white' }}>Experience</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="investmentExperience" label={<FieldLabel required>Experience</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="none">No Experience</Option>
                   <Option value="beginner">Beginner</Option>
                   <Option value="experienced">Experienced</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="achievementTimeline" label={<span style={{ color: 'white' }}>Time Horizon</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="achievementTimeline" label={<FieldLabel required>Time Horizon</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="1_3_years">1-3 Years</Option>
                   <Option value="3_7_years">3-7 Years</Option>
                   <Option value="over_7_years">7+ Years</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="hasHealthInsurance" label={<span style={{ color: 'white' }}>Health Insurance?</span>} valuePropName="checked">
+            <Col xs={12} md={12}>
+              <Form.Item name="hasHealthInsurance" label={<FieldLabel>Health Insurance?</FieldLabel>} valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="hasLifeInsurance" label={<span style={{ color: 'white' }}>Life Insurance?</span>} valuePropName="checked">
+            <Col xs={12} md={12}>
+              <Form.Item name="hasLifeInsurance" label={<FieldLabel>Life Insurance?</FieldLabel>} valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
-            <Col span={24}>
-              <Form.Item name="successPriority" label={<span style={{ color: 'white' }}>What is most important?</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24}>
+              <Form.Item name="successPriority" label={<FieldLabel required>Primary Goal</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="peace_of_mind">Capital Protection (Peace of Mind)</Option>
                   <Option value="maximizing_returns">High Growth (Max Returns)</Option>
                   <Option value="predictable_income">Regular Income</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
           </Row>
@@ -453,78 +647,78 @@ const FinancialPlanning = () => {
       title: 'Business Profile',
       content: (
         <FormSection>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="businessType" label={<span style={{ color: 'white' }}>Business Structure</span>} rules={[{ required: true }]}>
-                <Select size="large">
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="businessType" label={<FieldLabel required>Structure</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="sole_proprietor">Sole Proprietorship</Option>
                   <Option value="partnership">Partnership</Option>
                   <Option value="pvt_ltd">Private Ltd</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="industryType" label={<span style={{ color: 'white' }}>Industry</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="industryType" label={<FieldLabel required>Industry</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput placeholder="e.g. Retail, Tech, Mfg" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="annualRevenue" label={<span style={{ color: 'white' }}>Annual Revenue</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="annualRevenue" label={<FieldLabel required>Annual Revenue</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 50,00,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="profitMargin" label={<span style={{ color: 'white' }}>Profit Margin (%)</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="profitMargin" label={<FieldLabel required>Profit Margin (%)</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="30+">30% +</Option>
                   <Option value="15-30">15-30%</Option>
                   <Option value="5-15">5-15%</Option>
                   <Option value="0-5">0-5%</Option>
                   <Option value="negative">Negative</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="cashReserves" label={<span style={{ color: 'white' }}>Cash Reserves (Months)</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="cashReserves" label={<FieldLabel required>Cash Reserves</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="6+">6 Months +</Option>
                   <Option value="3-6">3-6 Months</Option>
                   <Option value="1-3">1-3 Months</Option>
                   <Option value="<1">Less than 1 Month</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="employeeCount" label={<span style={{ color: 'white' }}>Employee Count</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="employeeCount" label={<FieldLabel required>Employee Count</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="1-10">1-10</Option>
                   <Option value="11-50">11-50</Option>
                   <Option value="51-200">51-200</Option>
                   <Option value="200+">200+</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="expansionType" label={<span style={{ color: 'white' }}>Expansion Goal</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="expansionType" label={<FieldLabel required>Expansion Goal</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="new_location">New Location</Option>
                   <Option value="new_product">New Product Line</Option>
                   <Option value="market_expansion">Market Expansion</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="fundingRequired" label={<span style={{ color: 'white' }}>Funding Required</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="fundingRequired" label={<FieldLabel required>Funding Required</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 25,00,000" />
               </Form.Item>
             </Col>
-            <Col span={24}>
-              <Form.Item name="expansionTimeline" label={<span style={{ color: 'white' }}>Expansion Timeline</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24}>
+              <Form.Item name="expansionTimeline" label={<FieldLabel required>Expansion Timeline</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="immediate">Immediate (0-3 Months)</Option>
                   <Option value="short_term">Short Term (3-6 Months)</Option>
                   <Option value="planned">Planned (6+ Months)</Option>
-                </Select>
+                </StyledSelect>
               </Form.Item>
             </Col>
           </Row>
@@ -539,58 +733,65 @@ const FinancialPlanning = () => {
       title: 'Debt Profile',
       content: (
         <FormSection>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="totalDebtAmount" label={<span style={{ color: 'white' }}>Total Debt</span>} rules={[{ required: true }]}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="totalDebtAmount" label={<FieldLabel required>Total Debt</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 10,00,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="monthlyEMI" label={<span style={{ color: 'white' }}>Current Monthly EMI</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="monthlyEMI" label={<FieldLabel required>Current EMI</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 50,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="monthlyIncome" label={<span style={{ color: 'white' }}>Monthly Income</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="monthlyIncome" label={<FieldLabel required>Monthly Income</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 1,00,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="monthlyExpenses" label={<span style={{ color: 'white' }}>Monthly Expenses</span>} rules={[{ required: true }]}>
+            <Col xs={24} md={12}>
+              <Form.Item name="monthlyExpenses" label={<FieldLabel required>Monthly Expenses</FieldLabel>} rules={[{ required: true }]}>
                 <StyledInput prefix="₹" placeholder="e.g. 40,000" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="incomeStability" label={<span style={{ color: 'white' }}>Income Stability</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24} md={12}>
+              <Form.Item name="incomeStability" label={<FieldLabel required>Income Stability</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="very_stable">Very Stable (Govt/MNC)</Option>
                   <Option value="stable">Stable (Pvt)</Option>
                   <Option value="variable">Variable (Business/Freelance)</Option>
                   <Option value="unstable">Unstable</Option>
-                </Select>
+
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="debtTypes" label={<span style={{ color: 'white' }}>Types of Debt</span>} rules={[{ required: true }]}>
-                <Select mode="multiple" size="large" placeholder="Select all that apply">
+            <Col xs={24} md={12}>
+              <Form.Item name="debtTypes" label={<FieldLabel required>Types of Debt</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect mode="multiple" size="large" placeholder="Select all that apply">
                   <Option value="personal_loan">Personal Loan</Option>
                   <Option value="credit_card">Credit Card</Option>
                   <Option value="business_loan">Business Loan</Option>
                   <Option value="home_loan">Home Loan</Option>
-                </Select>
+                  <Option value="car_loan">Car Loan</Option>
+                  <Option value="education_loan">Education Loan</Option>
+                  <Option value="other">Other</Option>
+                </StyledSelect>
               </Form.Item>
             </Col>
-            <Col span={24}>
-              <Form.Item name="settlementGoal" label={<span style={{ color: 'white' }}>Primary Goal</span>} rules={[{ required: true }]}>
-                <Select size="large">
+            <Col xs={24}>
+              <Form.Item name="settlementGoal" label={<FieldLabel required>Primary Goal</FieldLabel>} rules={[{ required: true }]}>
+                <StyledSelect size="large">
                   <Option value="reduce_emi">Reduce Monthly EMI</Option>
                   <Option value="debt_free">Become Debt Free Faster</Option>
                   <Option value="consolidate">Consolidate Loans</Option>
-                </Select>
+                  <Option value="lower_interest">Lower Interest Rates</Option>
+                  <Option value="improve_credit">Improve Credit Score</Option>
+                  <Option value="other">Other</Option>
+                </StyledSelect>
               </Form.Item>
             </Col>
-          </Row>
-        </FormSection>
+          </Row >
+        </FormSection >
       )
     },
     commonSteps.documents
@@ -603,35 +804,35 @@ const FinancialPlanning = () => {
       <FormSection>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={{ color: 'white', marginBottom: 16 }}>Ready for your analysis?</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginBottom: 0 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: 0 }}>
             Here is a summary of the data we'll use for your analysis.
           </p>
         </div>
 
-        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 32, borderRadius: 24, marginBottom: 24 }}>
-          <Row gutter={[32, 32]}>
-            <Col span={12}>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Purpose</div>
-              <div style={{ color: 'white', fontSize: '1.2rem', fontWeight: 600, textTransform: 'capitalize' }}>
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 24, borderRadius: 24, marginBottom: 24 }}>
+          <Row gutter={[24, 24]}>
+            <Col xs={12} md={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4, fontSize: '0.8rem' }}>Purpose</div>
+              <div style={{ color: 'white', fontSize: '1rem', fontWeight: 600, textTransform: 'capitalize' }}>
                 {planningPurpose?.replace('_', ' ')}
               </div>
             </Col>
-            <Col span={12}>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Monthly Income</div>
-              <div style={{ color: 'var(--primary-color)', fontSize: '1.2rem', fontWeight: 600 }}>
-                {form.getFieldValue('monthlyIncome') || 'Not provided'}
+            <Col xs={12} md={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4, fontSize: '0.8rem' }}>Income</div>
+              <div style={{ color: 'var(--primary-color)', fontSize: '1rem', fontWeight: 600 }}>
+                {form.getFieldValue('monthlyIncome') || 'N/A'}
               </div>
             </Col>
-            <Col span={12}>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Documents</div>
-              <div style={{ color: 'white', fontSize: '1.2rem', fontWeight: 600 }}>
-                {uploadedDocumentIds.length} file(s) attached
+            <Col xs={12} md={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4, fontSize: '0.8rem' }}>Documents</div>
+              <div style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>
+                {uploadedDocumentIds.length} attached
               </div>
             </Col>
-            <Col span={12}>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Status</div>
-              <Tag color={form.getFieldsValue(true).monthlyIncome ? 'success' : 'warning'}>
-                {form.getFieldsValue(true).monthlyIncome ? 'Data Ready' : 'Incomplete'}
+            <Col xs={12} md={12}>
+              <div style={{ color: 'var(--text-secondary)', marginBottom: 4, fontSize: '0.8rem' }}>Status</div>
+              <Tag color={form.getFieldsValue(true).monthlyIncome ? 'success' : 'warning'} style={{ margin: 0 }}>
+                {form.getFieldsValue(true).monthlyIncome ? 'Ready' : 'Incomplete'}
               </Tag>
             </Col>
           </Row>
@@ -639,7 +840,7 @@ const FinancialPlanning = () => {
 
         <Alert
           message="Final Step: Get AI Insights"
-          description="Clicking 'Get Insights' will calculate your MOAT scores and generate a strategic plan based on the data above."
+          description="We'll calculate your MOAT scores instantly."
           type="info"
           showIcon
           style={{ background: 'rgba(24, 144, 255, 0.1)', border: '1px solid #1890ff' }}
@@ -666,21 +867,37 @@ const FinancialPlanning = () => {
 
     try {
       setLoading(true);
-      await api.post('/financial-planning/book-consultation', {
-        submissionId: submissionData.id,
-        consultationSlot: {
-          date: selectedSlot.date,
-          time: selectedSlot.time,
-          plannerId: selectedSlot.plannerId
+
+      // 1. Initiate Payment
+      await initiatePayment({
+        amount: 499, // Consultation Fee
+        purpose: 'consultation_booking',
+        referenceId: 0, // No specific ref ID yet
+        metadata: {
+          meetingDetails: {
+            professionalId: 1, // Placeholder Analyst ID
+            professionalRole: 'financial_planner',
+            title: `Portfolio Review with Analyst`,
+            startsAt: selectedSlot.date,
+            endsAt: moment(selectedSlot.date).add(1, 'hour').toISOString(),
+            clientNotes: 'Booked via Financial Planning Wizard',
+            intakeFields: {
+              submissionId: submissionData?.id
+            }
+          }
         }
+      }, (paymentRes) => {
+        // On Success
+        message.success('Consultation booked successfully!');
+        setBookingModalVisible(false);
+        navigate('/dashboard');
+      }, (error) => {
+        // On Error
+        message.error(error);
       });
 
-      message.success('Consultation booked successfully!');
-      setBookingModalVisible(false);
-      // Maybe navigate to dashboard?
-      navigate('/dashboard');
     } catch (err) {
-      message.error(err.response?.data?.error || 'Failed to book consultation');
+      console.error('Booking failed:', err);
     } finally {
       setLoading(false);
     }
@@ -691,22 +908,34 @@ const FinancialPlanning = () => {
 
     try {
       setFetchingPack(true);
-      const response = await api.get(`/decision-packs/${submissionData.id}`);
-      setPackData(response.data.data);
-      setPackModalVisible(true);
-    } catch (err) {
-      if (err.response?.status === 404) {
+
+      // 1. Initiate Payment for Deep Insights
+      await initiatePayment({
+        amount: 999,
+        purpose: 'financial_planning_insights',
+        referenceId: submissionData.id,
+      }, async (paymentRes) => {
+        // On Success: Fetch the pack
         try {
-          await api.post(`/decision-packs/${submissionData.id}/generate`);
-          const retryRes = await api.get(`/decision-packs/${submissionData.id}`);
-          setPackData(retryRes.data.data);
+          const response = await api.get(`/decision-packs/${submissionData.id}`);
+          setPackData(response.data.data);
           setPackModalVisible(true);
-          return;
-        } catch (e) {
-          console.error('Retry generation failed', e);
+        } catch (err) {
+          if (err.response?.status === 404) {
+            await api.post(`/decision-packs/${submissionData.id}/generate`);
+            const retryRes = await api.get(`/decision-packs/${submissionData.id}`);
+            setPackData(retryRes.data.data);
+            setPackModalVisible(true);
+          } else {
+            message.error('Failed to fetch insights even after payment. Please contact support.');
+          }
         }
-      }
-      message.error(err.response?.data?.error || 'Failed to fetch deep insights');
+      }, (error) => {
+        message.error(error);
+      });
+
+    } catch (err) {
+      console.error('Payment flow failed:', err);
     } finally {
       setFetchingPack(false);
     }
@@ -770,12 +999,12 @@ const FinancialPlanning = () => {
             // 3. Trigger Insights Generation
             setIsProcessingInsights(true);
             try {
-              // Generate scores
-              await api.post(`/decision-packs/${response.data.submission.id}/generate`);
+              // Fetch scores (backend already generates them during submission)
               const scoresRes = await api.get(`/decision-packs/${response.data.submission.id}/scores`);
               setScores(scoresRes.data.data);
             } catch (e) {
-              console.error('Insights gen error', e);
+              console.error('Insights fetch error', e);
+              // Fallback to fetch them anyway after showInsights is true?
             }
 
             // Show Insights View
@@ -865,7 +1094,9 @@ const FinancialPlanning = () => {
                       <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: 32, borderRadius: 24, border: '1px solid rgba(255, 255, 255, 0.08)', height: '100%' }}>
                         <h3 style={{ color: 'white', marginBottom: 12 }}>Deep AI Insights</h3>
                         <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 24, fontSize: '0.95rem' }}>
-                          Unlock comprehensive AI-generated strategic roadmaps and stress-testing reports. A small processing fee applies for full insights.
+                          {submissionData?.isPaid
+                            ? "Your strategic roadmap and stress-testing reports are now ready for review."
+                            : "Unlock comprehensive AI-generated strategic roadmaps and stress-testing reports. A small processing fee applies."}
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                           <Button
@@ -876,7 +1107,7 @@ const FinancialPlanning = () => {
                             style={{ height: 50, padding: '0 30px', fontSize: 16, background: 'var(--primary-color)', color: 'black', border: 'none' }}
                             onClick={handleGetDeepInsights}
                           >
-                            Get AI insights
+                            {submissionData?.isPaid ? 'View Full Insights' : 'Unlock AI Insights'}
                           </Button>
                           <Button
                             type="text"
@@ -966,12 +1197,15 @@ const FinancialPlanning = () => {
           {steps.map(item => <Steps.Step key={item.title} title={item.title} />)}
         </CustomSteps>
 
-        <div style={{ padding: '0 24px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 style={{ color: 'white', margin: 0 }}>Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}</h3>
-          <div style={{ width: '200px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ width: `${((currentStep + 1) / steps.length) * 100}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s ease' }} />
-          </div>
-        </div>
+        <StepHeader>
+          <StepIndicator>
+            <h2>Step {currentStep + 1} of {steps.length}</h2>
+            <h3>{steps[currentStep].title}</h3>
+          </StepIndicator>
+          <ProgressBar>
+            <div className="fill" style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }} />
+          </ProgressBar>
+        </StepHeader>
 
         <Form form={form} layout="vertical" preserve={true}>
           {steps[currentStep].content}

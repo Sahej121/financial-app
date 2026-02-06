@@ -11,6 +11,11 @@ const MonitorContainer = styled.div`
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    padding-top: 80px; // Space for fixed navbar
+  }
 `;
 
 const AdviceCard = styled(Card)`
@@ -38,6 +43,15 @@ const StyledTable = styled(Table)`
   }
   .ant-table-tbody > tr:hover > td {
     background: rgba(255, 255, 255, 0.02) !important;
+  }
+`;
+
+const StyledTitle = styled(Title)`
+  color: white !important;
+  font-size: 30px !important;
+
+  @media (max-width: 768px) {
+    font-size: 24px !important;
   }
 `;
 
@@ -155,9 +169,11 @@ const WealthMonitor = () => {
     return (
         <MonitorContainer>
             <div style={{ marginBottom: 32 }}>
-                <Title level={2} style={{ color: 'white' }}>Wealth Monitor</Title>
-                <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    Snapshot your bills to track spending patterns and receive AI insights on wealth optimization.
+                <StyledTitle level={2}>
+                    Wealth Monitor
+                </StyledTitle>
+                <Paragraph style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+                    Snapshot your bills to track spending patterns and receive AI insights.
                 </Paragraph>
             </div>
 
@@ -170,6 +186,8 @@ const WealthMonitor = () => {
                             dataSource={entries}
                             rowKey="id"
                             pagination={{ pageSize: 5 }}
+                            scroll={{ x: 700 }}
+                            size="small"
                         />
                     </Card>
                 </Col>

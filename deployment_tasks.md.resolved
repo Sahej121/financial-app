@@ -1,0 +1,52 @@
+# Deployment Readiness & Core Strengthening Plan
+
+This document outlines the necessary steps to transition the application from a development prototype to a production-ready system.
+
+## 1. Testing & Quality Assurance (Critical Gap)
+The application currently lacks a formal test suite, relying on ad-hoc scripts.
+- [ ] **Infrastructure Setup**
+    - [ ] Install `jest` and `supertest` in `server`.
+    - [ ] Configure [server/package.json](file:///Users/sahej/Desktop/financial-app/server/package.json) with a standard [test](file:///Users/sahej/Desktop/financial-app/server/node_modules/bl/test) script.
+    - [ ] Create `server/test/setup.js` for DB connection management during tests.
+- [ ] **Unit Tests**
+    - [ ] Migrate [test_verification.js](file:///Users/sahej/Desktop/financial-app/server/test_verification.js) (Payment Logic) to `server/test/payment.test.js`.
+    - [ ] Migrate [test_completeness.js](file:///Users/sahej/Desktop/financial-app/server/test_completeness.js) (Scoring Logic) to `server/test/scoring.test.js`.
+    - [ ] Create [DemandIntelligenceService](file:///Users/sahej/Desktop/financial-app/server/src/services/demandIntelligenceService.js#10-124) unit tests (mocking the ML call).
+- [ ] **Integration Tests**
+    - [ ] Test the full Financial Planning Submission flow (API endpoint).
+    - [ ] Test User Authentication flows.
+
+## 2. Pending Features (From Code Analysis)
+several core features are currently marked as TODO or are placeholders.
+- [ ] **Notifications System**
+    - [ ] Implement Email Notifications in `CreditCardController.applyForCard` (currently TODO).
+    - [ ] Implement Status Change Notifications in `financialPlanningController.updateSubmissionStatus` (currently TODO).
+- [ ] **Core Logic Expansions**
+    - [ ] **Professional Recommendation Engine**
+        - [ ] Implement `CAService.recommend(userProfile)` to match users with CAs based on specialization (Tax, Audit) and budget.
+        - [ ] Implement `PlannerService.match(userProfile)` to pair users with wealth managers based on AUM and risk score.
+        - [ ] Replace basic list endpoints ([getCAs](file:///Users/sahej/Desktop/financial-app/server/src/controllers/caController.js#4-63), [getFinancialPlanners](file:///Users/sahej/Desktop/financial-app/server/src/controllers/financialPlannerController.js#28-40)) with recommendation-first logic.
+    - [ ] **Mock/Dummy Cleanup**
+        - [ ] Review [CASelectionPage.js](file:///Users/sahej/Desktop/financial-app/client/src/pages/CASelectionPage.js) and ensure it uses the real API instead of any hardcoded fallbacks.
+        - [ ] Remove any "Demo" or "Test" data seeding scripts from production startup.
+
+## 3. Deployment & DevOps
+- [ ] **Configuration**
+    - [ ] Add `engines` field to [server/package.json](file:///Users/sahej/Desktop/financial-app/server/package.json) to enforce Node.js version (e.g., `>=20`).
+    - [ ] Create [ecosystem.config.js](file:///Users/sahej/Desktop/financial-app/server/ecosystem.config.js) for PM2 (Process Management) to handle restarts/logging in production.
+- [ ] **CI/CD**
+    - [ ] Create `.github/workflows/ci.yml` to run tests on push.
+    - [ ] Create `.github/workflows/deploy.yml` (optional, for auto-deploy to Render).
+
+## 4. Core Logic Strengthening
+- [ ] **Validation Standardization**
+    - [ ] [financialPlanningController.js](file:///Users/sahej/Desktop/financial-app/server/src/controllers/financialPlanningController.js) uses manual sanitization. Refactor to use `express-validator` (already a dependency) for consistency and security.
+- [ ] **Error Handling**
+    - [ ] specific `SequelizeValidationError` handling is present but could be abstracted into a global error mapper in `middleware/errorHandler.js`.
+- [ ] **Security**
+    - [ ]  Verify `Helmet` configuration covers all necessary headers (HSTS, Content Policy).
+    - [ ]  Ensure Rate Limiting (`apiLimiter`) is applied correctly to all sensitive routes (Check [routes/index.js](file:///Users/sahej/Desktop/financial-app/server/src/routes/index.js)).
+
+## 5. Frontend Polish
+- [ ] **Mock Mode Visibility**
+    - [ ] Ensure the UI clearly indicates if it's running in "Mock Payment" mode (based on the `isMock` flag we added) so users aren't confused in staging.

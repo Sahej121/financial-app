@@ -233,6 +233,12 @@ const FinancialPlannerDashboard = () => {
       render: (time) => <span style={{ fontSize: '12px' }}>{moment(time).format('MMM DD, HH:mm')}</span>
     },
     {
+      title: 'Payment',
+      dataIndex: 'transactionId',
+      width: 100,
+      render: (tid) => <Tag color={tid ? 'success' : 'warning'}>{tid ? 'PAID' : 'PENDING'}</Tag>
+    },
+    {
       title: 'Action',
       fixed: 'right',
       width: 150,
@@ -242,7 +248,13 @@ const FinancialPlannerDashboard = () => {
             type="primary"
             size="small"
             icon={<VideoCameraOutlined />}
-            onClick={() => window.open(record.zoomStartUrl || '#', '_blank')}
+            onClick={() => {
+              if (record.zoomStartUrl) {
+                window.open(record.zoomStartUrl, '_blank');
+              } else {
+                message.warning('Zoom link not generated for this meeting yet.');
+              }
+            }}
             style={{ background: '#00B0F0', fontSize: '11px' }}
           >
             Join
@@ -318,25 +330,25 @@ const FinancialPlannerDashboard = () => {
 
       <GridContainer>
         {/* KPIs */}
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <KPICard title="Assets Under Management (Est.)" trend={1} color="#00B0F0">
             <div className="kpi-value">₹{(data.stats.aum / 10000000).toFixed(2)} Cr</div>
             <div className="kpi-trend">▲ 12.5% vs last month</div>
           </KPICard>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <KPICard title="Active Clients" trend={1} color="#F2C811">
             <div className="kpi-value">{data.stats.activeClients}</div>
             <div className="kpi-trend">▲ 4 new this month</div>
           </KPICard>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <KPICard title="Meetings Today" trend={0} color="#107C10">
             <div className="kpi-value">{data.stats.meetingsToday}</div>
             <div className="kpi-trend">8 scheduled for week</div>
           </KPICard>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} lg={6}>
           <KPICard title="Client Satisfaction" trend={1} color="#D13438">
             <div className="kpi-value">{data.stats.satisfaction}/5.0</div>
             <div className="kpi-trend">Based on 24 reviews</div>
@@ -346,19 +358,19 @@ const FinancialPlannerDashboard = () => {
 
       <Row gutter={[16, 16]}>
         {/* Charts Row */}
-        <Col span={16}>
+        <Col xs={24} lg={16}>
           <ChartContainer title="Portfolio Growth (AUM)">
             <Area {...aumConfig} height={300} />
           </ChartContainer>
         </Col>
-        <Col span={8}>
+        <Col xs={24} lg={8}>
           <ChartContainer title="Asset Allocation">
             <Pie {...portfolioConfig} height={300} />
           </ChartContainer>
         </Col>
 
         {/* Third Row - Main Tables */}
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <TableContainer title="Upcoming Meetings">
             <Table
               dataSource={data.meetings.slice(0, 5)}
@@ -370,7 +382,7 @@ const FinancialPlannerDashboard = () => {
             />
           </TableContainer>
         </Col>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <TableContainer title="Pending Document Reviews">
             <Table
               dataSource={data.documents.slice(0, 5)}

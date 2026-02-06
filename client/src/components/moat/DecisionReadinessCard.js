@@ -63,6 +63,13 @@ const DecisionReadinessCard = ({
                 </Tag>
             </div>
 
+            {!scores && !loading && (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                    <ExclamationCircleOutlined style={{ fontSize: 24, marginBottom: 8, display: 'block' }} />
+                    <p>Generating your financial assessment...</p>
+                </div>
+            )}
+
             {primaryScore && (
                 <div className="primary-score-section">
                     <Progress
@@ -103,6 +110,11 @@ const DecisionReadinessCard = ({
             {completenessScore < 70 && (
                 <div className="completeness-warning">
                     <WarningOutlined /> Complete your profile for better recommendations
+                    {scores?.missingFields && scores.missingFields.length > 0 && (
+                        <div className="missing-fields">
+                            Missing: {scores.missingFields.join(', ')}
+                        </div>
+                    )}
                 </div>
             )}
 

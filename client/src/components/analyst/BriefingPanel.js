@@ -127,6 +127,11 @@ const Col = styled.div`
   padding: 12px;
   flex: ${props => props.span ? `0 0 ${(props.span / 24) * 100}%` : '1'};
   max-width: ${props => props.span ? `${(props.span / 24) * 100}%` : '100%'};
+
+  @media (max-width: 768px) {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 `;
 
 export default BriefingPanel;

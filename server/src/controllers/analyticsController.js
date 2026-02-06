@@ -426,3 +426,130 @@ exports.combineActivityData = (documentActivity, meetingActivity) => {
     total: data.documents + data.meetings
   })).sort((a, b) => new Date(a.date) - new Date(b.date));
 };
+
+// Get user financial health metrics (Wealth Health, Goals, Spending)
+exports.getUserFinancialHealth = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { FinancialPlanningSubmission } = require('../models');
+
+    // 1. Fetch latest submission for financial data
+    const submission = await FinancialPlanningSubmission.findOne({
+      where: { userId },
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Default values if no submission
+    let healthScore = 50;
+    let savingsRate = 0;
+    let debtRatio = 0;
+    let liquidityMonths = 0;
+    let goals = [];
+    let budgetAllocation = [];
+    let spendingTrends = [];
+    let metrics = [
+      { label: 'Savings Rate', value: '0%', status: 'warning' },
+      { label: 'Debt Ratio', value: '0%', status: 'success' },
+      { label: 'Liquidity', value: '0 Mo', status: 'error' }
+    ];
+
+    if (submission) {
+      // Parse values
+      const parseVal = (val) => parseFloat(String(val).replace(/[^0-9.]/g, '') || 0);
+
+      const monthlyIncome = parseVal(submission.monthlyIncome);
+      const monthlySavings = parseVal(submission.monthlySavings);
+      const monthlyEMI = parseVal(submission.monthlyEMI);
+      const monthlyExpenses = parseVal(submission.monthlyExpenses);
+      const cashReserves = submission.cashReserves === '6+' ? 6 : parseInt(submission.cashReserves || 0);
+      const targetAmount = parseVal(submission.targetAmount);
+
+      // Calculate Metrics
+      if (monthlyIncome > 0) {
+        savingsRate = Math.round((monthlySavings / monthlyIncome) * 100);
+        debtRatio = Math.round((monthlyEMI / monthlyIncome) * 100);
+        liquidityMonths = cashReserves;
+
+        // Score Logic (Simplified)
+        let score = 0;
+        if (savingsRate >= 20) score += 30;
+        else if (savingsRate >= 10) score += 15;
+
+        if (debtRatio <= 30) score += 30;
+        else if (debtRatio <= 50) score += 15;
+
+        if (liquidityMonths >= 3) score += 20;
+
+        if (submission.hasHealthInsurance && submission.hasLifeInsurance) score += 20;
+        else if (submission.hasHealthInsurance || submission.hasLifeInsurance) score += 10;
+
+        healthScore = Math.max(10, score);
+
+        metrics = [
+          { label: 'Savings Rate', value: `${savingsRate}%`, status: savingsRate > 20 ? 'success' : 'warning' },
+          { label: 'Debt Ratio', value: `${debtRatio}%`, status: debtRatio < 30 ? 'success' : 'warning' },
+          { label: 'Liquidity', value: `${liquidityMonths} Mo`, status: liquidityMonths >= 3 ? 'success' : 'error' }
+        ];
+      }
+
+      // Generate Goals
+      if (targetAmount > 0) {
+        goals.push({
+          title: submission.planningPurpose === 'business_expansion' ? 'Business Expansion' : 'Financial Independence',
+          target: targetAmount,
+          current: monthlySavings * 12, // Rough estimate
+          color: '#00B0F0',
+          icon: '🎯'
+        });
+      }
+
+      // Add default goals if list is empty
+      if (goals.length === 0) {
+        goals.push({ title: 'Emergency Fund', target: monthlyExpenses * 6, current: monthlySavings * 3, color: '#52c41a', icon: '🛡️' });
+      }
+
+      // Budget Allocation
+      const rawBudget = [
+        { type: 'Savings', value: monthlySavings },
+        { type: 'Needs', value: monthlyExpenses },
+        { type: 'Debt', value: monthlyEMI },
+        { type: 'Wants', value: Math.max(0, monthlyIncome - monthlySavings - monthlyExpenses - monthlyEMI) }
+      ];
+      budgetAllocation = rawBudget.filter(i => i.value > 0);
+
+      // Mock Spending Trends (variation around expenses)
+      const currentMonth = new Date().getMonth();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      for (let i = 4; i >= 0; i--) {
+        const mIndex = (currentMonth - i + 12) % 12;
+        const variation = (Math.random() * 0.2) - 0.1; // +/- 10%
+        spendingTrends.push({
+          month: months[mIndex],
+          value: Math.round(monthlyExpenses * (1 + variation))
+        });
+      }
+    } else {
+      // Fallback for new users
+      goals.push({ title: 'Start Saving', target: 100000, current: 0, color: '#00B0F0', icon: '💰' });
+      spendingTrends = [
+        { month: 'Jan', value: 0 }, { month: 'Feb', value: 0 }, { month: 'Mar', value: 0 },
+        { month: 'Apr', value: 0 }, { month: 'May', value: 0 }
+      ];
+    }
+
+    res.json({
+      success: true,
+      health: {
+        score: healthScore,
+        metrics
+      },
+      goals,
+      budgetAllocation,
+      spendingTrends
+    });
+
+  } catch (error) {
+    console.error('Financial Health API Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to calc health' });
+  }
+};

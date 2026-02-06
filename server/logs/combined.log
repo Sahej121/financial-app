@@ -41,3 +41,280 @@
 2026-02-02 03:14:19 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769982259530-bs_2025.pdf","mimeType":"application/pdf"}}
 2026-02-02 03:14:19 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1769982259530-bs_2025.pdf"}}
 2026-02-02 03:14:19 [error] : Analysis failed {"metadata":{"documentId":25,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-02 03:39:12 [info] : Server is running on localhost:3001 {"metadata":{}}
+2026-02-02 03:39:12 [info] : Redis connected successfully {"metadata":{}}
+2026-02-02 03:39:12 [info] : Database connected successfully {"metadata":{}}
+2026-02-02 03:39:12 [info] : Database synchronized {"metadata":{}}
+2026-02-02 03:48:39 [info] : Server is running on localhost:3001 {"metadata":{}}
+2026-02-02 03:48:39 [info] : Redis connected successfully {"metadata":{}}
+2026-02-02 03:48:40 [info] : Database connected successfully {"metadata":{}}
+2026-02-02 03:48:40 [info] : Database synchronized {"metadata":{}}
+2026-02-02 04:04:20 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/receipts/receipt-1769985260701.jpg","mimeType":"image/jpeg"}}
+2026-02-02 04:04:24 [info] : Starting extraction {"metadata":{"documentType":"wealth_monitor"}}
+2026-02-02 04:04:24 [info] : Heuristic confidence score {"metadata":{"score":0}}
+2026-02-05 19:43:12 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:43:12 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:43:12 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:43:12 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:43:58 [info] : Starting analysis pipeline {"metadata":{"documentId":26,"submissionId":null}}
+2026-02-05 19:43:58 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300838072-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 19:43:58 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300838072-DtlStatement_04122025042358.pdf"}}
+2026-02-05 19:43:58 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300838072-DtlStatement_04122025042358.pdf"}}
+2026-02-05 19:43:58 [error] : Analysis failed {"metadata":{"documentId":26,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 19:45:19 [info] : Starting analysis pipeline {"metadata":{"documentId":27,"submissionId":null}}
+2026-02-05 19:45:19 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300919075-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 19:45:19 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300919075-DtlStatement_04122025042358.pdf"}}
+2026-02-05 19:45:19 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770300919075-DtlStatement_04122025042358.pdf"}}
+2026-02-05 19:45:19 [error] : Analysis failed {"metadata":{"documentId":27,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 19:49:47 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:49:47 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:49:47 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:49:47 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:49:49 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:49:49 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:49:49 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:49:49 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:49:51 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:49:51 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:49:51 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:49:51 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:49:59 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:49:59 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:49:59 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:49:59 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:50:14 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:50:14 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:50:14 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:50:14 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:50:35 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:50:35 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:50:35 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:50:35 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:51:05 [info] : Starting demand intent analysis {"metadata":{"submissionId":14,"purpose":"investment"}}
+2026-02-05 19:51:05 [info] : Demand analysis complete {"metadata":{"submissionId":14,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 19:57:19 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:19 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:19 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:19 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:22 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:22 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:22 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:22 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:34 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:34 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:34 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:34 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:37 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:37 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:37 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:37 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:43 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:43 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:43 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:43 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:46 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:46 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:46 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:46 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:57:48 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:57:48 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:57:48 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:57:48 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:58:08 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:58:08 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:58:08 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:58:08 [info] : Database synchronized {"metadata":{}}
+2026-02-05 19:58:27 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 19:58:27 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 19:58:27 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 19:58:27 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:00:14 [info] : Starting analysis pipeline {"metadata":{"documentId":28,"submissionId":null}}
+2026-02-05 20:00:14 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770301814215-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:00:14 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770301814215-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:00:14 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770301814215-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:00:14 [error] : Analysis failed {"metadata":{"documentId":28,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 20:00:17 [info] : Starting demand intent analysis {"metadata":{"submissionId":15,"purpose":"investment"}}
+2026-02-05 20:00:17 [info] : Demand analysis complete {"metadata":{"submissionId":15,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 20:00:19 [info] : Serving decision pack from cache {"metadata":{"submissionId":"15"}}
+2026-02-05 20:07:38 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:07:38 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:07:38 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:07:38 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:07:41 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:07:41 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:07:41 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:07:41 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:08:17 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:08:17 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:08:17 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:08:17 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:08:35 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:08:35 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:08:35 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:08:35 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:09:01 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:09:01 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:09:01 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:09:01 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:09:49 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:09:49 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:09:49 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:09:49 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:10:31 [info] : Starting analysis pipeline {"metadata":{"documentId":29,"submissionId":null}}
+2026-02-05 20:10:31 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302431049-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:10:31 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302431049-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:10:31 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302431049-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:10:31 [error] : Analysis failed {"metadata":{"documentId":29,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 20:10:33 [info] : Starting demand intent analysis {"metadata":{"submissionId":16,"purpose":"investment"}}
+2026-02-05 20:10:33 [info] : Demand analysis complete {"metadata":{"submissionId":16,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 20:13:45 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:13:45 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:13:45 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:13:45 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:13:56 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:13:56 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:13:56 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:13:56 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:14:16 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:14:16 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:14:16 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:14:17 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:15:52 [info] : Starting analysis pipeline {"metadata":{"documentId":30,"submissionId":null}}
+2026-02-05 20:15:52 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302752623-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:15:52 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302752623-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:15:52 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302752623-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:15:52 [error] : Analysis failed {"metadata":{"documentId":30,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 20:15:55 [info] : Starting demand intent analysis {"metadata":{"submissionId":17,"purpose":"investment"}}
+2026-02-05 20:15:55 [info] : Demand analysis complete {"metadata":{"submissionId":17,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 20:16:03 [info] : Serving decision pack from cache {"metadata":{"submissionId":"17"}}
+2026-02-05 20:16:28 [info] : Serving decision pack from cache {"metadata":{"submissionId":"17"}}
+2026-02-05 20:17:36 [info] : Starting analysis pipeline {"metadata":{"documentId":31,"submissionId":null}}
+2026-02-05 20:17:36 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302856675-DtlStatement_04122025042358.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:17:36 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302856675-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:17:36 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/1770302856675-DtlStatement_04122025042358.pdf"}}
+2026-02-05 20:17:36 [error] : Analysis failed {"metadata":{"documentId":31,"error":"Failed to parse PDF content: pdf is not a function"}}
+2026-02-05 20:17:38 [info] : Starting demand intent analysis {"metadata":{"submissionId":18,"purpose":"loan_settlement"}}
+2026-02-05 20:17:38 [info] : Demand analysis complete {"metadata":{"submissionId":18,"intent":{"primaryCategory":"loan_settlement","nuances":[],"urgency":"MEDIUM","complexityLevel":"MODERATE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 20:17:42 [info] : Serving decision pack from cache {"metadata":{"submissionId":"18"}}
+2026-02-05 20:18:35 [info] : Starting demand intent analysis {"metadata":{"submissionId":19,"purpose":"loan_settlement"}}
+2026-02-05 20:18:35 [info] : Demand analysis complete {"metadata":{"submissionId":19,"intent":{"primaryCategory":"loan_settlement","nuances":[],"urgency":"MEDIUM","complexityLevel":"MODERATE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-05 20:18:37 [info] : Serving decision pack from cache {"metadata":{"submissionId":"19"}}
+2026-02-05 20:24:10 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/receipts/receipt-1770303250816.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:24:10 [error] : PDF extraction error {"metadata":{"error":"pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/receipts/receipt-1770303250816.pdf"}}
+2026-02-05 20:24:10 [error] : OCR Service Error {"metadata":{"error":"Failed to parse PDF content: pdf is not a function","filePath":"/Users/sahej/Desktop/financial-app/server/uploads/receipts/receipt-1770303250816.pdf"}}
+2026-02-05 20:25:34 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:25:34 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:25:34 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:25:34 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:27:31 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:27:31 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:27:31 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:27:31 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:28:35 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:28:35 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:28:35 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:28:35 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:28:56 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:28:56 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:28:56 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:28:57 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:29:50 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:29:50 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:29:50 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:29:50 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:29:52 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/temp_test_receipt.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:30:06 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-05 20:30:06 [info] : Redis connected successfully {"metadata":{}}
+2026-02-05 20:30:06 [info] : Database connected successfully {"metadata":{}}
+2026-02-05 20:30:06 [info] : Database synchronized {"metadata":{}}
+2026-02-05 20:30:42 [info] : Starting OCR {"metadata":{"filePath":"/Users/sahej/Desktop/financial-app/server/uploads/receipts/receipt-1770303642697.pdf","mimeType":"application/pdf"}}
+2026-02-05 20:30:42 [info] : Starting extraction {"metadata":{"documentType":"wealth_monitor"}}
+2026-02-05 20:30:42 [info] : Heuristic confidence score {"metadata":{"score":0.85}}
+2026-02-05 20:30:42 [info] : DETERMINISTIC HIGH CONFIDENCE: Skipping LLM (Authority Layer 1) {"metadata":{}}
+2026-02-06 00:16:45 [info] : Starting demand intent analysis {"metadata":{"submissionId":1,"purpose":"tax_planning"}}
+2026-02-06 00:16:45 [info] : Starting demand intent analysis {"metadata":{"submissionId":2,"purpose":"loan_settlement"}}
+2026-02-06 00:16:45 [info] : Starting demand intent analysis {"metadata":{"submissionId":3,"purpose":"investment"}}
+2026-02-06 00:16:45 [info] : Demand analysis complete {"metadata":{"submissionId":1,"intent":{"primaryCategory":"tax_planning","nuances":["TAX_OPTIMIZATION"],"urgency":"HIGH","complexityLevel":"SIMPLE","suggestedExpertise":["TAX_SPECIALIST"]}}}
+2026-02-06 00:16:45 [info] : Demand analysis complete {"metadata":{"submissionId":2,"intent":{"primaryCategory":"loan_settlement","nuances":["DEBT_DISTRESS"],"urgency":"HIGH","complexityLevel":"COMPLEX","suggestedExpertise":["DEBT_RESTRUCTURING_EXPERT","SENIOR_STRATEGIST"]}}}
+2026-02-06 00:16:45 [info] : Demand analysis complete {"metadata":{"submissionId":3,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-06 00:17:11 [info] : Starting demand intent analysis {"metadata":{"submissionId":1,"purpose":"tax_planning"}}
+2026-02-06 00:17:11 [info] : Starting demand intent analysis {"metadata":{"submissionId":2,"purpose":"loan_settlement"}}
+2026-02-06 00:17:11 [info] : Starting demand intent analysis {"metadata":{"submissionId":3,"purpose":"investment"}}
+2026-02-06 00:17:11 [info] : Demand analysis complete {"metadata":{"submissionId":1,"intent":{"primaryCategory":"tax_planning","nuances":["TAX_OPTIMIZATION"],"urgency":"HIGH","complexityLevel":"SIMPLE","suggestedExpertise":["TAX_SPECIALIST"]}}}
+2026-02-06 00:17:11 [info] : Demand analysis complete {"metadata":{"submissionId":2,"intent":{"primaryCategory":"loan_settlement","nuances":["DEBT_DISTRESS"],"urgency":"HIGH","complexityLevel":"COMPLEX","suggestedExpertise":["DEBT_RESTRUCTURING_EXPERT","SENIOR_STRATEGIST"]}}}
+2026-02-06 00:17:11 [info] : Demand analysis complete {"metadata":{"submissionId":3,"intent":{"primaryCategory":"investment","nuances":[],"urgency":"MEDIUM","complexityLevel":"SIMPLE","suggestedExpertise":["GENERALIST_PLANNER"]}}}
+2026-02-06 00:31:56 [info] : Starting demand intent analysis {"metadata":{"submissionId":2,"purpose":"loan_settlement"}}
+2026-02-06 00:31:56 [info] : Starting demand intent analysis {"metadata":{"submissionId":1,"purpose":"tax_planning"}}
+2026-02-06 00:31:56 [error] : AI Analysis failed, falling back to heuristics AI invalid {"metadata":{"stack":"Error: AI invalid\n    at Object.<anonymous> (/Users/sahej/Desktop/financial-app/server/test/demandIntelligence.test.js:67:55)\n    at Promise.finally.completed (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at _runTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/sahej/Desktop/financial-app/server/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-runner/build/index.js:343:7)"}}
+2026-02-06 00:31:56 [info] : Demand analysis complete {"metadata":{"submissionId":1,"intent":{"nuances":["TAX_OPTIMIZATION","HIGH_GROWTH"],"urgency":"HIGH","complexityLevel":"MODERATE","suggestedExpertise":["TAX_SPECIALIST"],"summary":"Client needs tax help."}}}
+2026-02-06 00:40:53 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 00:40:53 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 00:40:53 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 00:40:53 [info] : Database synchronized {"metadata":{}}
+2026-02-06 01:00:07 [info] : Starting demand intent analysis {"metadata":{"submissionId":20,"purpose":"investment"}}
+2026-02-06 01:00:08 [error] : AI Analysis failed, falling back to heuristics 401 {"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"expired_api_key"}} {"metadata":{"status":401,"headers":{"alt-svc":"h3=\":443\"; ma=86400","cache-control":"private, max-age=0, no-store, no-cache, must-revalidate","cf-cache-status":"DYNAMIC","cf-ray":"9c94d20fae271f68-DEL","connection":"keep-alive","content-length":"96","content-type":"application/json","date":"Thu, 05 Feb 2026 19:30:07 GMT","server":"cloudflare","set-cookie":"__cf_bm=dh8gl27nSFnETwybKFbVSF6cO7QcisWjUrNJliRu7p4-1770319807.9477558-1.0.1.1-jTDq_nA25FTrtN7zUJA4OOt_KHaHh9lK6Hn8TN_ZZRspHdY3jRVQLbDE_rSe4lDQNLFjecOmU6TEiKF.PZd8wi6f9KX4xhSjg07yYjUDo6PS8pAR0YpbJDsgOem7hedU; HttpOnly; Secure; Path=/; Domain=groq.com; Expires=Thu, 05 Feb 2026 20:00:07 GMT","strict-transport-security":"max-age=15552000","vary":"Origin","via":"1.1 google","x-groq-region":"bom","x-request-id":"req_01kgqmh1fzf6gvnqczzshc26s7"},"error":{"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"expired_api_key"}},"stack":"Error: 401 {\"error\":{\"message\":\"Invalid API Key\",\"type\":\"invalid_request_error\",\"code\":\"expired_api_key\"}}\n    at APIError.generate (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/error.js:43:20)\n    at Groq.makeStatusError (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/core.js:293:33)\n    at Groq.makeRequest (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/core.js:339:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async AIProvider.generateJSON (/Users/sahej/Desktop/financial-app/server/src/utils/aiProvider.js:45:36)\n    at async DemandIntelligenceService.analyzeDemandIntent (/Users/sahej/Desktop/financial-app/server/src/services/demandIntelligenceService.js:32:24)\n    at async DecisionPackService.generatePack (/Users/sahej/Desktop/financial-app/server/src/services/decisionPackService.js:266:40)"}}
+2026-02-06 01:38:28 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 01:38:28 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 01:38:28 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 01:38:28 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:45:52 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:45:52 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:45:52 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:45:52 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:45:53 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:45:53 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:45:53 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:45:54 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:45:58 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:45:58 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:45:58 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:45:58 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:07 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:46:07 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:07 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:07 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:11 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:46:11 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:11 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:11 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:15 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:46:15 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:15 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:15 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:35 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:46:35 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:35 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:35 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:37 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:37 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:37 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:46:53 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:46:54 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:46:54 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:05 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:05 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:05 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:26 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:26 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:26 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:38 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:47:38 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:38 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:38 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:41 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:41 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:41 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:56 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:47:56 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:56 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:56 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:47:59 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:47:59 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:47:59 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:48:15 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 17:48:15 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:48:15 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:48:15 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:48:19 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:48:19 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:48:19 [info] : Database synchronized {"metadata":{}}

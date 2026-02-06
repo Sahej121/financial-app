@@ -21,6 +21,7 @@ router.put('/auth/reset-password/:resetToken', authController.resetPassword);
 router.get('/auth/profile', authController.auth, authController.getProfile);
 router.put('/auth/update-profile', authController.auth, authController.updateProfile);
 router.put('/auth/update-settings', authController.auth, authController.updateSettings);
+router.put('/auth/change-password', authController.auth, authController.changePassword);
 
 // CA routes
 router.get('/cas', caController.getCAs);
@@ -98,7 +99,7 @@ const gstRouter = require('./gst');
 router.use('/gst', gstRouter);
 
 // Payment routes
-const paymentRouter = require('./payment');
+const paymentRouter = require('./paymentRoutes');
 router.use('/payments', paymentRouter);
 
 // ===== MOAT: Decision Pack Routes =====

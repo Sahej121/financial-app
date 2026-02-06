@@ -3,28 +3,56 @@
 
 :root {
   /* Brand Colors */
-  --primary-color: #00B0F0;
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
   --secondary-color: #F2C811;
-  --success-color: #52c41a;
-  --error-color: #ff4d4f;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
 
-  /* Backgrounds */
-  --bg-primary: #050505;
-  --bg-secondary: #0A0A0A;
-  --bg-card: rgba(20, 20, 20, 0.6);
-  --bg-glass: rgba(10, 10, 10, 0.6);
+  /* Refined Dark Theme - Slate Palette */
+  --bg-primary: #0f172a;
+  /* slate-900 */
+  --bg-secondary: #1e293b;
+  /* slate-800 */
+  --bg-tertiary: #334155;
+  /* slate-700 */
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --bg-glass: rgba(30, 41, 59, 0.6);
 
   /* Typography */
-  --text-primary: #FFFFFF;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-tertiary: rgba(255, 255, 255, 0.45);
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  /* slate-300 */
+  --text-muted: #64748b;
+  /* slate-500 */
+  --text-tertiary: #475569;
+  /* slate-600 */
 
   /* Borders & Effects */
-  --border-color: rgba(255, 255, 255, 0.08);
+  --border-primary: #334155;
+  /* slate-700 */
+  --border-secondary: #475569;
+  /* slate-600 */
   --border-glass: rgba(255, 255, 255, 0.1);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.5);
-  --glass-blur: 20px;
+
+  /* Glassmorphism */
+  --glass-blur: 12px;
+
+  /* Spacing (8px grid) */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
 }
+
 
 html {
   scroll-behavior: smooth;
@@ -54,13 +82,13 @@ body {
 
 .ant-card {
   background: var(--bg-card) !important;
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--border-glass) !important;
   border-radius: 12px !important;
 }
 
 .ant-card-head {
   color: var(--text-primary) !important;
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
 }
 
 .ant-typography,
@@ -81,7 +109,7 @@ h6 {
 }
 
 .ant-btn-primary:hover {
-  opacity: 0.9;
+  background: var(--primary-hover) !important;
   color: white !important;
 }
 
@@ -100,7 +128,7 @@ h6 {
 .ant-select-selector,
 .ant-input-number {
   background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--border-primary) !important;
   color: var(--text-primary) !important;
 }
 
@@ -117,11 +145,11 @@ h6 {
 .ant-table-thead>tr>th {
   background: var(--bg-secondary) !important;
   color: var(--text-secondary) !important;
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
 }
 
 .ant-table-tbody>tr>td {
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
 }
 
 .ant-table-tbody>tr:hover>td {

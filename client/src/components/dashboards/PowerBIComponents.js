@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import { Card, Row } from 'antd';
 
 // Premium Theme Colors referencing CSS variables for consistency
-// ... rest of colors ...
 const colors = {
   background: 'var(--bg-primary)',
   cardBg: 'var(--bg-card)',
@@ -23,6 +22,11 @@ export const DashboardContainer = styled.div`
   background-image: 
     radial-gradient(circle at 5% 5%, rgba(0, 176, 240, 0.03) 0%, transparent 20%),
     radial-gradient(circle at 95% 95%, rgba(242, 200, 17, 0.03) 0%, transparent 20%);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    padding-top: 88px; // Prevent overlap with fixed navbar
+  }
 `;
 
 export const GridContainer = styled(Row).attrs({
@@ -55,6 +59,10 @@ export const PowerBICard = styled(Card)`
     font-size: 16px;
     padding: 0 24px !important;
     min-height: 56px;
+
+    @media (max-width: 768px) {
+      padding: 0 16px !important;
+    }
   }
   
   .ant-card-head-title {
@@ -63,6 +71,10 @@ export const PowerBICard = styled(Card)`
   
   .ant-card-body {
     padding: 24px !important;
+
+    @media (max-width: 768px) {
+      padding: 16px !important;
+    }
   }
 `;
 
@@ -99,10 +111,14 @@ export const KPICard = styled(PowerBICard)`
     margin-bottom: 8px;
     line-height: 1.2;
     letter-spacing: -1px;
+
+    @media (max-width: 768px) {
+      font-size: 1.8rem;
+    }
   }
 
   .kpi-trend {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: ${props => props.trend > 0 ? 'var(--success-color)' : props.trend < 0 ? 'var(--error-color)' : 'var(--text-secondary)'};
     display: flex;
     align-items: center;
@@ -116,13 +132,20 @@ export const KPICard = styled(PowerBICard)`
 `;
 
 export const ChartContainer = styled(PowerBICard)`
-  min-height: 420px;
+  min-height: 400px;
   
+  @media (max-width: 768px) {
+    min-height: 300px;
+    margin-bottom: 16px;
+  }
+
   .chart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 `;
 
@@ -139,27 +162,21 @@ export const TableContainer = styled(PowerBICard)`
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 1px;
+    white-space: nowrap;
   }
   
   .ant-table-tbody > tr > td {
     border-bottom: 1px solid ${colors.border};
     color: ${colors.text};
     padding: 16px !important;
+
+    @media (max-width: 768px) {
+      padding: 12px 8px !important;
+    }
   }
 
   .ant-table-tbody > tr:hover > td {
     background: rgba(255, 255, 255, 0.03) !important;
-  }
-  
-  // Pagination Styling
-  .ant-pagination-item {
-    background: transparent;
-    border-color: ${colors.border};
-    a { color: ${colors.text}; }
-  }
-  .ant-pagination-item-active {
-    border-color: ${colors.primary};
-    a { color: ${colors.primary}; }
   }
 `;
 
@@ -168,6 +185,14 @@ export const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
   
   h1 {
     color: ${colors.text};
@@ -178,11 +203,21 @@ export const Header = styled.div`
     background: linear-gradient(135deg, #fff 0%, #aaa 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
   }
 
   .actions {
     display: flex;
-    gap: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+      width: 100%;
+      justify-content: space-between;
+    }
   }
 `;
 
@@ -197,9 +232,16 @@ export const ActionButton = styled.button`
   font-size: 13px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
+
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    flex: 1;
+    font-size: 12px;
+  }
 
   &:hover {
     background: rgba(0, 176, 240, 0.15);

@@ -11,27 +11,10 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { loading, error } = useSelector((state) => state.user);
+  const { loading, error, user, isVerified } = useSelector((state) => state.user);
   const [form] = Form.useForm();
 
-  const onFinish = async (values) => {
-    try {
-      const result = await dispatch(login(values)).unwrap();
-
-      // Check for redirect path
-      if (location.state?.from) {
-        navigate(location.state.from, { replace: true });
-        return;
-      }
-
-      // Otherwise navigate to appropriate dashboard based on user role
-      const dashboardPath = getDashboardPath(result.user.role);
-      navigate(dashboardPath, { replace: true });
-    } catch (err) {
-      // Error is handled by Redux
-    }
-  };
-
+  // Helper to determine dashboard path based on role
   const getDashboardPath = (role) => {
     switch (role) {
       case 'ca':
@@ -42,6 +25,42 @@ const Login = () => {
         return '/dashboard';
     }
   };
+
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    console.log('Login useEffect:', { user, isVerified, location: location.pathname });
+    if (user && isVerified) {
+      if (location.state?.from) {
+        console.log('Redirecting to location.state.from:', location.state.from);
+        navigate(location.state.from, { replace: true });
+      } else {
+        const path = getDashboardPath(user.role);
+        console.log('Redirecting to dashboard:', path);
+        navigate(path, { replace: true });
+      }
+    }
+  }, [user, isVerified, navigate, location]);
+
+  const onFinish = async (values) => {
+    try {
+      console.log('onFinish called');
+      const result = await dispatch(login(values)).unwrap();
+      console.log('Login API response received');
+
+      // Get the target path immediately
+      const role = result.user?.role || 'user';
+      const targetPath = location.state?.from || getDashboardPath(role);
+      console.log('About to redirect to:', targetPath);
+
+      // Use direct assignment - this is the most reliable method
+      window.location.href = targetPath;
+
+    } catch (err) {
+      console.error('Login error caught:', err);
+    }
+  };
+
 
   return (
     <div style={{ maxWidth: 400, margin: '40px auto', padding: '0 16px' }}>
@@ -100,10 +119,11 @@ const Login = () => {
                 dispatch(googleLogin({ token: credentialResponse.credential }))
                   .unwrap()
                   .then(result => {
+                    const role = result.user?.role || 'user';
                     if (location.state?.from) {
-                      navigate(location.state.from, { replace: true });
+                      window.location.href = location.state.from;
                     } else {
-                      navigate(getDashboardPath(result.user.role));
+                      window.location.href = getDashboardPath(role);
                     }
                   });
               }}
@@ -120,10 +140,11 @@ const Login = () => {
                   dispatch(appleLogin(response))
                     .unwrap()
                     .then(result => {
+                      const role = result.user?.role || 'user';
                       if (location.state?.from) {
-                        navigate(location.state.from, { replace: true });
+                        window.location.href = location.state.from;
                       } else {
-                        navigate(getDashboardPath(result.user.role));
+                        window.location.href = getDashboardPath(role);
                       }
                     });
                 }

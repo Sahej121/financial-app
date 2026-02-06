@@ -22,6 +22,8 @@ const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { sequelize } = require('./models');
+const cookieParser = require('cookie-parser');
+const { doubleCsrfProtection, generateToken } = require('./middleware/csrf');
 const { connectRedis } = require('./utils/cache');
 
 const app = express();
@@ -34,7 +36,19 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(apiLimiter);
+
+// CSRF Protection - Applied after body parser and cookie parser
+// Bypassed in test environment for functional testing
+if (process.env.NODE_ENV !== 'test') {
+  app.use(doubleCsrfProtection);
+}
+
+// Route to get CSRF token
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ token: generateToken(req, res) });
+});
 
 // [REMOVED] Public static serving of uploads is disabled for security.
 // Use authenticated /api/documents/:documentId/download route instead.
@@ -73,7 +87,12 @@ Sentry.setupExpressErrorHandler(app);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, 'localhost', () => {
-  logger.info(`Server is running on localhost:${PORT}`);
-}); 
+// Start server only if run directly
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

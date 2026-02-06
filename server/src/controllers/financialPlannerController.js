@@ -27,6 +27,19 @@ exports.createFinancialPlanner = async (req, res) => {
 
 exports.getFinancialPlanners = async (req, res) => {
     try {
+        const { recommend, planningPurpose, monthlyIncome } = req.query;
+
+        // INTELLIGENT MATCHING (If explicitly requested)
+        if (recommend === 'true' || planningPurpose) {
+            const recommendationService = require('../services/recommendationService');
+            const userProfile = {
+                planningPurpose,
+                monthlyIncome: monthlyIncome || 0
+            };
+            const recommendations = await recommendationService.recommendPlanners(userProfile);
+            return res.json(recommendations);
+        }
+
         const planners = await FinancialPlanner.findAll({
             where: { isActive: true },
             order: [['rating', 'DESC']]

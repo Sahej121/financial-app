@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message } from 'antd';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Card, Statistic } from 'antd';
 import {
   FileTextOutlined,
   CalendarOutlined,
   UserOutlined,
   VideoCameraOutlined,
   UploadOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
 import { Line, Pie } from '@ant-design/plots';
 import moment from 'moment';
@@ -14,15 +15,8 @@ import api from '../../services/api';
 import DocumentUploadModal from '../DocumentUploadModal';
 import WealthHealthWidget from './widgets/WealthHealthWidget';
 import GoalProgressWidget from './widgets/GoalProgressWidget';
-import {
-  DashboardContainer,
-  GridContainer,
-  KPICard,
-  ChartContainer,
-  TableContainer,
-  Header,
-  ActionButton
-} from './PowerBIComponents';
+import '../../styles/dashboard.css';
+
 
 const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -33,8 +27,12 @@ const UserDashboard = () => {
     stats: {
       totalDocuments: 0,
       totalMeetings: 0,
-      spending: 0
-    }
+      pendingTasks: 0
+    },
+    health: { score: 50, metrics: [] },
+    goals: [],
+    budgetAllocation: [],
+    spendingTrends: []
   });
 
   useEffect(() => {
@@ -44,14 +42,18 @@ const UserDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [analyticsRes, meetingsRes] = await Promise.all([
+
+      // Fetch all data with individual error handling
+      const [analyticsRes, meetingsRes, healthRes] = await Promise.allSettled([
         api.get('/analytics/summary?period=month'),
-        api.get('/meetings/user?upcoming=true&status=scheduled,confirmed')
+        api.get('/meetings/user?upcoming=true&status=scheduled,confirmed'),
+        api.get('/analytics/financial-health')
       ]);
 
-      const analytics = analyticsRes.data.summary || {};
-      const meetings = meetingsRes.data.meetings || [];
-      const recentDocs = analyticsRes.data.recentActivity?.documents || [];
+      const analytics = analyticsRes.status === 'fulfilled' ? analyticsRes.value.data.summary || {} : {};
+      const meetings = meetingsRes.status === 'fulfilled' ? meetingsRes.value.data.meetings || [] : [];
+      const recentDocs = analyticsRes.status === 'fulfilled' ? analyticsRes.value.data.recentActivity?.documents || [] : [];
+      const healthData = healthRes.status === 'fulfilled' ? healthRes.value.data || {} : {};
 
       setData({
         upcomingMeetings: meetings,
@@ -59,8 +61,12 @@ const UserDashboard = () => {
         stats: {
           totalDocuments: analytics.totalDocuments || 0,
           totalMeetings: analytics.totalMeetings || 0,
-          pendingTasks: analytics.pendingTasks || 2 // Mock if missing
-        }
+          pendingTasks: analytics.pendingTasks || 0
+        },
+        health: healthData.health || { score: 50, metrics: [] },
+        goals: healthData.goals || [],
+        budgetAllocation: healthData.budgetAllocation || [],
+        spendingTrends: healthData.spendingTrends || []
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -71,35 +77,97 @@ const UserDashboard = () => {
 
   // --- Charts Config ---
   const spendingConfig = {
-    data: [
-      { month: 'Jan', value: 4500 },
-      { month: 'Feb', value: 5200 },
-      { month: 'Mar', value: 4800 },
-      { month: 'Apr', value: 6100 },
-      { month: 'May', value: 5500 },
-    ],
+    data: data.spendingTrends || [],
     xField: 'month',
     yField: 'value',
-    color: '#00B0F0',
+    color: '#3b82f6',
     smooth: true,
-    height: 250,
-    xAxis: { grid: null, line: null },
-    yAxis: { grid: { line: { style: { stroke: '#333' } } } },
+    height: 280,
+    areaStyle: {
+      fill: 'l(270) 0:#3b82f680 1:#3b82f610',
+    },
+    line: {
+      size: 3,
+    },
+    point: {
+      size: 5,
+      shape: 'circle',
+      style: {
+        fill: '#3b82f6',
+        stroke: '#1e293b',
+        lineWidth: 2,
+      },
+    },
+    xAxis: {
+      grid: null,
+      line: { style: { stroke: '#334155' } },
+      label: { style: { fill: '#64748b', fontSize: 12 } }
+    },
+    yAxis: {
+      grid: { line: { style: { stroke: '#334155', lineDash: [4, 4] } } },
+      label: { style: { fill: '#64748b', fontSize: 12 } }
+    },
+    tooltip: {
+      customContent: (title, items) => {
+        if (!items || items.length === 0) return null;
+        return `
+          <div style="padding: 12px; background: rgba(30, 41, 59, 0.95); border: 1px solid #334155; border-radius: 8px;">
+            <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 4px;">${title}</div>
+            <div style="color: #fff; font-size: 16px; font-weight: 600;">₹${items[0]?.value?.toLocaleString()}</div>
+          </div>
+        `;
+      }
+    },
   };
 
   const categoryConfig = {
-    data: [
-      { type: 'Investment', value: 40 },
-      { type: 'Needs', value: 30 },
-      { type: 'Wants', value: 20 },
-      { type: 'Savings', value: 10 },
-    ],
+    data: data.budgetAllocation || [],
     angleField: 'value',
     colorField: 'type',
-    radius: 0.8,
-    innerRadius: 0.6,
-    color: ['#107C10', '#00B0F0', '#F2C811', '#D13438'],
-    legend: { position: 'bottom', itemHeight: 20 }
+    radius: 0.85,
+    innerRadius: 0.65,
+    color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+    statistic: {
+      title: {
+        style: { color: '#64748b', fontSize: '14px', fontWeight: 500 },
+        content: 'Total',
+      },
+      content: {
+        style: { color: '#fff', fontSize: '20px', fontWeight: 700 },
+        customHtml: (container, view, datum, data) => {
+          const total = data.reduce((sum, item) => sum + item.value, 0);
+          return `₹${(total / 1000).toFixed(0)}K`;
+        },
+      },
+    },
+    legend: {
+      position: 'bottom',
+      itemHeight: 24,
+      itemName: {
+        style: { fill: '#cbd5e1', fontSize: 13 }
+      }
+    },
+    label: {
+      type: 'spider',
+      labelHeight: 28,
+      content: '{percentage}',
+      style: {
+        fill: '#fff',
+        fontSize: 12,
+        fontWeight: 600,
+      },
+    },
+    tooltip: {
+      customContent: (title, items) => {
+        if (!items || items.length === 0) return null;
+        return `
+          <div style="padding: 12px; background: rgba(30, 41, 59, 0.95); border: 1px solid #334155; border-radius: 8px;">
+            <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 4px;">${items[0]?.data?.type}</div>
+            <div style="color: #fff; font-size: 16px; font-weight: 600;">₹${items[0]?.value?.toLocaleString()}</div>
+          </div>
+        `;
+      }
+    },
   };
 
   const meetingColumns = [
@@ -141,70 +209,118 @@ const UserDashboard = () => {
   ];
 
   return (
-    <DashboardContainer>
-      <Header>
-        <h1>My Financial Overview</h1>
-        <div className="actions">
-          <ActionButton onClick={() => setUploadModalVisible(true)}>
-            <UploadOutlined /> Upload Document
-          </ActionButton>
-          <ActionButton onClick={loadDashboardData}><ReloadOutlined /> Refresh</ActionButton>
-        </div>
-      </Header>
+    <div className="dashboard-container">
+      {/* Header */}
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">My Financial Overview</h1>
+        <Space>
+          <Button
+            className="dashboard-action-btn"
+            icon={<UploadOutlined />}
+            onClick={() => setUploadModalVisible(true)}
+          >
+            Upload Document
+          </Button>
+          <Button
+            className="dashboard-action-btn"
+            icon={<ReloadOutlined />}
+            onClick={loadDashboardData}
+          >
+            Refresh
+          </Button>
+        </Space>
+      </div>
 
-      <GridContainer>
-        <Col span={8}>
-          <KPICard title="Total Documents" trend={1} color="#00B0F0">
+      {/* KPI Cards */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+        <Col xs={24} sm={8}>
+          <Card className="kpi-card blue" bordered={false}>
+            <div className="kpi-icon-wrapper blue">
+              <FileTextOutlined />
+            </div>
+            <div className="kpi-label">Total Documents</div>
             <div className="kpi-value">{data.stats.totalDocuments}</div>
-            <div className="kpi-trend">Safe & Secure</div>
-          </KPICard>
+            <div className="kpi-subtitle">
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              Safe & Secure
+            </div>
+          </Card>
         </Col>
-        <Col span={8}>
-          <KPICard title="Upcoming Meetings" trend={0} color="#F2C811">
+        <Col xs={24} sm={8}>
+          <Card className="kpi-card yellow" bordered={false}>
+            <div className="kpi-icon-wrapper yellow">
+              <CalendarOutlined />
+            </div>
+            <div className="kpi-label">Upcoming Meetings</div>
             <div className="kpi-value">{data.stats.totalMeetings}</div>
-            <div className="kpi-trend">Scheduled</div>
-          </KPICard>
+            <div className="kpi-subtitle">
+              <CheckCircleOutlined style={{ color: '#F2C811' }} />
+              Scheduled
+            </div>
+          </Card>
         </Col>
-        <Col span={8}>
-          <KPICard title="Pending Tasks" trend={-1} color="#D13438">
+        <Col xs={24} sm={8}>
+          <Card className="kpi-card green" bordered={false}>
+            <div className="kpi-icon-wrapper green">
+              <CheckCircleOutlined />
+            </div>
+            <div className="kpi-label">Pending Tasks</div>
             <div className="kpi-value">{data.stats.pendingTasks}</div>
-            <div className="kpi-trend">Requires Action</div>
-          </KPICard>
-        </Col>
-      </GridContainer>
-
-      {/* New Wealth & Goals Widgets */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col xs={24} md={12}>
-          <WealthHealthWidget />
-        </Col>
-        <Col xs={24} md={12}>
-          <GoalProgressWidget />
+            <div className="kpi-subtitle">
+              {data.stats.pendingTasks > 0 ? (
+                <span style={{ color: '#f59e0b' }}>Requires Action</span>
+              ) : (
+                <span style={{ color: '#10b981' }}>All Clear</span>
+              )}
+            </div>
+          </Card>
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]}>
-        <Col span={16}>
-          <ChartContainer title="Spending Trends">
-            <Line {...spendingConfig} />
-          </ChartContainer>
+      {/* Wealth & Goals Widgets */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+        <Col xs={24} lg={12}>
+          <WealthHealthWidget score={data.health?.score} metrics={data.health?.metrics} />
         </Col>
-        <Col span={8}>
-          <ChartContainer title="Budget Allocation">
-            <Pie {...categoryConfig} height={250} />
-          </ChartContainer>
+        <Col xs={24} lg={12}>
+          <GoalProgressWidget goals={data.goals} />
         </Col>
+      </Row>
 
+      {/* Charts */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+        <Col xs={24} lg={16}>
+          <Card className="widget-card" title="Spending Trends" bordered={false}>
+            <Line {...spendingConfig} />
+          </Card>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card className="widget-card" title="Budget Allocation" bordered={false}>
+            <Pie {...categoryConfig} height={280} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Upcoming Meetings Table */}
+      <Row gutter={[24, 24]}>
         <Col span={24}>
-          <TableContainer title="Upcoming Meetings">
+          <Card className="widget-card" title="Upcoming Meetings" bordered={false}>
             <Table
               dataSource={data.upcomingMeetings}
               columns={meetingColumns}
               pagination={false}
-              size="small"
+              size="middle"
               rowKey="id"
+              locale={{
+                emptyText: (
+                  <div className="empty-state">
+                    <div className="empty-state-icon">📅</div>
+                    <div className="empty-state-text">No upcoming meetings scheduled</div>
+                  </div>
+                )
+              }}
             />
-          </TableContainer>
+          </Card>
         </Col>
       </Row>
 
@@ -216,7 +332,7 @@ const UserDashboard = () => {
           message.success('Document uploaded successfully');
         }}
       />
-    </DashboardContainer>
+    </div>
   );
 };
 

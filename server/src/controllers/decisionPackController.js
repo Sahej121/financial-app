@@ -26,6 +26,11 @@ exports.generatePack = async (req, res) => {
             return res.status(403).json({ success: false, error: 'Not authorized to access this submission' });
         }
 
+        // Gating for regular users
+        if (req.user.role === 'user' && !submission.isPaid) {
+            return res.status(402).json({ success: false, error: 'Payment required for Deep Insights' });
+        }
+
         const pack = await decisionPackService.generatePack(submissionId);
 
         res.json({
@@ -55,6 +60,11 @@ exports.getPack = async (req, res) => {
 
         if (submission.userId !== userId && !['ca', 'financial_planner', 'admin'].includes(req.user.role)) {
             return res.status(403).json({ success: false, error: 'Not authorized' });
+        }
+
+        // Gating for regular users
+        if (req.user.role === 'user' && !submission.isPaid) {
+            return res.status(402).json({ success: false, error: 'Payment required for Deep Insights' });
         }
 
         const pack = await decisionPackService.getPack(submissionId);

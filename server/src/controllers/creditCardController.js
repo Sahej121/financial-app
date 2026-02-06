@@ -62,7 +62,12 @@ exports.applyForCard = async (req, res) => {
     });
 
     // Send email notification
-    // TODO: Implement email notification
+    const sendEmail = require('../utils/email');
+    await sendEmail({
+      email: email,
+      subject: `Application Received: ${cardId}`,
+      message: `Dear ${name},\n\nWe have received your application for the credit card. Reference ID: ${application.id}.\n\nOur team will verify your details and get back to you shortly.\n\nBest Regards,\nNeurona Team`
+    });
 
     res.status(201).json({
       message: 'Application submitted successfully',

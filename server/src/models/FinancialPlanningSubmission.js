@@ -75,6 +75,18 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Full decision pack JSON for dashboard display'
     },
+    isPaid: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    transactionId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'transactions',
+        key: 'id'
+      }
+    },
 
     // ===== MOAT: Business Expansion Fields =====
     expansionType: {

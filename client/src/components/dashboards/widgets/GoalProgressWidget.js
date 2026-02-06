@@ -40,14 +40,20 @@ const GoalItem = styled.div`
   }
 `;
 
-const GoalProgressWidget = () => {
-    const [goals, setGoals] = React.useState([
+const GoalProgressWidget = ({ goals: initialGoals }) => {
+    const [goals, setGoals] = React.useState(initialGoals || [
         { title: 'Dream Home', current: 4500000, target: 15000000, color: '#00B0F0', icon: '🏠' },
         { title: 'Emergency Fund', current: 480000, target: 500000, color: '#52c41a', icon: '🛡️' },
         { title: 'World Tour', current: 150000, target: 800000, color: '#F2C811', icon: '✈️' },
     ]);
     const [isModalVisible, setIsModalVisible] = React.useState(false);
     const [form] = Form.useForm();
+
+    React.useEffect(() => {
+        if (initialGoals && initialGoals.length > 0) {
+            setGoals(initialGoals);
+        }
+    }, [initialGoals]);
 
     const formatCurrency = (val) => `₹${(val / 100000).toFixed(1)}L`;
 

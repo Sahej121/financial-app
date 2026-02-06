@@ -10,6 +10,7 @@
  */
 
 const { DocumentInsight, FinancialPlanningSubmission } = require('../models');
+const { parseIndianCurrency } = require('../utils/currencyHelper');
 
 class ScoringService {
     /**
@@ -17,30 +18,16 @@ class ScoringService {
      */
     weightedAverage(items) {
         const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+        if (totalWeight === 0) return 0;
         const weightedSum = items.reduce((sum, item) => sum + (item.weight * item.score), 0);
         return Math.round(weightedSum / totalWeight);
     }
 
     /**
-     * Parse monetary string to number (handles "₹", "Lakhs", "Cr", etc.)
+     * Parse monetary string to number
      */
     parseMoney(value) {
-        if (!value) return 0;
-        if (typeof value === 'number') return value;
-
-        const str = String(value).toLowerCase().replace(/[₹,\s]/g, '');
-        let multiplier = 1;
-
-        if (str.includes('cr')) {
-            multiplier = 10000000;
-        } else if (str.includes('lakh')) {
-            multiplier = 100000;
-        } else if (str.includes('k')) {
-            multiplier = 1000;
-        }
-
-        const num = parseFloat(str.replace(/[^\d.]/g, ''));
-        return isNaN(num) ? 0 : num * multiplier;
+        return parseIndianCurrency(value) || 0;
     }
 
     /**
@@ -205,7 +192,7 @@ class ScoringService {
      * How much of the required data has been provided
      */
     calculateDataCompleteness(submission) {
-        const purpose = submission.planningPurpose;
+        const purpose = (submission.planningPurpose || 'investment').toLowerCase();
 
         // Define required fields per purpose
         const requiredFields = {
@@ -236,7 +223,66 @@ class ScoringService {
             }
         }
 
-        return Math.round((filledCount / fields.length) * 100);
+        const score = Math.round((filledCount / fields.length) * 100);
+        console.log(`SCORING: Purpose=${purpose}, Filled=${filledCount}/${fields.length}, Score=${score}`);
+        return score;
+    }
+
+    /**
+     * GET MISSING FIELDS FOR FEEDBACK
+     */
+    getMissingFields(submission) {
+        const purpose = submission.planningPurpose || 'investment';
+        const requiredFields = {
+            investment: [
+                { id: 'monthlyIncome', label: 'Monthly Income' },
+                { id: 'monthlySavings', label: 'Monthly Savings' },
+                { id: 'riskPreference', label: 'Risk Preference' },
+                { id: 'investmentExperience', label: 'Investment Experience' },
+                { id: 'hasHealthInsurance', label: 'Health Insurance Status' },
+                { id: 'hasLifeInsurance', label: 'Life Insurance Status' }
+            ],
+            comprehensive: [
+                { id: 'monthlyIncome', label: 'Monthly Income' },
+                { id: 'monthlySavings', label: 'Monthly Savings' },
+                { id: 'totalLiabilityAmount', label: 'Total Liabilities' },
+                { id: 'riskPreference', label: 'Risk Preference' },
+                { id: 'hasHealthInsurance', label: 'Health Insurance Status' },
+                { id: 'hasLifeInsurance', label: 'Life Insurance Status' }
+            ],
+            tax_planning: [
+                { id: 'monthlyIncome', label: 'Monthly Income' },
+                { id: 'investment80C', label: '80C Investments' },
+                { id: 'healthInsurancePremium', label: 'Health Insurance Premium' }
+            ],
+            business_expansion: [
+                { id: 'fundingRequired', label: 'Funding Required' },
+                { id: 'annualRevenue', label: 'Annual Revenue' },
+                { id: 'profitMargin', label: 'Profit Margin' },
+                { id: 'cashReserves', label: 'Cash Reserves' }
+            ],
+            loan_settlement: [
+                { id: 'totalDebtAmount', label: 'Total Debt' },
+                { id: 'monthlyEMI', label: 'Monthly EMI' },
+                { id: 'settlementGoal', label: 'Settlement Goal' }
+            ]
+        };
+
+        const fields = requiredFields[purpose] || requiredFields.investment;
+        const missing = [];
+
+        for (const field of fields) {
+            const value = submission[field.id];
+            const isFilled = value !== null && value !== undefined && value !== '' &&
+                (Array.isArray(value) ? value.length > 0 : true) &&
+                (typeof value === 'object' && !Array.isArray(value) ? Object.keys(value).length > 0 : true);
+
+            if (!isFilled) {
+                missing.push(field.label);
+            }
+        }
+
+        return missing;
     }
 
     /**
@@ -287,7 +333,8 @@ class ScoringService {
             ...scores,
             primaryScore: scores.expansionReadinessScore || scores.loanSafetyScore || scores.investmentCapacityScore,
             purpose,
-            rules: ruleEvaluation.rules
+            rules: ruleEvaluation.rules,
+            missingFields: this.getMissingFields(submission)
         };
     }
 }

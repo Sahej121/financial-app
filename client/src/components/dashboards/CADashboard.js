@@ -362,7 +362,14 @@ const CADashboard = () => {
     {
       title: 'Time',
       dataIndex: 'startsAt',
+      width: 130,
       render: (time) => moment(time).format('MMM DD, HH:mm')
+    },
+    {
+      title: 'Payment',
+      dataIndex: 'transactionId',
+      width: 100,
+      render: (tid) => <Tag color={tid ? 'success' : 'warning'}>{tid ? 'PAID' : 'PENDING'}</Tag>
     },
     {
       title: 'Action',
@@ -372,7 +379,13 @@ const CADashboard = () => {
             type="primary"
             size="small"
             icon={<VideoCameraOutlined />}
-            onClick={() => window.open(record.zoomStartUrl || '#', '_blank')}
+            onClick={() => {
+              if (record.zoomStartUrl) {
+                window.open(record.zoomStartUrl, '_blank');
+              } else {
+                message.warning('Zoom host link not generated yet.');
+              }
+            }}
             style={{ background: '#00B0F0' }}
           >
             Start
@@ -529,19 +542,19 @@ const CADashboard = () => {
       </Header>
 
       <GridContainer>
-        <Col span={8}>
+        <Col xs={24} sm={12} lg={8}>
           <KPICard title="Pending Reviews" trend={-1} color="#F2C811">
             <div className="kpi-value">{data.stats.pendingReviews}</div>
             <div className="kpi-trend">Requires attention</div>
           </KPICard>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={12} lg={8}>
           <KPICard title="Scheduled Meetings" trend={1} color="#00B0F0">
             <div className="kpi-value">{data.stats.scheduledMeetings}</div>
             <div className="kpi-trend">For this week</div>
           </KPICard>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={12} lg={8}>
           <KPICard title="Urgent Documents" trend={-1} color="#D13438">
             <div className="kpi-value">{data.stats.urgentAttention}</div>
             <div className="kpi-trend">High Priority</div>
@@ -550,18 +563,18 @@ const CADashboard = () => {
       </GridContainer>
 
       <Row gutter={[16, 16]}>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <ChartContainer title="Weekly Activity (Meetings)">
             <Column {...meetingsChartConfig} height={250} />
           </ChartContainer>
         </Col>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <ChartContainer title="Document Status">
             <Pie {...docStatusConfig} height={250} />
           </ChartContainer>
         </Col>
 
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <TableContainer title="Upcoming Consultations">
             <Table
               dataSource={data.meetings.slice(0, 5)}
@@ -573,7 +586,7 @@ const CADashboard = () => {
             />
           </TableContainer>
         </Col>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <TableContainer title="Document Review Queue">
             <Table
               dataSource={data.documents.slice(0, 5)}
@@ -596,6 +609,7 @@ const CADashboard = () => {
               pagination={false}
               size="small"
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               locale={{ emptyText: 'No pending filings for review' }}
             />
           </TableContainer>
@@ -777,8 +791,8 @@ const CADashboard = () => {
               </Title>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '20px' }}>
-              <Col span={8}>
+            <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+              <Col xs={24} sm={8}>
                 <Card size="small" style={{ background: 'rgba(255,255,255,0.03)', border: 'none' }}>
                   <Statistic
                     title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>TOTAL CREDITS</span>}
@@ -789,7 +803,7 @@ const CADashboard = () => {
                   />
                 </Card>
               </Col>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Card size="small" style={{ background: 'rgba(255,255,255,0.03)', border: 'none' }}>
                   <Statistic
                     title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>AVG BALANCE</span>}
@@ -800,12 +814,13 @@ const CADashboard = () => {
                   />
                 </Card>
               </Col>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Card size="small" style={{ background: 'rgba(255,255,255,0.03)', border: 'none' }}>
                   <Statistic
-                    title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>GROWTH TREND</span>}
-                    value={selectedBriefing.snapshot.revenueTrend}
-                    valueStyle={{ color: '#00B0F0', fontSize: '16px', fontWeight: 'bold' }}
+                    title={<span style={{ color: 'rgba(255,255,255,0.45)' }}>DEBIT TXNS</span>}
+                    value={selectedBriefing.snapshot.debitTransactions}
+                    suffix=" TXNs"
+                    valueStyle={{ color: '#ff4d4f', fontSize: '18px' }}
                   />
                 </Card>
               </Col>

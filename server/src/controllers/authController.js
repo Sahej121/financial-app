@@ -64,10 +64,14 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Validate role is allowed
-    const allowedRoles = ['user', 'premium', 'ca', 'financial_planner', 'admin'];
-    if (role && !allowedRoles.includes(role)) {
-      return res.status(400).json({ error: 'Invalid role specified' });
+    // Validate role is allowed via public endpoint
+    const publicRoles = ['user', 'premium'];
+    if (role && !publicRoles.includes(role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Cannot register with privileged role via public endpoint'
+      });
     }
     // Validation
     if (!name || !email || !password) {
@@ -368,6 +372,48 @@ exports.updateSettings = async (req, res) => {
         marketingEmails: user.marketingEmails,
         darkTheme: user.darkTheme
       }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+
+    // Validate inputs
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Check password strength
+    const strength = zxcvbn(newPassword);
+    if (strength.score < 2) {
+      return res.status(400).json({
+        error: 'New password is too weak',
+        suggestions: strength.feedback.suggestions
+      });
+    }
+
+    // Hash and save new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
