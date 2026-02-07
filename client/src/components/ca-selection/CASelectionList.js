@@ -171,11 +171,15 @@ const CASelectionList = ({ onStartConsultation }) => {
   };
 
   const filteredCAs = cas.filter(ca => {
-    const matchesSearch = ca.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ca.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const name = ca.name || '';
+    const description = ca.description || '';
+    const search = searchTerm || '';
+
+    const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) ||
+      description.toLowerCase().includes(search.toLowerCase());
 
     // Additional filtering logic for specializations would go here
-    if (filterSpecialization && !ca.specializations.includes(filterSpecialization)) {
+    if (filterSpecialization && (!ca.specializations || !ca.specializations.includes(filterSpecialization))) {
       return false;
     }
 
@@ -253,7 +257,7 @@ const CASelectionList = ({ onStartConsultation }) => {
                 </div>
 
                 <div style={{ margin: '16px 0', display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {ca.specializations.slice(0, 2).map((spec, index) => (
+                  {(ca.specializations || []).slice(0, 2).map((spec, index) => (
                     <Tag color="cyan" key={index} style={{ background: 'rgba(19, 194, 194, 0.1)', border: '1px solid rgba(19, 194, 194, 0.3)', color: '#13c2c2', margin: 0 }}>
                       {spec}
                     </Tag>

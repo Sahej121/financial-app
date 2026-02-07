@@ -88,8 +88,8 @@ const CreditCardRecommendations = ({ recommendations, userPreferences }) => {
       reasons.push('Highest match based on your preferences');
     }
 
-    if (userPreferences?.primaryBank &&
-      card.bank?.toLowerCase().includes(userPreferences.primaryBank.toLowerCase())) {
+    if (userPreferences?.primaryBank && card.bank &&
+      card.bank.toLowerCase().includes(userPreferences.primaryBank.toLowerCase())) {
       reasons.push(`You have existing relationship with ${card.bank}`);
     }
 

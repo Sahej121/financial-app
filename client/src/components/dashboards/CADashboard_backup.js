@@ -279,16 +279,16 @@ const CADashboard = () => {
           content={
             <Descriptions column={1} size="small" bordered>
               <Descriptions.Item label="Industry">
-                {(record.industry && record.industry.toUpperCase()) || 'N/A'}
+                {record.industry?.toUpperCase() || 'N/A'}
               </Descriptions.Item>
               <Descriptions.Item label="Turnover">
-                {(record.turnoverBand && record.turnoverBand.replace('_', ' ').toUpperCase()) || 'N/A'}
+                {record.turnoverBand?.replace('_', ' ').toUpperCase() || 'N/A'}
               </Descriptions.Item>
               <Descriptions.Item label="Income">
                 {Array.isArray(record.incomeSources) ? record.incomeSources.join(', ') : 'N/A'}
               </Descriptions.Item>
               <Descriptions.Item label="Method">
-                {(record.accountingMethod && record.accountingMethod.toUpperCase()) || 'N/A'}
+                {record.accountingMethod?.toUpperCase() || 'N/A'}
               </Descriptions.Item>
             </Descriptions>
           }
@@ -428,7 +428,7 @@ const CADashboard = () => {
     {
       title: 'Priority',
       dataIndex: 'priority',
-      render: (p) => <Tag color={p === 'urgent' ? 'red' : 'blue'}>{p ? p.toUpperCase() : 'NORMAL'}</Tag>
+      render: (p) => <Tag color={p === 'urgent' ? 'red' : 'blue'}>{p.toUpperCase()}</Tag>
     },
     {
       title: 'Action',

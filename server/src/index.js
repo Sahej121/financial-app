@@ -23,7 +23,7 @@ const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { sequelize } = require('./models');
 const cookieParser = require('cookie-parser');
-const { doubleCsrfProtection, generateToken } = require('./middleware/csrf');
+const { doubleCsrfProtection, generateCsrfToken } = require('./middleware/csrf');
 const { connectRedis } = require('./utils/cache');
 
 const app = express();
@@ -39,6 +39,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(apiLimiter);
 
+const responseSanitizer = require('./middleware/sanitizer');
+app.use(responseSanitizer);
+
 // CSRF Protection - Applied after body parser and cookie parser
 // Bypassed in test environment for functional testing
 if (process.env.NODE_ENV !== 'test') {
@@ -47,7 +50,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Route to get CSRF token
 app.get('/api/csrf-token', (req, res) => {
-  res.json({ token: generateToken(req, res) });
+  res.json({ token: generateCsrfToken(req, res) });
 });
 
 // [REMOVED] Public static serving of uploads is disabled for security.

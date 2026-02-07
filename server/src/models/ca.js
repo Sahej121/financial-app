@@ -65,6 +65,10 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     }
+  }, {
+    defaultScope: {
+      attributes: { exclude: ['phone'] }
+    }
   });
 
   CA.associate = (models) => {

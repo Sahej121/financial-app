@@ -64,6 +64,10 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             defaultValue: 0
         }
+    }, {
+        defaultScope: {
+            attributes: { exclude: ['phone'] }
+        }
     });
 
     FinancialPlanner.associate = (models) => {

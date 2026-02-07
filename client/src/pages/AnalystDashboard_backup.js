@@ -148,7 +148,7 @@ const AnalystDashboard = () => {
       key: 'status',
       render: status => (
         <Tag color={getStatusColor(status)}>
-          {status ? status.toUpperCase() : 'UNKNOWN'}
+          {status.toUpperCase()}
         </Tag>
       )
     },

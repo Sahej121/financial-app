@@ -318,3 +318,125 @@
 2026-02-06 17:48:19 [info] : Redis connected successfully {"metadata":{}}
 2026-02-06 17:48:19 [info] : Database connected successfully {"metadata":{}}
 2026-02-06 17:48:19 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:53:53 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 17:53:53 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 17:53:53 [info] : Database synchronized {"metadata":{}}
+2026-02-06 17:53:53 [info] : Starting demand intent analysis {"metadata":{"submissionId":1,"purpose":"tax_planning"}}
+2026-02-06 17:53:53 [info] : Starting demand intent analysis {"metadata":{"submissionId":2,"purpose":"loan_settlement"}}
+2026-02-06 17:53:53 [info] : Demand analysis complete {"metadata":{"submissionId":1,"intent":{"nuances":["TAX_OPTIMIZATION","HIGH_GROWTH"],"urgency":"HIGH","complexityLevel":"MODERATE","suggestedExpertise":["TAX_SPECIALIST"],"summary":"Client needs tax help."}}}
+2026-02-06 17:53:53 [error] : AI Analysis failed, falling back to heuristics AI invalid {"metadata":{"stack":"Error: AI invalid\n    at Object.<anonymous> (/Users/sahej/Desktop/financial-app/server/test/demandIntelligence.test.js:67:55)\n    at Promise.finally.completed (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)\n    at _callCircusTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at _runTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:947:3)\n    at /Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:849:7\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:862:11)\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at _runTestsForDescribeBlock (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:857:11)\n    at run (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:761:3)\n    at runAndTransformResultsToJestFormat (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)\n    at jestAdapter (/Users/sahej/Desktop/financial-app/server/node_modules/jest-circus/build/runner.js:101:19)\n    at runTestInternal (/Users/sahej/Desktop/financial-app/server/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/Users/sahej/Desktop/financial-app/server/node_modules/jest-runner/build/index.js:343:7)"}}
+2026-02-06 18:10:36 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:10:36 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:10:36 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:10:36 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:10:43 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:10:43 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:10:43 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:10:43 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:07 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:07 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:07 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:07 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:17 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:17 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:17 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:17 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:26 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:26 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:26 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:26 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:28 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:28 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:28 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:28 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:37 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:37 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:37 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:37 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:39 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:39 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:40 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:40 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:49 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:49 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:49 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:49 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:14:52 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:14:52 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:14:52 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:14:52 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:15:20 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:15:20 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:15:20 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:15:21 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:16:10 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:16:10 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:16:10 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:16:10 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:16:12 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:16:12 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:16:12 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:16:12 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:16:43 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:16:43 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:16:43 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:16:43 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:17:01 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:17:01 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:17:01 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:17:01 [info] : Database synchronized {"metadata":{}}
+2026-02-06 18:17:03 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 18:17:03 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 18:17:03 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 18:17:03 [info] : Database synchronized {"metadata":{}}
+2026-02-06 19:00:55 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 19:00:55 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 19:00:55 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 19:00:55 [info] : Database synchronized {"metadata":{}}
+2026-02-06 19:01:30 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 19:01:30 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 19:01:30 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 19:01:30 [info] : Database synchronized {"metadata":{}}
+2026-02-06 19:05:31 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 19:05:31 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 19:05:31 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 19:05:31 [info] : Database synchronized {"metadata":{}}
+2026-02-06 19:14:06 [info] : Starting demand intent analysis {"metadata":{"submissionId":21,"purpose":"loan_settlement"}}
+2026-02-06 19:14:06 [error] : AI Analysis failed, falling back to heuristics 401 {"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"expired_api_key"}} {"metadata":{"status":401,"headers":{"alt-svc":"h3=\":443\"; ma=86400","cache-control":"private, max-age=0, no-store, no-cache, must-revalidate","cf-cache-status":"DYNAMIC","cf-ray":"9c9b1491bc77b7e9-DEL","connection":"keep-alive","content-length":"96","content-type":"application/json","date":"Fri, 06 Feb 2026 13:44:06 GMT","server":"cloudflare","set-cookie":"__cf_bm=OnRd5bD2ed0XQo4I3NDX8ykFkh_BMy5mv9Gey0uAoz8-1770385446.6741247-1.0.1.1-_YkAiBOJxGFwGOd_hByL9rpmSpOWNbUBEF0Xz1xiDHTm1CygjEXP6b.uXhiI4WFHQ1t5pikpxwJrzd8uLiLVAOzouruOKuJ5JhZKItZU_U0BVfqx..ecFgZTEZLZu92e; HttpOnly; Secure; Path=/; Domain=groq.com; Expires=Fri, 06 Feb 2026 14:14:06 GMT","strict-transport-security":"max-age=15552000","vary":"Origin","via":"1.1 google","x-groq-region":"bom","x-request-id":"req_01kgsk45snej9rbgkh747efqpc"},"error":{"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"expired_api_key"}},"stack":"Error: 401 {\"error\":{\"message\":\"Invalid API Key\",\"type\":\"invalid_request_error\",\"code\":\"expired_api_key\"}}\n    at APIError.generate (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/error.js:43:20)\n    at Groq.makeStatusError (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/core.js:293:33)\n    at Groq.makeRequest (/Users/sahej/Desktop/financial-app/server/node_modules/groq-sdk/core.js:339:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async AIProvider.generateJSON (/Users/sahej/Desktop/financial-app/server/src/utils/aiProvider.js:45:36)\n    at async DemandIntelligenceService.analyzeDemandIntent (/Users/sahej/Desktop/financial-app/server/src/services/demandIntelligenceService.js:32:24)\n    at async DecisionPackService.generatePack (/Users/sahej/Desktop/financial-app/server/src/services/decisionPackService.js:266:40)"}}
+2026-02-06 19:14:19 [info] : Serving decision pack from cache {"metadata":{"submissionId":"21"}}
+2026-02-06 19:34:28 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-06 19:34:28 [info] : Redis connected successfully {"metadata":{}}
+2026-02-06 19:34:28 [info] : Database connected successfully {"metadata":{}}
+2026-02-06 19:34:28 [info] : Database synchronized {"metadata":{}}
+2026-02-07 15:34:26 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 15:34:26 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 15:34:26 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 15:34:26 [info] : Database synchronized {"metadata":{}}
+2026-02-07 15:39:39 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 15:39:39 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 15:39:39 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 15:39:39 [info] : Database synchronized {"metadata":{}}
+2026-02-07 15:45:01 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 15:45:01 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 15:45:01 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 15:45:01 [info] : Database synchronized {"metadata":{}}
+2026-02-07 15:45:54 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 15:45:54 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 15:45:54 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 15:45:54 [info] : Database synchronized {"metadata":{}}
+2026-02-07 15:45:55 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 15:45:56 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 15:45:56 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 15:45:56 [info] : Database synchronized {"metadata":{}}
+2026-02-07 16:03:15 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 16:03:15 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 16:03:15 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 16:03:15 [info] : Database synchronized {"metadata":{}}
+2026-02-07 16:03:46 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 16:03:46 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 16:03:46 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 16:03:46 [info] : Database synchronized {"metadata":{}}
+2026-02-07 16:10:48 [info] : Server is running on port 3001 {"metadata":{}}
+2026-02-07 16:10:48 [info] : Redis connected successfully {"metadata":{}}
+2026-02-07 16:10:48 [info] : Database connected successfully {"metadata":{}}
+2026-02-07 16:10:48 [info] : Database synchronized {"metadata":{}}

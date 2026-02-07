@@ -82,6 +82,9 @@ module.exports = (sequelize) => {
     }, {
         tableName: 'gst_profiles',
         timestamps: true,
+        defaultScope: {
+            attributes: { exclude: ['pan'] }
+        },
         indexes: [
             { fields: ['userId'] },
             { fields: ['gstin'], unique: true },

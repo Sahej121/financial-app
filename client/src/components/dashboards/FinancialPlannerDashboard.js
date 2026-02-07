@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Tabs } from 'antd';
-import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Tabs, Card, Statistic, Badge, Typography } from 'antd';
+import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, FileTextOutlined, SafetyCertificateOutlined, WarningOutlined, CheckCircleOutlined, DollarCircleOutlined, AuditOutlined } from '@ant-design/icons';
 import { Pie, Area, Column } from '@ant-design/plots';
 import moment from 'moment';
 import api from '../../services/api';
@@ -9,19 +9,11 @@ import DocumentInsightsPanel from '../analyst/DocumentInsightsPanel';
 import BriefingPanel from '../analyst/BriefingPanel';
 import ClientSubmissionReport from '../analyst/ClientSubmissionReport';
 import DocumentPreviewModal from '../analyst/DocumentPreviewModal';
-import {
-  DashboardContainer,
-  GridContainer,
-  KPICard,
-  ChartContainer,
-  TableContainer,
-  Header,
-  ActionButton
-} from './PowerBIComponents';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
+const { Text, Title } = Typography;
 
 // Helper to download CSV
 const downloadCSV = (content, fileName) => {
@@ -58,6 +50,11 @@ const FinancialPlannerDashboard = () => {
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
 
+  // Report Writing State
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedMeetingForReport, setSelectedMeetingForReport] = useState(null);
+  const [reportForm] = Form.useForm();
+
   // Document Preview State
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -73,16 +70,20 @@ const FinancialPlannerDashboard = () => {
   const loadDashboardData = async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
-      if (isRefresh) setRefreshing(true);
 
-      const [meetingsRes, documentsRes, statsRes] = await Promise.all([
+      const [meetingsRes, documentsRes, statsRes, pastMeetingsRes] = await Promise.all([
         api.get('/meetings/professional?role=financial_planner&upcoming=true'),
         api.get('/documents/pending?role=financial_planner'),
-        api.get('/financial-planners/stats').catch(() => ({ data: {} }))
+        api.get('/financial-planners/stats').catch(() => ({ data: {} })),
+        api.get('/meetings/professional?role=financial_planner&upcoming=false&limit=10').catch(() => ({ data: { meetings: [] } }))
       ]);
+
+      console.log('Past Meetings Data:', pastMeetingsRes.data);
+      console.log('Documents Data:', documentsRes.data);
 
       setData({
         meetings: meetingsRes.data.meetings || [],
+        pastMeetings: pastMeetingsRes.data.meetings || [],
         documents: documentsRes.data.documents || [],
         stats: {
           ...statsRes.data,
@@ -150,6 +151,31 @@ const FinancialPlannerDashboard = () => {
     }
   };
 
+  const openReportModal = (meeting) => {
+    setSelectedMeetingForReport(meeting);
+    reportForm.setFieldsValue({
+      reportContent: meeting.reportContent || '',
+      rating: meeting.rating || 5
+    });
+    setReportModalVisible(true);
+  };
+
+  const handleReportSubmit = async (values) => {
+    try {
+      // Assuming endpoint to update meeting details
+      await api.patch(`/meetings/${selectedMeetingForReport.id}`, {
+        reportContent: values.reportContent,
+        rating: values.rating
+      });
+      message.success('Report saved successfully');
+      setReportModalVisible(false);
+      loadDashboardData(); // Refresh to show updated data
+    } catch (error) {
+      console.error('Error saving report:', error);
+      message.error('Failed to save report');
+    }
+  };
+
   // --- Charts Config ---
   const aumConfig = {
     data: data.stats.aumHistory || [],
@@ -171,7 +197,7 @@ const FinancialPlannerDashboard = () => {
     label: { type: 'outer', content: '{name} {percentage}' },
     interactions: [{ type: 'element-active' }],
     color: ['#00B0F0', '#F2C811', '#107C10', '#D13438'],
-    legend: { position: 'bottom', itemHeight: 20 } // simplified legend config
+    legend: { position: 'bottom', itemHeight: 20 }
   };
 
   const acquisitionConfig = {
@@ -198,7 +224,7 @@ const FinancialPlannerDashboard = () => {
       render: (client) => (
         <Space>
           <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#00B0F0' }} size="small" />
-          <span style={{ fontWeight: 600, fontSize: '13px' }}>{client?.name}</span>
+          <span style={{ fontWeight: 600, fontSize: '13px', color: 'white' }}>{client?.name}</span>
         </Space>
       )
     },
@@ -230,7 +256,7 @@ const FinancialPlannerDashboard = () => {
       title: 'Time',
       dataIndex: 'startsAt',
       width: 120,
-      render: (time) => <span style={{ fontSize: '12px' }}>{moment(time).format('MMM DD, HH:mm')}</span>
+      render: (time) => <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>{moment(time).format('MMM DD, HH:mm')}</span>
     },
     {
       title: 'Payment',
@@ -241,7 +267,7 @@ const FinancialPlannerDashboard = () => {
     {
       title: 'Action',
       fixed: 'right',
-      width: 150,
+      width: 250,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -255,7 +281,7 @@ const FinancialPlannerDashboard = () => {
                 message.warning('Zoom link not generated for this meeting yet.');
               }
             }}
-            style={{ background: '#00B0F0', fontSize: '11px' }}
+            style={{ background: '#00B0F0', fontSize: '11px', borderColor: '#00B0F0' }}
           >
             Join
           </Button>
@@ -267,6 +293,14 @@ const FinancialPlannerDashboard = () => {
           >
             AI Prep
           </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openReportModal(record)}
+            style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', fontSize: '11px' }}
+          >
+            Report
+          </Button>
         </Space>
       )
     }
@@ -276,19 +310,19 @@ const FinancialPlannerDashboard = () => {
     {
       title: 'Document',
       dataIndex: 'fileName',
-      render: (name) => <span style={{ fontWeight: 500 }}>{name}</span>
+      render: (name) => <span style={{ fontWeight: 500, color: 'white' }}>{name}</span>
     },
     {
       title: 'Client',
       dataIndex: 'owner',
-      render: (owner) => owner?.name
+      render: (owner) => <span style={{ color: 'rgba(255,255,255,0.85)' }}>{owner?.name}</span>
     },
     {
       title: 'Status',
       dataIndex: 'status',
       render: (status) => {
         const colors = { pending: 'orange', approved: 'green', rejected: 'red' };
-        return <Tag color={colors[status] || 'default'}>{status.toUpperCase()}</Tag>;
+        return <Tag color={colors[status] || 'default'}>{status ? status.toUpperCase() : 'UNKNOWN'}</Tag>;
       }
     },
     {
@@ -317,89 +351,166 @@ const FinancialPlannerDashboard = () => {
   ];
 
   return (
-    <DashboardContainer>
-      <Header>
-        <h1>Analyst Overview</h1>
-        <div className="actions">
-          <ActionButton onClick={() => loadDashboardData(true)} disabled={refreshing}>
-            <ReloadOutlined spin={refreshing} /> {refreshing ? 'Refreshing...' : 'Refresh Data'}
-          </ActionButton>
-          <ActionButton onClick={handleExport}><FileTextOutlined /> Export Report</ActionButton>
-        </div>
-      </Header>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Analyst Overview</h1>
+        <Space>
+          <Button
+            className="dashboard-action-btn"
+            icon={<ReloadOutlined spin={refreshing} />}
+            onClick={() => loadDashboardData(true)}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button
+            className="dashboard-action-btn"
+            icon={<FileTextOutlined />}
+            onClick={handleExport}
+          >
+            Export Report
+          </Button>
+        </Space>
+      </div>
 
-      <GridContainer>
-        {/* KPIs */}
+      <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>
-          <KPICard title="Assets Under Management (Est.)" trend={1} color="#00B0F0">
+          <Card className="kpi-card blue" bordered={false}>
+            <div className="kpi-icon-wrapper blue">
+              <DollarCircleOutlined />
+            </div>
+            <div className="kpi-label">AUM (Est.)</div>
             <div className="kpi-value">₹{(data.stats.aum / 10000000).toFixed(2)} Cr</div>
-            <div className="kpi-trend">▲ 12.5% vs last month</div>
-          </KPICard>
+            <div className={`kpi-trend positive`}>▲ 12.5% vs last month</div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <KPICard title="Active Clients" trend={1} color="#F2C811">
+          <Card className="kpi-card yellow" bordered={false}>
+            <div className="kpi-icon-wrapper yellow">
+              <UserOutlined />
+            </div>
+            <div className="kpi-label">Active Clients</div>
             <div className="kpi-value">{data.stats.activeClients}</div>
-            <div className="kpi-trend">▲ 4 new this month</div>
-          </KPICard>
+            <div className={`kpi-trend positive`}>▲ 4 new this month</div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <KPICard title="Meetings Today" trend={0} color="#107C10">
+          <Card className="kpi-card green" bordered={false}>
+            <div className="kpi-icon-wrapper green">
+              <VideoCameraOutlined />
+            </div>
+            <div className="kpi-label">Meetings Today</div>
             <div className="kpi-value">{data.stats.meetingsToday}</div>
-            <div className="kpi-trend">8 scheduled for week</div>
-          </KPICard>
+            <div className={`kpi-trend neutral`}>8 scheduled for week</div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <KPICard title="Client Satisfaction" trend={1} color="#D13438">
+          <Card className="kpi-card red" bordered={false} style={{ borderColor: '#ef4444' }}>
+            <div className="kpi-icon-wrapper" style={{ background: 'rgba(209, 52, 56, 0.15)', color: '#D13438' }}>
+              <CheckCircleOutlined />
+            </div>
+            <div className="kpi-label">Client Satisfaction</div>
             <div className="kpi-value">{data.stats.satisfaction}/5.0</div>
-            <div className="kpi-trend">Based on 24 reviews</div>
-          </KPICard>
+            <div className={`kpi-trend positive`}>Based on 24 reviews</div>
+          </Card>
         </Col>
-      </GridContainer>
+      </Row>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
         {/* Charts Row */}
         <Col xs={24} lg={16}>
-          <ChartContainer title="Portfolio Growth (AUM)">
+          <Card className="chart-container widget-card" title="Portfolio Growth (AUM)" bordered={false}>
             <Area {...aumConfig} height={300} />
-          </ChartContainer>
+          </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <ChartContainer title="Asset Allocation">
+          <Card className="chart-container widget-card" title="Asset Allocation" bordered={false}>
             <Pie {...portfolioConfig} height={300} />
-          </ChartContainer>
+          </Card>
         </Col>
 
         {/* Third Row - Main Tables */}
-        <Col xs={24} lg={12}>
-          <TableContainer title="Upcoming Meetings">
-            <Table
-              dataSource={data.meetings.slice(0, 5)}
-              columns={meetingColumns}
-              pagination={false}
-              size="small"
-              rowKey="id"
-              scroll={{ x: 600 }}
-            />
-          </TableContainer>
+        {/* Third Row - Main Tables */}
+        <Col span={24}>
+          <Card className="widget-card" bordered={false} bodyStyle={{ padding: 0 }}>
+            <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 24px' }}>
+              <TabPane tab="Upcoming Meetings" key="1">
+                <div style={{ padding: '0 24px 24px' }}>
+                  <Table
+                    dataSource={data.meetings.slice(0, 5)}
+                    columns={meetingColumns}
+                    pagination={false}
+                    size="small"
+                    rowKey="id"
+                    scroll={{ x: 'max-content' }}
+                    locale={{ emptyText: <div style={{ color: 'rgba(255,255,255,0.45)', textAlign: 'center', padding: '20px' }}>No upcoming meetings</div> }}
+                  />
+                </div>
+              </TabPane>
+              <TabPane tab="Meeting History" key="2">
+                <div style={{ padding: '0 24px 24px' }}>
+                  <Table
+                    dataSource={data.pastMeetings?.slice(0, 5) || []}
+                    columns={[
+                      ...meetingColumns.filter(c => c.key !== 'action' && c.title !== 'Action'),
+                      {
+                        title: 'Status',
+                        dataIndex: 'status',
+                        width: 100,
+                        render: s => <Tag color={s === 'completed' ? 'green' : 'default'}>{s ? s.toUpperCase() : 'UNKNOWN'}</Tag>
+                      },
+                      {
+                        title: 'Report',
+                        key: 'report',
+                        fixed: 'right',
+                        width: 100,
+                        render: (_, record) => (
+                          <Button
+                            size="small"
+                            type={record.reportContent ? 'default' : 'primary'}
+                            ghost={!!record.reportContent}
+                            icon={<EditOutlined />}
+                            onClick={() => openReportModal(record)}
+                            style={record.reportContent ?
+                              { borderColor: 'rgba(255,255,255,0.3)', color: 'white' } :
+                              { background: '#00B0F0', border: 'none' }
+                            }
+                          >
+                            {record.reportContent ? 'Edit' : 'Write'}
+                          </Button>
+                        )
+                      }
+                    ]}
+                    pagination={false}
+                    size="small"
+                    rowKey="id"
+                    scroll={{ x: 'max-content' }}
+                    locale={{ emptyText: <div style={{ color: 'rgba(255,255,255,0.45)', textAlign: 'center', padding: '20px' }}>No past meetings found</div> }}
+                  />
+                </div>
+              </TabPane>
+            </Tabs>
+          </Card>
         </Col>
-        <Col xs={24} lg={12}>
-          <TableContainer title="Pending Document Reviews">
+
+        <Col span={24}>
+          <Card className="widget-card" title="Pending Document Reviews" bordered={false}>
             <Table
               dataSource={data.documents.slice(0, 5)}
               columns={documentColumns}
               pagination={false}
               size="small"
               rowKey="id"
-              scroll={{ x: 600 }}
+              scroll={{ x: 'max-content' }}
             />
-          </TableContainer>
+          </Card>
         </Col>
 
         {/* Fourth Row - Secondary Chart */}
         <Col span={24}>
-          <ChartContainer title="New Client Acquisition Trends">
+          <Card className="chart-container widget-card" title="New Client Acquisition Trends" bordered={false}>
             <Column {...acquisitionConfig} height={200} />
-          </ChartContainer>
+          </Card>
         </Col>
       </Row>
 
@@ -432,6 +543,60 @@ const FinancialPlannerDashboard = () => {
             <TextArea rows={4} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block>Submit Review</Button>
+        </Form>
+      </Modal>
+
+      {/* Report Writing Modal */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined style={{ color: '#00B0F0' }} />
+            <span>Meeting Report & Notes</span>
+          </Space>
+        }
+        visible={reportModalVisible}
+        onCancel={() => setReportModalVisible(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          form={reportForm}
+          layout="vertical"
+          onFinish={handleReportSubmit}
+        >
+          <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(0,176,240,0.05)', borderRadius: '8px', border: '1px solid rgba(0,176,240,0.1)' }}>
+            <Text strong style={{ color: '#00B0F0' }}>Client: {selectedMeetingForReport?.client?.name}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              Meeting: {moment(selectedMeetingForReport?.startsAt).format('MMM DD, YYYY HH:mm')}
+            </Text>
+          </div>
+
+          <Form.Item
+            name="reportContent"
+            label="Report Content"
+            rules={[{ required: true, message: 'Please enter report content' }]}
+          >
+            <TextArea
+              rows={8}
+              placeholder="Enter detailed meeting notes, client requirements, and action items..."
+              style={{ background: '#1f1f1f', color: 'white', borderColor: '#434343' }}
+            />
+          </Form.Item>
+
+          <Form.Item name="rating" label="Meeting Rating (Internal)">
+            <Select>
+              <Option value={1}>1 - Needs Improvement</Option>
+              <Option value={2}>2 - Fair</Option>
+              <Option value={3}>3 - Good</Option>
+              <Option value={4}>4 - Very Good</Option>
+              <Option value={5}>5 - Excellent</Option>
+            </Select>
+          </Form.Item>
+
+          <Button type="primary" htmlType="submit" block style={{ background: '#00B0F0', borderColor: '#00B0F0' }}>
+            Save Report
+          </Button>
         </Form>
       </Modal>
 
@@ -503,7 +668,7 @@ const FinancialPlannerDashboard = () => {
         fileType={previewDoc?.fileType}
       />
 
-    </DashboardContainer>
+    </div>
   );
 };
 
