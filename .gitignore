@@ -47,3 +47,11 @@ Thumbs.db
 /server/database.sqlite
 /server/uploads/*
 !/server/uploads/.gitkeep
+
+# Extra debris
+*.txt
+*.resolved
+*_backup.*
+test-*.js
+TextEdit
+TextEdit.pub

@@ -1,3 +1,0 @@
-Testing with professional: analyst1@financialapp.com
-Found meetings: 0
-Meetings: []

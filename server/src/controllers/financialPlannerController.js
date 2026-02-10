@@ -58,6 +58,14 @@ exports.getAnalystStats = async (req, res) => {
         const now = new Date();
         const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
+        // Fetch user with associations for reputation metrics
+        const user = await User.findByPk(professionalId, {
+            include: [
+                { model: FinancialPlanner, as: 'FinancialPlanner' },
+                { model: CA, as: 'CA' }
+            ]
+        });
+
         // Helper function to get month name
         const getMonthName = (date) => {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
