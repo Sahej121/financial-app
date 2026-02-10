@@ -9,45 +9,21 @@ import styled from 'styled-components';
 
 // --- Styled Components for Form Elements ---
 const StyledInput = styled(Input)`
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  height: 56px;
-  border-radius: 16px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &::placeholder { color: rgba(255, 255, 255, 0.3); }
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-  }
+  min-height: var(--input-height);
+  border-radius: var(--input-radius) !important;
+  font-size: 16px;
   
   &:focus {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: #00B0F0 !important;
-    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+    box-shadow: var(--input-focus-shadow) !important;
   }
 `;
 
 const StyledInputPassword = styled(Input.Password)`
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 16px;
-  height: 56px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--input-radius) !important;
+  height: var(--input-height) !important;
 
-  input { background: transparent !important; color: white !important; }
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-  }
-  
   &:focus-within {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: #00B0F0 !important;
-    box-shadow: 0 0 20px rgba(0, 176, 240, 0.2) !important;
+    box-shadow: var(--input-focus-shadow) !important;
   }
 `;
 
@@ -71,8 +47,8 @@ const StyledButton = styled(Button)`
 `;
 
 const SOCIAL_BUTTON_STYLE = {
-  height: 56,
-  borderRadius: 16,
+  height: 'var(--input-height)',
+  borderRadius: 'var(--input-radius)',
   background: 'rgba(255,255,255,0.03)',
   border: '1px solid rgba(255,255,255,0.1)',
   color: 'white',

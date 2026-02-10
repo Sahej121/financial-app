@@ -214,10 +214,12 @@ exports.submitFinancialPlan = async (req, res) => {
 
     console.log('Financial planning submission created:', submission.id);
 
-    // Link uploaded documents to this submission
     if (documentIds && Array.isArray(documentIds) && documentIds.length > 0) {
-      console.log('Linking documents:', documentIds);
-      await Document.update(
+      console.log(`[DEBUG] Linking ${documentIds.length} documents to submission ${submission.id}`);
+      console.log(`[DEBUG] Document IDs: ${documentIds.join(', ')}`);
+      console.log(`[DEBUG] User ID: ${userId}`);
+
+      const [updatedCount] = await Document.update(
         { submissionId: submission.id },
         {
           where: {
@@ -225,7 +227,13 @@ exports.submitFinancialPlan = async (req, res) => {
             userId: userId // Security check: Ensure user owns documents
           }
         }
-      ).catch(err => console.error('Error linking documents to submission:', err));
+      ).catch(err => {
+        console.error('[ERROR] Failed to link documents:', err);
+        throw err;
+      });
+      console.log(`[DEBUG] Successfully linked ${updatedCount} documents`);
+    } else {
+      console.log('[DEBUG] No document IDs provided to link');
     }
 
     // Create a meeting/consultation based on selected slot IF provided

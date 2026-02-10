@@ -21,6 +21,17 @@ const ClientSubmissionDetail = ({ submission }) => {
     const [scores, setScores] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
+    const [verifiedFields, setVerifiedFields] = useState({});
+
+    const toggleVerification = (field) => {
+        setVerifiedFields(prev => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
+        if (!verifiedFields[field]) {
+            message.success(`${field.replace(/([A-Z])/g, ' $1')} verified by expert.`);
+        }
+    };
 
     useEffect(() => {
         if (submission?.id) {
@@ -119,10 +130,63 @@ const ClientSubmissionDetail = ({ submission }) => {
 
                     <Divider style={{ borderColor: 'var(--border-color)' }} />
 
-                    <Descriptions title={<span style={{ color: 'var(--text-primary)' }}>Core Identification</span>} layout="vertical" bordered size="small" column={2}>
-                        <Descriptions.Item label="Target Amount">₹{submission.targetAmount}</Descriptions.Item>
-                        <Descriptions.Item label="Time Horizon">{submission.achievementTimeline?.replace('_', ' ')}</Descriptions.Item>
-                        <Descriptions.Item label="Income Type">{submission.incomeType?.replace('_', ' ').toUpperCase()} ({submission.monthlyIncome})</Descriptions.Item>
+                    <Descriptions
+                        title={
+                            <Space>
+                                <span style={{ color: 'var(--text-primary)' }}>Core Identification</span>
+                                <Tag color="blue" icon={<SafetyCertificateOutlined />}>AI Extracted</Tag>
+                            </Space>
+                        }
+                        layout="vertical"
+                        bordered
+                        size="small"
+                        column={2}
+                    >
+                        <Descriptions.Item
+                            label={
+                                <Space>
+                                    Target Amount
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<CheckCircleOutlined style={{ color: verifiedFields.targetAmount ? '#52c41a' : '#444' }} />}
+                                        onClick={() => toggleVerification('targetAmount')}
+                                    />
+                                </Space>
+                            }
+                        >
+                            ₹{submission.targetAmount}
+                        </Descriptions.Item>
+                        <Descriptions.Item
+                            label={
+                                <Space>
+                                    Time Horizon
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<CheckCircleOutlined style={{ color: verifiedFields.achievementTimeline ? '#52c41a' : '#444' }} />}
+                                        onClick={() => toggleVerification('achievementTimeline')}
+                                    />
+                                </Space>
+                            }
+                        >
+                            {submission.achievementTimeline?.replace('_', ' ')}
+                        </Descriptions.Item>
+                        <Descriptions.Item
+                            label={
+                                <Space>
+                                    Income Type
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<CheckCircleOutlined style={{ color: verifiedFields.incomeType ? '#52c41a' : '#444' }} />}
+                                        onClick={() => toggleVerification('incomeType')}
+                                    />
+                                </Space>
+                            }
+                        >
+                            {submission.incomeType?.replace('_', ' ').toUpperCase()} ({submission.monthlyIncome})
+                        </Descriptions.Item>
                         <Descriptions.Item label="Purpose">
                             <Tag color="purple">{submission.planningPurpose?.replace('_', ' ').toUpperCase() || 'Investment'}</Tag>
                         </Descriptions.Item>

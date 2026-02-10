@@ -5,8 +5,9 @@
  * This service ensures that financial logic is separated from both LLMs and simple scoring formulas.
  */
 
-const { DocumentInsight, FinancialPlanningSubmission, DecisionAuditLog } = require('../models');
+const { DocumentInsight, FinancialPlanningSubmission, DecisionAuditLog, Correction } = require('../models');
 const logger = require('../utils/logger');
+const correctionService = require('./correctionService');
 
 class RuleEngineService {
     /**
@@ -16,6 +17,7 @@ class RuleEngineService {
     async calculateSystemConfidence(submissionId) {
         const submission = await FinancialPlanningSubmission.findByPk(submissionId);
         const insights = await DocumentInsight.findAll({ where: { submissionId } });
+        const corrections = await correctionService.getCorrectionsBySubmission(submissionId);
 
         // 1. Intake Completeness (0.25 weight)
         const scoringService = require('./scoringService');
@@ -52,9 +54,19 @@ class RuleEngineService {
             (consistencyScore * 0.25) +
             (sanityScore * 0.20);
 
+        // LOGIC TRACE: Hallucination Risk occurs if parse accuracy is high but consistency is low
+        const hallucinationRisk = (parseAccuracy > 0.8 && consistencyScore < 0.5);
+
         return {
             score: parseFloat(totalConfidence.toFixed(2)),
-            breakdown: { intakeCompleteness, parseAccuracy, consistencyScore, sanityScore }
+            bundle: {
+                intakeCompleteness,
+                parseAccuracy,
+                consistencyScore,
+                sanityScore,
+                hallucinationRisk,
+                timestamp: new Date().toISOString()
+            }
         };
     }
 
@@ -75,6 +87,7 @@ class RuleEngineService {
         const submission = await FinancialPlanningSubmission.findByPk(submissionId);
         const confidence = await this.calculateSystemConfidence(submissionId);
         const executionPath = await this.determineExecutionPath(confidence.score);
+        const corrections = await correctionService.getCorrectionsBySubmission(submissionId);
 
         const results = {
             submissionId,
@@ -92,7 +105,15 @@ class RuleEngineService {
         const scoringService = require('./scoringService');
         const income = scoringService.parseMoney(submission.monthlyIncome);
         const emi = scoringService.parseMoney(submission.monthlyEMI);
-        const emiRatio = income > 0 ? (emi / income) : 0;
+
+        // PRIORITY LAYER: Check for analyst corrections on critical rule fields
+        const incomeCorr = corrections.find(c => c.fieldName === 'monthlyIncome');
+        const emiCorr = corrections.find(c => c.fieldName === 'monthlyEMI');
+
+        const finalIncome = incomeCorr ? scoringService.parseMoney(incomeCorr.correctedValue) : income;
+        const finalEmi = emiCorr ? scoringService.parseMoney(emiCorr.correctedValue) : emi;
+
+        const emiRatio = finalIncome > 0 ? (finalEmi / finalIncome) : 0;
 
         if (emiRatio > 0.65) {
             results.rules.push({
@@ -145,6 +166,8 @@ class RuleEngineService {
                     confidenceScore: results.confidenceScore,
                     executionPath: results.executionPath,
                     data: results,
+                    promptVersion: 'RULE_ENGINE_V1',
+                    hallucinationCheck: results.confidenceScore >= 0.85,
                     performer: 'SYSTEM'
                 });
             } else {

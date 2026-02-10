@@ -157,6 +157,15 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     }
+  }, {
+    defaultScope: {
+      attributes: {
+        exclude: ['password', 'otpCode', 'otpExpire', 'resetPasswordToken', 'resetPasswordExpire', 'twoFactorSecret']
+      }
+    },
+    scopes: {
+      withAuth: { attributes: {} }
+    }
   });
 
   User.associate = (models) => {

@@ -139,28 +139,28 @@ exports.getPendingDocuments = async (req, res) => {
     const professionalId = req.user.id;
     const { role, status, category } = req.query;
 
-    let whereClause = {};
+    const pendingStatuses = ['submitted', 'assigned', 'in_review'];
+    const allValidStatuses = ['submitted', 'assigned', 'in_review', 'reviewed', 'approved', 'rejected', 'requires_changes'];
+    const activeStatus = status && allValidStatuses.includes(status) ? [status] : pendingStatuses;
 
     // Filter by assigned professional or unassigned documents meant for the role
     if (role && ['ca', 'financial_planner'].includes(role)) {
       whereClause = {
+        status: { [Op.in]: activeStatus },
         [Op.or]: [
           { assignedToId: professionalId }, // Assigned to me
-          { assignedToId: null, status: 'submitted', assignedRole: role }, // Unassigned but for my role
-          { assignedToId: null, status: 'submitted', assignedRole: null } // Unassigned and role-agnostic
+          { assignedToId: null, assignedRole: role }, // Unassigned but for my role
+          { assignedToId: null, assignedRole: null } // Unassigned and role-agnostic
         ]
       };
     } else {
       whereClause = {
+        status: { [Op.in]: activeStatus },
         [Op.or]: [
           { assignedToId: professionalId },
-          { assignedToId: null, status: 'submitted' }
+          { assignedToId: null }
         ]
       };
-    }
-
-    if (status) {
-      whereClause.status = status;
     }
 
     if (category) {
@@ -181,6 +181,11 @@ exports.getPendingDocuments = async (req, res) => {
         ['uploadedAt', 'DESC']
       ]
     });
+
+    console.log(`Sending ${documents.length} pending documents to client`);
+    if (documents.length > 0) {
+      console.log('Sample document:', JSON.stringify(documents[0].toJSON(), null, 2));
+    }
 
     res.json({
       success: true,
@@ -403,6 +408,75 @@ exports.downloadDocument = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to download document'
+    });
+  }
+};
+
+// Bulk review documents (professionals only)
+exports.bulkReviewDocuments = async (req, res) => {
+  try {
+    const professionalId = req.user.id;
+    const { documentIds, status, reviewNotes } = req.body;
+
+    if (!documentIds || !Array.isArray(documentIds)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Document IDs are required as an array'
+      });
+    }
+
+    const validStatuses = ['approved', 'rejected', 'reviewed', 'requires_changes', 'submitted', 'assigned'];
+    const targetStatus = status || 'reviewed';
+
+    if (!validStatuses.includes(targetStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid review status'
+      });
+    }
+
+    // Update documents if they are:
+    // 1. Assigned to this professional
+    // 2. Unassigned but belong to this professional's role pool (and are in 'submitted' status)
+    console.log('Bulk review request:', { professionalId, documentIds, targetStatus });
+
+    const [updatedCount] = await Document.update(
+      {
+        status: targetStatus,
+        reviewNotes: reviewNotes || 'Bulk reviewed',
+        reviewedAt: new Date(),
+        assignedToId: professionalId // Also assign them if they were unassigned
+      },
+      {
+        where: {
+          id: { [Op.in]: documentIds },
+          [Op.or]: [
+            { assignedToId: professionalId },
+            {
+              assignedToId: null,
+              status: 'submitted',
+              [Op.or]: [
+                { assignedRole: req.user.role },
+                { assignedRole: null }
+              ]
+            }
+          ]
+        }
+      }
+    );
+
+    console.log('Bulk review result:', { updatedCount });
+
+    res.json({
+      success: true,
+      message: `Successfully reviewed ${updatedCount} documents`,
+      updatedCount
+    });
+  } catch (error) {
+    console.error('Bulk review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to bulk review documents'
     });
   }
 };

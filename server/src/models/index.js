@@ -20,8 +20,9 @@ const CreditCardApplication = require('./CreditCardApplication');
 const FinancialPlanningSubmission = require('./FinancialPlanningSubmission');
 const CreditCardSubmission = require('./CreditCardSubmission');
 const DocumentInsight = require('./DocumentInsight');
+const DocumentChunk = require('./DocumentChunk');
 const FinancialPlanner = require('./financialPlanner');
-const ActivityLog = require('./activityLog');
+const ActivityLog = require('./ActivityLog');
 // GST Models
 const GSTProfile = require('./GSTProfile');
 const GSTInvoice = require('./GSTInvoice');
@@ -31,6 +32,9 @@ const ITCRecord = require('./ITCRecord');
 const WealthMonitor = require('./WealthMonitor');
 const DecisionAuditLog = require('./DecisionAuditLog');
 const Transaction = require('./Transaction');
+const GSTReport = require('./GSTReport');
+const OutcomeRecord = require('./OutcomeRecord');
+const Feedback = require('./Feedback');
 
 // Initialize models
 const models = {
@@ -43,8 +47,11 @@ const models = {
   FinancialPlanningSubmission: FinancialPlanningSubmission(sequelize),
   CreditCardSubmission: CreditCardSubmission(sequelize),
   DocumentInsight: DocumentInsight(sequelize),
+  DocumentChunk: DocumentChunk(sequelize),
   FinancialPlanner: FinancialPlanner(sequelize),
   ActivityLog: ActivityLog(sequelize),
+  OutcomeRecord: OutcomeRecord(sequelize),
+  Feedback: Feedback(sequelize),
   // GST Models
   GSTProfile: GSTProfile(sequelize),
   GSTInvoice: GSTInvoice(sequelize),
@@ -53,7 +60,9 @@ const models = {
   ITCRecord: ITCRecord(sequelize),
   WealthMonitor: WealthMonitor(sequelize),
   DecisionAuditLog: DecisionAuditLog(sequelize),
-  Transaction: Transaction(sequelize)
+  Transaction: Transaction(sequelize),
+  GSTReport: GSTReport(sequelize),
+  Correction: require('./Correction')(sequelize)
 };
 
 // Set up associations

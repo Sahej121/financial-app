@@ -4,6 +4,19 @@ const Sentry = require("@sentry/node");
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
+// Global Error Handlers for Crash Debugging
+process.on('uncaughtException', (error) => {
+  console.error('!!!! UNCAUGHT EXCEPTION !!!!');
+  console.error(error);
+  if (logger) logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('!!!! UNHANDLED REJECTION !!!!');
+  console.error(reason);
+  if (logger) logger.error('Unhandled Rejection', { reason });
+});
+
 Sentry.init({
   dsn: process.env.SENTRY_DSN || "sentry_dsn_placeholder",
   integrations: [
@@ -23,7 +36,7 @@ const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { sequelize } = require('./models');
 const cookieParser = require('cookie-parser');
-const { doubleCsrfProtection, generateToken } = require('./middleware/csrf');
+const { doubleCsrfProtection, generateCsrfToken } = require('./middleware/csrf');
 const { connectRedis } = require('./utils/cache');
 
 const app = express();
@@ -39,6 +52,31 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(apiLimiter);
 
+const responseSanitizer = require('./middleware/sanitizer');
+app.use(responseSanitizer);
+
+// DEBUG LOGGING for CSRF
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== 'test') {
+    const isCsrfFetch = req.url.includes('csrf-token');
+    const isStateChanging = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+
+    if (isCsrfFetch || isStateChanging) {
+      logger.info(`[CSRF-DEBUG] ${req.method} ${req.url}`, {
+        cookies: req.cookies,
+        rawCookie: req.headers['cookie'],
+        headers: {
+          'x-csrf-token': req.headers['x-csrf-token'],
+          'content-type': req.headers['content-type'],
+          'origin': req.headers['origin'],
+          'referer': req.headers['referer']
+        }
+      });
+    }
+  }
+  next();
+});
+
 // CSRF Protection - Applied after body parser and cookie parser
 // Bypassed in test environment for functional testing
 if (process.env.NODE_ENV !== 'test') {
@@ -46,9 +84,13 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Route to get CSRF token
-app.get('/api/csrf-token', (req, res) => {
-  res.json({ token: generateToken(req, res) });
-});
+const csrfTokenHandler = (req, res) => {
+  res.json({ token: generateCsrfToken(req, res) });
+};
+
+app.get('/api/csrf-token', csrfTokenHandler);
+app.get('/api/api/csrf-token', csrfTokenHandler); // Fallback for weird path doubling
+app.get('/csrf-token', csrfTokenHandler); // Fallback if baseURL is handled unexpectedly
 
 // [REMOVED] Public static serving of uploads is disabled for security.
 // Use authenticated /api/documents/:documentId/download route instead.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Button, Avatar, Tag, Rate, Typography, message, Input, Select, Spin } from 'antd';
-import { UserOutlined, SearchOutlined } from '@ant-design/icons';
+import { UserOutlined, SearchOutlined, SafetyOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import api from '../../services/api';
 
@@ -171,11 +171,15 @@ const CASelectionList = ({ onStartConsultation }) => {
   };
 
   const filteredCAs = cas.filter(ca => {
-    const matchesSearch = ca.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ca.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const name = ca.name || '';
+    const description = ca.description || '';
+    const search = searchTerm || '';
+
+    const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) ||
+      description.toLowerCase().includes(search.toLowerCase());
 
     // Additional filtering logic for specializations would go here
-    if (filterSpecialization && !ca.specializations.includes(filterSpecialization)) {
+    if (filterSpecialization && (!ca.specializations || !ca.specializations.includes(filterSpecialization))) {
       return false;
     }
 
@@ -245,7 +249,7 @@ const CASelectionList = ({ onStartConsultation }) => {
               >
                 <div style={{ textAlign: 'center' }}>
                   <StyledAvatar icon={<UserOutlined style={{ fontSize: 32, color: 'rgba(255,255,255,0.8)' }} />} />
-                  <Title level={4} style={{ margin: '8px 0', fontSize: '1.25rem' }}>{ca.name}</Title>
+                  <Title level={4} style={{ margin: '8px 0', fontSize: '1.25rem' }}>{ca.name || 'Expert CA'}</Title>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <Rate disabled defaultValue={ca.rating} style={{ fontSize: '14px', color: '#F2C811' }} />
                     <Text type="secondary" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>({ca.rating})</Text>
@@ -253,12 +257,47 @@ const CASelectionList = ({ onStartConsultation }) => {
                 </div>
 
                 <div style={{ margin: '16px 0', display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {ca.specializations.slice(0, 2).map((spec, index) => (
-                    <Tag color="cyan" key={index} style={{ background: 'rgba(19, 194, 194, 0.1)', border: '1px solid rgba(19, 194, 194, 0.3)', color: '#13c2c2', margin: 0 }}>
-                      {spec}
-                    </Tag>
-                  ))}
+                  {(ca.specializations || []).slice(0, 3).map((spec, index) => {
+                    const isVerified = ca.verifiedSpecializations && ca.verifiedSpecializations[spec];
+                    return (
+                      <Tag
+                        key={index}
+                        color={isVerified ? "blue" : "cyan"}
+                        style={{
+                          background: isVerified ? 'rgba(24, 144, 255, 0.15)' : 'rgba(19, 194, 194, 0.1)',
+                          border: isVerified ? '1px solid #1890ff' : '1px solid rgba(19, 194, 194, 0.3)',
+                          color: isVerified ? '#1890ff' : '#13c2c2',
+                          margin: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}
+                      >
+                        {spec} {isVerified && <CheckCircleOutlined />}
+                      </Tag>
+                    );
+                  })}
                 </div>
+
+                {/* Trust Score Badge */}
+                {ca.trustScore && (
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'rgba(250, 173, 20, 0.1)',
+                      border: '1px solid #faad14',
+                      borderRadius: '12px',
+                      padding: '2px 8px'
+                    }}>
+                      <SafetyOutlined style={{ color: '#faad14' }} />
+                      <Text style={{ color: '#faad14', fontWeight: 600, fontSize: '12px' }}>
+                        Trust Score: {ca.trustScore}
+                      </Text>
+                    </div>
+                  </div>
+                )}
 
                 <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', textAlign: 'center', marginBottom: 20 }}>
                   {ca.description}

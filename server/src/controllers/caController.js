@@ -61,7 +61,8 @@ exports.getCAs = async (req, res) => {
 
     const cas = await CA.findAll({
       where: whereClause,
-      order: orderClause
+      order: orderClause,
+      raw: true
     });
 
     res.json(cas);

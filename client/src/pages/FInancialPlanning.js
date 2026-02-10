@@ -31,7 +31,8 @@ import {
   RocketOutlined,
   SafetyOutlined,
   DollarOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  RobotOutlined
 } from '@ant-design/icons';
 import styled, { keyframes } from 'styled-components';
 import moment from 'moment';
@@ -172,10 +173,10 @@ const FormSection = styled.div`
 `;
 
 const StyledInput = styled(Input)`
-  height: 56px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  height: var(--input-height);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
   color: white;
   font-size: 16px;
   padding: 0 20px;
@@ -183,18 +184,18 @@ const StyledInput = styled(Input)`
   font-family: 'Inter', sans-serif;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--input-bg-hover);
+    border-color: var(--input-border-hover);
   }
 
   &:focus {
     background: rgba(0, 0, 0, 0.4);
-    border-color: #00B0F0;
-    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1);
+    border-color: var(--input-border-focus);
+    box-shadow: var(--input-focus-shadow);
   }
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: var(--text-muted);
   }
 `;
 
@@ -202,10 +203,10 @@ const StyledSelect = styled(Select)`
   width: 100%;
   
   .ant-select-selector {
-    height: 56px !important;
-    background: rgba(0, 0, 0, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
+    height: var(--input-height) !important;
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: var(--input-radius) !important;
     display: flex !important;
     align-items: center !important;
     padding: 0 20px !important;
@@ -219,7 +220,7 @@ const StyledSelect = styled(Select)`
   }
 
   .ant-select-selection-placeholder {
-    color: rgba(255, 255, 255, 0.25) !important;
+    color: var(--text-muted) !important;
     font-size: 16px;
   }
 
@@ -228,13 +229,13 @@ const StyledSelect = styled(Select)`
   }
 
   &:hover .ant-select-selector {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
+    background: var(--input-bg-hover) !important;
+    border-color: var(--input-border-hover) !important;
   }
 
   &.ant-select-focused .ant-select-selector {
-    border-color: #00B0F0 !important;
-    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1) !important;
+    border-color: var(--input-border-focus) !important;
+    box-shadow: var(--input-focus-shadow) !important;
   }
   
   &.ant-select-multiple .ant-select-selection-item {
@@ -307,22 +308,21 @@ const TimeSlotCard = styled.div`
 `;
 
 const NextButton = styled(Button)`
-  height: 60px;
-  border-radius: 30px;
-  font-size: 1.2rem;
-  font-weight: 600;
+  height: var(--input-height);
+  border-radius: var(--input-radius);
+  font-size: 1.1rem;
+  font-weight: 700;
   padding: 0 48px;
-  background: #00B0F0;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
   border: none;
-  color: black;
-  box-shadow: 0 8px 25px rgba(0, 176, 240, 0.3);
+  color: white !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
   margin-top: 40px;
+  transition: all 0.3s ease;
   
   &:hover {
     transform: translateY(-2px);
-    background: white;
-    color: black;
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
   }
 
   &:disabled {
@@ -411,6 +411,40 @@ const FinancialPlanning = () => {
   const [packModalVisible, setPackModalVisible] = useState(false);
   const [fetchingPack, setFetchingPack] = useState(false);
 
+  // Auto-fill Logic
+  const autoFillForm = async (docId) => {
+    try {
+      const res = await api.get(`/documents/${docId}/insights`);
+      if (res.data.insight && res.data.insight.extractedData) {
+        const data = res.data.insight.extractedData;
+        const updates = {};
+
+        // Map Bank Statement data to Planning fields
+        if (data.avgMonthlyBalance) updates.monthlyIncome = Math.round(data.avgMonthlyBalance);
+        if (data.totalCredits && !updates.monthlyIncome) updates.monthlyIncome = Math.round(data.totalCredits / 6); // Rough estimate if only total Credits for 6mo
+
+        if (data.loanEmis && data.loanEmis.length > 0) {
+          const totalEmi = data.loanEmis.reduce((sum, e) => sum + (e.emiAmount || e.amount || 0), 0);
+          updates.monthlyEMI = totalEmi;
+          updates.totalDebtAmount = totalEmi * 12; // Placeholder estimate
+        }
+
+        if (data.accountHolder) updates.fullName = data.accountHolder; // If we add name field
+
+        if (Object.keys(updates).length > 0) {
+          form.setFieldsValue(updates);
+          message.success({
+            content: 'Magic Ingestion: AI has pre-filled your profile from the document!',
+            icon: <RobotOutlined style={{ color: '#00B0F0' }} />,
+            duration: 5
+          });
+        }
+      }
+    } catch (e) {
+      console.log('Auto-fill check failed', e);
+    }
+  };
+
   // Restore state logic
   useEffect(() => {
     // Check if we have saved state
@@ -422,12 +456,13 @@ const FinancialPlanning = () => {
 
     if (savedState && token) {
       try {
-        const { formData, purpose, step } = JSON.parse(savedState);
+        const { formData, purpose, step, docIds } = JSON.parse(savedState);
 
         // Restore
-        form.setFieldsValue(formData);
+        if (formData) form.setFieldsValue(formData);
         if (purpose) setPlanningPurpose(purpose);
         if (step) setCurrentStep(step);
+        if (docIds) setUploadedDocumentIds(docIds);
 
         message.success('Welcome back! Your progress has been restored.');
 
@@ -455,10 +490,10 @@ const FinancialPlanning = () => {
 
       // Generate time slots
       const slots = planners.flatMap((p) => [
-        { id: `${p.id}-1`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '10:00 AM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-2`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '2:00 PM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-3`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '11:00 AM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-4`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '4:00 PM', analyst: p.name, plannerId: p.id }
+        { id: `${p.id}-1`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '10:00 AM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-2`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '2:00 PM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-3`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '11:00 AM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-4`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '4:00 PM', analyst: p.name || 'Professional Analyst', plannerId: p.id }
       ]);
 
       setAvailableSlots(slots);
@@ -525,27 +560,56 @@ const FinancialPlanning = () => {
 
   const commonSteps = {
     documents: {
-      title: 'Documents',
+      title: 'Magic Ingestion',
       content: (
         <FormSection>
-          <div style={{ marginBottom: 32 }}>
-            <h2 style={{ color: 'white', marginBottom: 12 }}>Upload Documents (Optional)</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Our AI will analyze your documents to provide better insights.</p>
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
+            <h2 style={{ color: 'white', marginBottom: 12 }}>Scan Your Financial Story</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Upload a bank statement or financial report. Our AI will auto-fill your profile to save you time.</p>
           </div>
           <Upload.Dragger
             multiple
             name="file"
-            action="/api/documents/upload"
-            data={{
-              category: planningPurpose === 'business_expansion' ? 'financial_statements' : 'bank_statements'
+            customRequest={async ({ file, onSuccess, onError }) => {
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('category', planningPurpose === 'business_expansion' ? 'financial_statements' : 'bank_statements');
+
+              try {
+                const response = await api.post('/documents/upload', formData, {
+                  headers: {
+                    'Content-Type': 'multipart/form-data',
+                  },
+                });
+                onSuccess(response.data, file);
+              } catch (error) {
+                onError(error);
+              }
             }}
-            headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
             onChange={(info) => {
               if (info.file.status === 'done') {
                 message.success(`${info.file.name} uploaded successfully`);
-                setUploadedDocumentIds(prev => [...prev, info.file.response.document.id]);
+                // The response structure might depend on how axios returns it vs how antd expects it in onSuccess
+                // api.post returns { data: ... }. In onSuccess(response.data), info.file.response will be response.data.
+                const docId = info.file.response?.document?.id || info.file.response?.data?.document?.id;
+                if (docId) {
+                  setUploadedDocumentIds(prev => {
+                    const next = [...prev, docId];
+                    // Update session storage if it exists
+                    const saved = sessionStorage.getItem('pendingFinancialPlan');
+                    if (saved) {
+                      const constParsed = JSON.parse(saved);
+                      constParsed.docIds = next;
+                      sessionStorage.setItem('pendingFinancialPlan', JSON.stringify(constParsed));
+                    }
+                    return next;
+                  });
+                  // Trigger Auto-fill
+                  autoFillForm(docId);
+                }
               } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} upload failed.`);
+                console.error('Upload error:', info.file.error);
               }
             }}
             style={{
@@ -851,10 +915,18 @@ const FinancialPlanning = () => {
 
   const getStepsForPurpose = () => {
     if (!planningPurpose) return [purposeSelectionStep];
+
+    // Core Refactor: Documents (Magic Ingestion) is ALWAYS the first step after purpose
+    const baseSteps = [purposeSelectionStep, commonSteps.documents];
+
     const specificSteps = planningPurpose === 'business_expansion' ? businessExpansionSteps
       : planningPurpose === 'loan_settlement' ? loanSettlementSteps
         : investmentSteps;
-    return [purposeSelectionStep, ...specificSteps, previewStep];
+
+    // Filter out the document step from specificSteps as it's now global Step 2
+    const filteredSpecific = specificSteps.filter(s => s.title !== 'Documents' && s.title !== 'Magic Ingestion');
+
+    return [...baseSteps, ...filteredSpecific, previewStep];
   };
 
   const steps = getStepsForPurpose();
@@ -915,8 +987,13 @@ const FinancialPlanning = () => {
         purpose: 'financial_planning_insights',
         referenceId: submissionData.id,
       }, async (paymentRes) => {
-        // On Success: Fetch the pack
+        // On Success: Refresh submission data to get updated isPaid status
         try {
+          const subRes = await api.get(`/financial-planning/submission/${submissionData.id}`);
+          if (subRes.data.success) {
+            setSubmissionData(subRes.data.submission);
+          }
+
           const response = await api.get(`/decision-packs/${submissionData.id}`);
           setPackData(response.data.data);
           setPackModalVisible(true);
@@ -965,7 +1042,8 @@ const FinancialPlanning = () => {
           const stateToSave = {
             formData,
             purpose: planningPurpose,
-            step: currentStep
+            step: currentStep,
+            docIds: uploadedDocumentIds
           };
           sessionStorage.setItem('pendingFinancialPlan', JSON.stringify(stateToSave));
 

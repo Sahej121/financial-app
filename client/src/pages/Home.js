@@ -25,12 +25,6 @@ const float = keyframes`
   50% { transform: translateY(-20px); }
 `;
 
-const gradientFlow = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
-
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
@@ -38,7 +32,7 @@ const fadeInUp = keyframes`
 
 // --- Styled Components ---
 const PageLayout = styled(Layout)`
-  background: #000000;
+  background: var(--bg-primary);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -59,7 +53,7 @@ const HeroSection = styled.div`
   background: 
     radial-gradient(circle at 15% 50%, rgba(0, 176, 240, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(242, 200, 17, 0.1) 0%, transparent 50%),
-    linear-gradient(0deg, #050505 0%, #000000 100%);
+    linear-gradient(0deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 
   &::before {
     content: '';
@@ -87,7 +81,7 @@ const Badge = styled.div`
   background: rgba(0, 176, 240, 0.1);
   border: 1px solid rgba(0, 176, 240, 0.2);
   border-radius: 30px;
-  color: #00B0F0;
+  color: var(--primary-color);
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 24px;
@@ -97,10 +91,10 @@ const Badge = styled.div`
   span {
     width: 6px;
     height: 6px;
-    background: #00B0F0;
+    background: var(--primary-color);
     border-radius: 50%;
     margin-right: 8px;
-    box-shadow: 0 0 10px #00B0F0;
+    box-shadow: 0 0 10px var(--primary-color);
   }
 `;
 
@@ -117,7 +111,7 @@ const HeroTitle = styled.h1`
   -webkit-text-fill-color: transparent;
   
   span.highlight {
-    background: linear-gradient(90deg, #00B0F0, #0077F0);
+    background: linear-gradient(90deg, var(--primary-color), #0077F0);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -182,11 +176,11 @@ const OutlineButton = styled(Button)`
 const FloatingElement = styled.div`
   position: absolute;
   padding: 16px 24px;
-  background: rgba(20, 20, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
   backdrop-filter: blur(24px);
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  box-shadow: var(--shadow-lg);
   animation: ${float} 6s ease-in-out infinite;
   animation-delay: ${props => props.delay || '0s'};
   z-index: 1;
@@ -206,9 +200,9 @@ const FloatingElement = styled.div`
 `;
 
 const StatSection = styled.div`
-  background: #050505;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
   padding: 100px 0;
 `;
 
@@ -222,8 +216,9 @@ const FeatureGrid = styled.div`
 `;
 
 const FeatureCard = styled.div`
+  background: var(--bg-tertiary); /* Fallback */
   background: linear-gradient(145deg, rgba(20, 20, 20, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-primary);
   padding: 48px;
   border-radius: 32px;
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -248,8 +243,8 @@ const FeatureCard = styled.div`
 
   &:hover {
     transform: translateY(-10px);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
     
     &::before {
       opacity: 1;
@@ -311,7 +306,7 @@ const TestimonialCard = styled.div`
   }
 
   .stars {
-    color: #F2C811;
+    color: var(--secondary-color);
     margin-bottom: 16px;
     font-size: 14px;
   }
@@ -337,8 +332,8 @@ const TestimonialCard = styled.div`
 `;
 
 const ContactBanner = styled.div`
-  background: radial-gradient(circle at 50% 100%, rgba(20, 20, 20, 1) 0%, #000 100%);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  background: radial-gradient(circle at 50% 100%, var(--bg-tertiary) 0%, #000 100%);
+  border-top: 1px solid var(--border-primary);
   padding: 100px 24px 120px;
   text-align: center;
 `;
@@ -367,7 +362,7 @@ const Home = () => {
             </div>
             <div>
               <Text strong style={{ color: 'white', display: 'block', fontSize: 16 }}>Portfolio Yield</Text>
-              <Text style={{ color: '#00B0F0', fontSize: 14 }}>+24.5% APY</Text>
+              <Text style={{ color: 'var(--primary-color)', fontSize: 14 }}>+24.5% APY</Text>
             </div>
           </FloatingElement>
 
@@ -432,7 +427,7 @@ const Home = () => {
           <Reveal>
             <FeatureCard>
               <div className="icon-wrapper">
-                <RocketOutlined style={{ color: '#00B0F0' }} />
+                <RocketOutlined style={{ color: 'var(--primary-color)' }} />
               </div>
               <h3>AI-Driven Strategy</h3>
               <p>Our autonomous algorithms analyze millions of data points to construct a portfolio that evolves with the market.</p>
@@ -442,7 +437,7 @@ const Home = () => {
           <Reveal delay={100}>
             <FeatureCard>
               <div className="icon-wrapper">
-                <TeamOutlined style={{ color: '#F2C811' }} />
+                <TeamOutlined style={{ color: 'var(--secondary-color)' }} />
               </div>
               <h3>Expert Access</h3>
               <p>Direct line to India's top Chartered Accountants and Financial Analysts for complex tax and estate planning.</p>
@@ -452,7 +447,7 @@ const Home = () => {
           <Reveal delay={200}>
             <FeatureCard>
               <div className="icon-wrapper">
-                <SafetyOutlined style={{ color: '#52c41a' }} />
+                <SafetyOutlined style={{ color: 'var(--success-color)' }} />
               </div>
               <h3>Bank-Grade Security</h3>
               <p>Your assets are protected by military-grade encryption and insured custodial partners.</p>
@@ -462,7 +457,7 @@ const Home = () => {
           <Reveal delay={300}>
             <FeatureCard>
               <div className="icon-wrapper">
-                <GlobalOutlined style={{ color: '#ff4d4f' }} />
+                <GlobalOutlined style={{ color: 'var(--error-color)' }} />
               </div>
               <h3>Global Access</h3>
               <p>Diversify beyond borders. Frictionless investing in US stocks, ETFs, and international bonds.</p>
@@ -482,7 +477,7 @@ const Home = () => {
           <Reveal delay={500}>
             <FeatureCard>
               <div className="icon-wrapper">
-                <TrophyOutlined style={{ color: '#722ed1' }} />
+                <TrophyOutlined style={{ color: 'var(--accent-color)' }} />
               </div>
               <h3>Goal Tracking</h3>
               <p>Turn dreams into deadlines. Our goal engine reverse-engineers your required savings rate to hit life's milestones.</p>
@@ -571,7 +566,7 @@ const Home = () => {
         {/* Big CTA */}
         <div style={{
           padding: '160px 24px',
-          background: 'linear-gradient(180deg, #000 0%, #050505 100%)',
+          background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden'

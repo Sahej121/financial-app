@@ -133,8 +133,8 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
-    const user = await User.findOne({ where: { email } });
+    // Find user - Use scope('withAuth') to include password for verification
+    const user = await User.scope('withAuth').findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -392,8 +392,9 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ error: 'New password must be at least 6 characters' });
     }
 
-    // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    // Verify current password - Fetch fresh user with password scope
+    const userWithPassword = await User.scope('withAuth').findByPk(req.user.id);
+    const isPasswordValid = await bcrypt.compare(currentPassword, userWithPassword.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
@@ -408,8 +409,11 @@ exports.changePassword = async (req, res) => {
     }
 
     // Hash and save new password
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update the existing user object (or use the scoped one)
+    await user.update({ password: hashedPassword });
 
     res.json({
       success: true,

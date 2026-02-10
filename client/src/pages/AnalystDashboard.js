@@ -13,92 +13,34 @@ import {
   Timeline,
   Avatar,
   message,
-  Modal
+  Modal,
+  Space,
+  Descriptions,
+  Popover,
+  Form
 } from 'antd';
 import {
   UserOutlined,
   ClockCircleOutlined,
   VideoCameraOutlined,
   CheckCircleOutlined,
-  DollarCircleOutlined
+  DollarCircleOutlined,
+  InfoCircleOutlined,
+  WarningOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
-import styled from 'styled-components';
 import moment from 'moment';
 import ActivityFeed from '../components/ActivityFeed';
+import ClientSubmissionDetail from '../components/analyst/ClientSubmissionDetail';
+import '../styles/dashboard.css';
 
 const { Content } = Layout;
-
-const DashboardContainer = styled(Content)`
-  padding: 40px;
-  min-height: 100vh;
-  background: #000;
-  font-family: 'Inter', sans-serif;
-`;
-
-const StyledCard = styled(Card)`
-  background: rgba(18, 18, 18, 0.8);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  
-  .ant-card-head {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 24px 24px 0 24px;
-    
-    .ant-card-head-title {
-        color: white;
-        font-weight: 800;
-        font-size: 18px;
-        letter-spacing: -0.5px;
-    }
-  }
-
-  .ant-card-body {
-      padding: 24px;
-  }
-`;
-
-const CalendarCard = styled(StyledCard)`
-  .ant-picker-calendar {
-    background: transparent;
-  }
-  
-  .ant-picker-cell-selected .ant-picker-calendar-date {
-    background: white;
-    color: black;
-  }
-  
-  .ant-picker-calendar-date-value {
-      color: rgba(255, 255, 255, 0.8);
-  }
-`;
-
-const StatCard = styled(StyledCard)`
-  text-align: center;
-  
-  .ant-statistic-title {
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 13px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  
-  .ant-statistic-content {
-    color: #fff;
-    font-weight: 800;
-    font-size: 32px;
-    letter-spacing: -1px;
-  }
-`;
-
-
-import ClientSubmissionDetail from '../components/analyst/ClientSubmissionDetail';
 
 const AnalystDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
   const [consultations, setConsultations] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(moment());
 
@@ -106,8 +48,17 @@ const AnalystDashboard = () => {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
+  // Outcome Logging State
+  const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
+
+  // Report Writing State
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportContent, setReportContent] = useState('');
+
   useEffect(() => {
     fetchConsultations();
+    fetchStats();
   }, []);
 
   const fetchConsultations = async () => {
@@ -122,6 +73,7 @@ const AnalystDashboard = () => {
         setConsultations(data.meetings.map(m => ({
           id: m.id,
           clientName: m.client?.name || 'Unknown Client',
+          client: m.client,
           scheduledTime: m.startsAt,
           consultationType: m.planningType,
           status: m.status,
@@ -133,6 +85,85 @@ const AnalystDashboard = () => {
       message.error('Failed to load dashboard data. Please check your connection.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/financial-planners/stats', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleLogOutcome = (record) => {
+    setSelectedConsultation(record);
+    setOutcomeModalVisible(true);
+  };
+
+  // This would be connected to a form submit handler in the modal
+  const submitOutcome = async (values) => {
+    try {
+      const response = await fetch('/api/financial-planners/outcomes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          clientId: selectedConsultation.client?.id,
+          meetingId: selectedConsultation.id,
+          adviceType: selectedConsultation.consultationType,
+          ...values
+        })
+      });
+
+      if (response.ok) {
+        message.success('Outcome logged successfully! Trust Score updating...');
+        setOutcomeModalVisible(false);
+        fetchStats(); // Refresh scores
+      } else {
+        message.error('Failed to log outcome');
+      }
+    } catch (error) {
+      message.error('Error submitting outcome');
+    }
+  };
+
+  const handleWriteReport = (record) => {
+    setSelectedConsultation(record);
+    setReportContent(record.reportContent || '');
+    setReportModalVisible(true);
+  };
+
+  const submitReport = async () => {
+    try {
+      const response = await fetch(`/api/meetings/${selectedConsultation.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          status: selectedConsultation.status, // Keep existing status
+          reportContent: reportContent
+        })
+      });
+
+      if (response.ok) {
+        message.success('Report saved successfully!');
+        setReportModalVisible(false);
+        fetchConsultations(); // Refresh to show updated data if needed
+      } else {
+        message.error('Failed to save report');
+      }
+    } catch (error) {
+      console.error('Error saving report:', error);
+      message.error('Error saving report');
     }
   };
 
@@ -171,7 +202,7 @@ const AnalystDashboard = () => {
           <li key={consultation.id}>
             <Badge
               status={consultation.status === 'completed' ? 'success' : 'processing'}
-              text={consultation.clientName}
+              text={<span style={{ color: 'var(--text-secondary)' }}>{consultation.clientName}</span>}
             />
           </li>
         ))}
@@ -186,8 +217,8 @@ const AnalystDashboard = () => {
       key: 'clientName',
       render: (text, record) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => handleViewProfile(record)}>
-          <Avatar icon={<UserOutlined />} />
-          <span style={{ textDecoration: 'underline', color: '#1890ff' }}>{text}</span>
+          <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+          <span style={{ textDecoration: 'underline', color: 'var(--primary-color)' }}>{text}</span>
         </div>
       )
     },
@@ -195,12 +226,13 @@ const AnalystDashboard = () => {
       title: 'Time',
       dataIndex: 'scheduledTime',
       key: 'scheduledTime',
-      render: time => moment(time).format('DD MMM YYYY, hh:mm A')
+      render: time => <span style={{ color: 'var(--text-primary)' }}>{moment(time).format('DD MMM YYYY, hh:mm A')}</span>
     },
     {
       title: 'Type',
       dataIndex: 'consultationType',
-      key: 'consultationType'
+      key: 'consultationType',
+      render: type => <span style={{ color: 'var(--text-secondary)' }}>{type}</span>
     },
     {
       title: 'Status',
@@ -208,7 +240,7 @@ const AnalystDashboard = () => {
       key: 'status',
       render: status => (
         <Tag color={getStatusColor(status)}>
-          {status.toUpperCase()}
+          {status ? status.toUpperCase() : 'UNKNOWN'}
         </Tag>
       )
     },
@@ -220,7 +252,7 @@ const AnalystDashboard = () => {
           size="small"
           type="default"
           ghost={true}
-          style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}
+          style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
           onClick={() => handleViewProfile(record)}
         >
           View Insight
@@ -231,75 +263,167 @@ const AnalystDashboard = () => {
       title: 'Action',
       key: 'action',
       render: (_, record) => (
-        <Button
-          type="primary"
-          icon={<VideoCameraOutlined />}
-          disabled={!moment(record.scheduledTime).isSame(moment(), 'day')}
-          onClick={() => window.location.href = `/consultation/${record.id}`}
-        >
-          Join
-        </Button>
+        <Space>
+          <Button
+            type="primary"
+            icon={<VideoCameraOutlined />}
+            disabled={!moment(record.scheduledTime).isSame(moment(), 'day')}
+            onClick={() => window.location.href = `/consultation/${record.id}`}
+          >
+            Join
+          </Button>
+          {record.status === 'completed' && (
+            <>
+              <Button
+                size="small"
+                style={{ borderColor: 'var(--success-color)', color: 'var(--success-color)', background: 'transparent' }}
+                onClick={() => handleLogOutcome(record)}
+              >
+                Log Outcome
+              </Button>
+              <Button
+                size="small"
+                style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)', background: 'transparent' }}
+                onClick={() => handleWriteReport(record)}
+              >
+                {record.reportContent ? 'Edit Report' : 'Write Report'}
+              </Button>
+            </>
+          )}
+        </Space>
       )
     }
   ];
 
   return (
-    <DashboardContainer>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Analyst Dashboard</h1>
+        {stats?.reputation && (
+          <Tag color="gold" style={{ fontSize: '14px', padding: '5px 10px', marginLeft: 15 }}>
+            <SafetyCertificateOutlined /> Trust Score: {stats.reputation.trustScore}
+          </Tag>
+        )}
+      </div>
+
       <Row gutter={[24, 24]}>
+        {/* NEW: Reputation & Trust Score Card */}
+        <Col span={24}>
+          <Card className="widget-card" title="Reputation & Impact" bordered={false}>
+            <Row gutter={16}>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Trust Score"
+                  value={stats?.reputation?.trustScore || 50}
+                  precision={1}
+                  valueStyle={{ color: 'var(--warning-color)' }}
+                  prefix={<SafetyCertificateOutlined />}
+                  suffix="/ 100"
+                />
+                <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: 5 }}>
+                  Based on competence, outcomes & speed
+                </div>
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Competence"
+                  value={stats?.reputation?.competenceScore || 0}
+                  precision={0}
+                  suffix="%"
+                  valueStyle={{ color: 'var(--text-primary)' }}
+                />
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Client Outcomes"
+                  value={stats?.reputation?.outcomeScore || 0}
+                  precision={0}
+                  valueStyle={{ color: 'var(--success-color)' }}
+                />
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Completed Cases"
+                  value={stats?.reputation?.totalCompletedCases || 0}
+                  valueStyle={{ color: 'var(--text-primary)' }}
+                />
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+
         {/* Statistics Cards */}
         <Col xs={24} sm={12} lg={6}>
-          <StatCard>
-            <Statistic
-              title="Today's Consultations"
-              value={consultations.filter(c =>
-                moment(c.scheduledTime).isSame(moment(), 'day')
-              ).length}
-              prefix={<ClockCircleOutlined />}
-            />
-          </StatCard>
+          <Card className="kpi-card blue" bordered={false}>
+            <div className="kpi-icon-wrapper blue">
+              <ClockCircleOutlined />
+            </div>
+            <div className="kpi-label">Today's Consultations</div>
+            <div className="kpi-value">
+              {consultations.filter(c => moment(c.scheduledTime).isSame(moment(), 'day')).length}
+            </div>
+            <div className="kpi-subtitle">
+              Scheduled for today
+            </div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard>
-            <Statistic
-              title="Total Consultations"
-              value={consultations.length}
-              prefix={<UserOutlined />}
-            />
-          </StatCard>
+          <Card className="kpi-card yellow" bordered={false}>
+            <div className="kpi-icon-wrapper yellow">
+              <UserOutlined />
+            </div>
+            <div className="kpi-label">Total Consultations</div>
+            <div className="kpi-value">{consultations.length}</div>
+            <div className="kpi-subtitle">
+              All time record
+            </div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard>
-            <Statistic
-              title="Completed"
-              value={consultations.filter(c => c.status === 'completed').length}
-              prefix={<CheckCircleOutlined />}
-            />
-          </StatCard>
+          <Card className="kpi-card green" bordered={false}>
+            <div className="kpi-icon-wrapper green">
+              <CheckCircleOutlined />
+            </div>
+            <div className="kpi-label">Completed</div>
+            <div className="kpi-value">
+              {consultations.filter(c => c.status === 'completed').length}
+            </div>
+            <div className="kpi-subtitle">
+              Successfully finished
+            </div>
+          </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard>
-            <Statistic
-              title="Revenue"
-              value={consultations.filter(c => c.status === 'completed').length * 499}
-              prefix={<DollarCircleOutlined />}
-              suffix="INR"
-            />
-          </StatCard>
+          <Card className="kpi-card blue" bordered={false}>
+            <div className="kpi-icon-wrapper blue">
+              <DollarCircleOutlined />
+            </div>
+            <div className="kpi-label">Revenue</div>
+            <div className="kpi-value">
+              ₹{(consultations.filter(c => c.status === 'completed').length * 499).toLocaleString()}
+            </div>
+            <div className="kpi-subtitle">
+              Total earnings
+            </div>
+          </Card>
         </Col>
 
         {/* Calendar and Upcoming Consultations */}
         <Col xs={24} lg={16}>
-          <CalendarCard title="Consultation Calendar">
-            <Calendar
-              dateCellRender={dateCellRender}
-              value={selectedDate}
-              onChange={setSelectedDate}
-            />
-          </CalendarCard>
+          <Card className="widget-card" title="Consultation Calendar" bordered={false}>
+            <div className="calendar-card-wrapper">
+              <Calendar
+                dateCellRender={dateCellRender}
+                value={selectedDate}
+                onChange={setSelectedDate}
+                fullscreen={false}
+              />
+            </div>
+          </Card>
         </Col>
 
         <Col xs={24} lg={8}>
-          <StyledCard title="Today's Schedule">
+          <Card className="widget-card" title="Today's Schedule" bordered={false}>
             <Timeline>
               {consultations
                 .filter(c => moment(c.scheduledTime).isSame(moment(), 'day'))
@@ -309,30 +433,35 @@ const AnalystDashboard = () => {
                     key={consultation.id}
                     color={getStatusColor(consultation.status)}
                   >
-                    <p style={{ color: '#fff' }}>{moment(consultation.scheduledTime).format('hh:mm A')}</p>
-                    <p style={{ color: '#fff' }}><strong>{consultation.clientName}</strong></p>
-                    <p style={{ color: '#8c8c8c' }}>{consultation.consultationType}</p>
-                    <Button size="small" type="link" onClick={() => handleViewProfile(consultation)}>View Details</Button>
+                    <p style={{ color: 'var(--text-primary)' }}>{moment(consultation.scheduledTime).format('hh:mm A')}</p>
+                    <p style={{ color: 'var(--text-primary)' }}><strong>{consultation.clientName}</strong></p>
+                    <p style={{ color: 'var(--text-secondary)' }}>{consultation.consultationType}</p>
+                    <Button size="small" type="link" onClick={() => handleViewProfile(consultation)} style={{ paddingLeft: 0 }}>View Details</Button>
                   </Timeline.Item>
                 ))}
             </Timeline>
-          </StyledCard>
+            {consultations.filter(c => moment(c.scheduledTime).isSame(moment(), 'day')).length === 0 && (
+              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No consultations scheduled for today
+              </div>
+            )}
+          </Card>
         </Col>
 
         <Col xs={24} lg={8}>
-          <StyledCard title="Recent Activities">
+          <Card className="widget-card" title="Recent Activities" bordered={false}>
             {currentUser && (
               <ActivityFeed
                 userId={currentUser.id}
                 userType="Analyst"
               />
             )}
-          </StyledCard>
+          </Card>
         </Col>
 
         {/* Consultation Table */}
         <Col span={24}>
-          <StyledCard title="Upcoming Consultations">
+          <Card className="widget-card" title="Upcoming Consultations" bordered={false}>
             <Table
               columns={columns}
               dataSource={upcomingConsultations}
@@ -341,7 +470,7 @@ const AnalystDashboard = () => {
               pagination={{ pageSize: 5 }}
               style={{ background: 'transparent' }}
             />
-          </StyledCard>
+          </Card>
         </Col>
       </Row>
 
@@ -351,12 +480,101 @@ const AnalystDashboard = () => {
         onCancel={() => setProfileModalVisible(false)}
         footer={null}
         width={800}
-        bodyStyle={{ padding: 0, background: '#141414' }}
-        closeIcon={<span style={{ color: 'white' }}>x</span>}
+        bodyStyle={{ padding: 0, background: 'var(--bg-card)' }}
+        closeIcon={<span style={{ color: 'var(--text-primary)' }}>x</span>}
       >
         <ClientSubmissionDetail submission={selectedSubmission} />
       </Modal>
-    </DashboardContainer>
+
+      {/* Outcome Logging Modal (Simple Implementation) */}
+      <Modal
+        title="Log Outcome & Impact"
+        visible={outcomeModalVisible}
+        onCancel={() => setOutcomeModalVisible(false)}
+        onOk={() => document.getElementById('outcomeForm').requestSubmit()}
+        okText="Submit & Close Loop"
+      >
+        <form id="outcomeForm" onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          submitOutcome({
+            outcomeScore: formData.get('outcomeScore'),
+            financialImpact: formData.get('financialImpact'),
+            adviceSummary: formData.get('adviceSummary')
+          });
+        }}>
+          <div style={{ marginBottom: 15 }}>
+            <label style={{ display: 'block', marginBottom: 5, color: 'var(--text-primary)' }}>Outcome Score (1-10)</label>
+            <input name="outcomeScore" type="number" min="1" max="10" defaultValue="8" style={{ width: '100%', padding: 8, background: 'var(--bg-input)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} required />
+            <small style={{ color: 'var(--text-secondary)' }}>How effective was your advice?</small>
+          </div>
+          <div style={{ marginBottom: 15 }}>
+            <label style={{ display: 'block', marginBottom: 5, color: 'var(--text-primary)' }}>Financial Impact (₹)</label>
+            <input name="financialImpact" type="number" step="0.01" placeholder="e.g. 50000" style={{ width: '100%', padding: 8, background: 'var(--bg-input)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} />
+            <small style={{ color: 'var(--text-secondary)' }}>Estimated savings or value generated</small>
+          </div>
+          <div style={{ marginBottom: 15 }}>
+            <label style={{ display: 'block', marginBottom: 5, color: 'var(--text-primary)' }}>Advice Summary</label>
+            <textarea name="adviceSummary" rows="3" style={{ width: '100%', padding: 8, background: 'var(--bg-input)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} required placeholder="Briefly describe the key recommendation..."></textarea>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Report Writing Modal */}
+      <Modal
+        title="Analyst Report"
+        visible={reportModalVisible}
+        onCancel={() => setReportModalVisible(false)}
+        onOk={submitReport}
+        okText="Save Report"
+        width={800}
+        bodyStyle={{ background: 'var(--bg-card)' }}
+      >
+        <div style={{ marginBottom: 15 }}>
+          <label style={{ display: 'block', marginBottom: 5, color: 'var(--text-primary)' }}>Executive Summary & Key Recommendations</label>
+          <textarea
+            rows="10"
+            style={{
+              width: '100%',
+              padding: 12,
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-primary)',
+              color: 'var(--text-primary)',
+              borderRadius: 'var(--card-radius)',
+              resize: 'vertical'
+            }}
+            placeholder="Enter detailed report content here..."
+            value={reportContent}
+            onChange={(e) => setReportContent(e.target.value)}
+          ></textarea>
+          <small style={{ color: 'var(--text-secondary)' }}>This report will be visible to the client.</small>
+        </div>
+      </Modal>
+
+      <style jsx>{`
+        .calendar-card-wrapper .ant-picker-calendar {
+            background: transparent !important;
+        }
+        .calendar-card-wrapper .ant-picker-calendar-header {
+            padding: 12px 0;
+        }
+        .calendar-card-wrapper .ant-picker-calendar-mode-switch {
+            display: none;
+        }
+        .calendar-card-wrapper .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+            background: var(--primary-color) !important;
+        }
+        .calendar-card-wrapper .ant-picker-content th {
+            color: var(--text-secondary);
+        }
+        .calendar-card-wrapper .ant-picker-cell {
+            color: var(--text-primary);
+        }
+        .calendar-card-wrapper .ant-picker-cell-inner:hover {
+            background: rgba(255,255,255,0.1) !important;
+        }
+      `}</style>
+    </div>
   );
 };
 

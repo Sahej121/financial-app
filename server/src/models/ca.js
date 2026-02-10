@@ -64,6 +64,41 @@ module.exports = (sequelize) => {
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
+    },
+    // Reputation System Fields
+    trustScore: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 50.00,
+      comment: 'Composite 0-100 score'
+    },
+    competenceScore: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00
+    },
+    responsivenessScore: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00
+    },
+    outcomeScore: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00
+    },
+    consistencyScore: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00
+    },
+    totalCompletedCases: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    verifiedSpecializations: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Specializations with depth scores > threshold'
+    }
+  }, {
+    defaultScope: {
+      attributes: { exclude: ['phone'] }
     }
   });
 

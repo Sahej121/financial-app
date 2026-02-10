@@ -5,6 +5,11 @@
     padding: var(--space-4);
     max-width: 1600px;
     margin: 0 auto;
+    min-height: calc(100vh - 72px);
+    /* Subtle unified background accent for dashboards */
+    background-image:
+        radial-gradient(circle at 10% 10%, rgba(0, 176, 240, 0.05) 0%, transparent 25%),
+        radial-gradient(circle at 90% 90%, rgba(242, 200, 17, 0.05) 0%, transparent 25%);
 }
 
 /* Dashboard Header */
@@ -13,22 +18,24 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-2);
 }
 
 .dashboard-title {
-    font-size: 32px;
-    font-weight: 700;
     color: var(--text-primary);
     margin: 0;
     letter-spacing: -0.5px;
+    font-size: 28px;
+    font-weight: 700;
 }
 
 /* KPI Cards */
 .kpi-card {
     background: var(--bg-card) !important;
-    backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
     border: 1px solid var(--border-glass) !important;
-    border-radius: 16px !important;
+    border-radius: var(--card-radius) !important;
     box-shadow: var(--shadow-md) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -47,21 +54,21 @@
 }
 
 .kpi-card.blue::after {
-    background: linear-gradient(90deg, #00B0F0, transparent);
+    background: linear-gradient(90deg, var(--primary-color), transparent);
 }
 
 .kpi-card.yellow::after {
-    background: linear-gradient(90deg, #F2C811, transparent);
+    background: linear-gradient(90deg, var(--secondary-color), transparent);
 }
 
 .kpi-card.green::after {
-    background: linear-gradient(90deg, #10b981, transparent);
+    background: linear-gradient(90deg, var(--success-color), transparent);
 }
 
 .kpi-card:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5) !important;
+    border-color: var(--border-strong) !important;
 }
 
 .kpi-card:hover::after {
@@ -74,10 +81,10 @@
 
 .kpi-label {
     font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     margin-bottom: var(--space-1);
 }
 
@@ -87,6 +94,7 @@
     color: var(--text-primary);
     line-height: 1.2;
     margin-bottom: var(--space-1);
+    letter-spacing: -1px;
 }
 
 .kpi-subtitle {
@@ -116,8 +124,7 @@
 }
 
 .kpi-icon-wrapper.blue .anticon {
-    font-size: 24px;
-    color: #00B0F0;
+    color: var(--primary-color);
 }
 
 .kpi-icon-wrapper.yellow {
@@ -125,8 +132,7 @@
 }
 
 .kpi-icon-wrapper.yellow .anticon {
-    font-size: 24px;
-    color: #F2C811;
+    color: var(--secondary-color);
 }
 
 .kpi-icon-wrapper.green {
@@ -134,8 +140,7 @@
 }
 
 .kpi-icon-wrapper.green .anticon {
-    font-size: 24px;
-    color: #10b981;
+    color: var(--success-color);
 }
 
 /* Widget Cards */
@@ -143,14 +148,15 @@
     background: var(--bg-card) !important;
     backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--border-glass) !important;
-    border-radius: 16px !important;
+    border-radius: var(--card-radius) !important;
     box-shadow: var(--shadow-md) !important;
     height: 100%;
 }
 
 .widget-card .ant-card-head {
     border-bottom: 1px solid var(--border-primary) !important;
-    padding: var(--space-3) !important;
+    padding: 0 var(--space-3) !important;
+    min-height: 64px !important;
 }
 
 .widget-card .ant-card-head-title {
@@ -168,7 +174,7 @@
     background: var(--bg-card);
     backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--border-glass);
-    border-radius: 16px;
+    border-radius: var(--card-radius);
     padding: var(--space-3);
     box-shadow: var(--shadow-md);
 }
@@ -180,7 +186,7 @@
     margin-bottom: var(--space-3);
 }
 
-/* Wealth Health Gauge */
+/* Wealth Health Gauge - Unified */
 .wealth-gauge-container {
     display: flex;
     flex-direction: column;
@@ -233,7 +239,7 @@
 
 .metric-item {
     padding: var(--space-2);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: 12px;
     text-align: center;
@@ -277,7 +283,7 @@
 
 .goal-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: var(--border-secondary);
+    border-color: var(--border-active);
 }
 
 .goal-header {
@@ -308,69 +314,33 @@
     border-radius: 4px;
     overflow: hidden;
     position: relative;
+    margin-bottom: 8px;
 }
 
 .goal-progress-fill {
     height: 100%;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 12px rgba(0, 176, 240, 0.4);
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.goal-status {
-    font-size: 12px;
-    margin-top: 8px;
-    padding: 4px 12px;
-    border-radius: 12px;
-    display: inline-block;
-    font-weight: 500;
-}
-
-.goal-status.on-track {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--success-color);
-}
-
-.goal-status.needs-focus {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--warning-color);
 }
 
 /* Action Buttons */
 .dashboard-action-btn {
-    background: rgba(59, 130, 246, 0.1) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    background: rgba(0, 176, 240, 0.1) !important;
+    border: 1px solid rgba(0, 176, 240, 0.3) !important;
     color: var(--primary-color) !important;
     font-weight: 600;
-    height: 40px;
-    border-radius: 10px;
+    height: 48px;
+    border-radius: 12px;
     transition: all 0.3s ease;
 }
 
 .dashboard-action-btn:hover {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(0, 176, 240, 0.2) !important;
     border-color: var(--primary-color) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* Empty States */
-.empty-state {
-    text-align: center;
-    padding: var(--space-6);
-    color: var(--text-muted);
-}
-
-.empty-state-icon {
-    font-size: 48px;
-    color: var(--text-tertiary);
-    margin-bottom: var(--space-2);
-}
-
-.empty-state-text {
-    font-size: 16px;
-    color: var(--text-secondary);
+    box-shadow: 0 4px 12px rgba(0, 176, 240, 0.3);
 }
 
 /* Responsive */

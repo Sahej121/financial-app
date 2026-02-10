@@ -715,15 +715,15 @@ const CreditCardForm = () => {
       });
 
       if (userPreferences.onlineShoppingPlatforms?.length > 0 &&
-        (card.key_benefits.toLowerCase().includes('amazon') ||
-          card.key_benefits.toLowerCase().includes('flipkart') ||
-          card.key_benefits.toLowerCase().includes('online'))) {
+        ((card.key_benefits || '').toLowerCase().includes('amazon') ||
+          (card.key_benefits || '').toLowerCase().includes('flipkart') ||
+          (card.key_benefits || '').toLowerCase().includes('online'))) {
         personalizedScore += 15;
       }
 
       userPreferences.cardType?.forEach(type => {
-        if (card.card_type?.toLowerCase() === type.toLowerCase() ||
-          card.special_remarks.toLowerCase().includes(type.toLowerCase())) {
+        if ((card.card_type || '').toLowerCase() === (type || '').toLowerCase() ||
+          (card.special_remarks || '').toLowerCase().includes((type || '').toLowerCase())) {
           personalizedScore += 20;
         }
       });

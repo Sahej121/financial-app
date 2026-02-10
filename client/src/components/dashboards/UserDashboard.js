@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message, Card, Statistic } from 'antd';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Card, Statistic, Typography } from 'antd';
 import {
   FileTextOutlined,
   CalendarOutlined,
@@ -16,6 +16,8 @@ import DocumentUploadModal from '../DocumentUploadModal';
 import WealthHealthWidget from './widgets/WealthHealthWidget';
 import GoalProgressWidget from './widgets/GoalProgressWidget';
 import '../../styles/dashboard.css';
+
+const { Text, Paragraph } = Typography;
 
 
 const UserDashboard = () => {
@@ -100,12 +102,12 @@ const UserDashboard = () => {
     },
     xAxis: {
       grid: null,
-      line: { style: { stroke: '#334155' } },
-      label: { style: { fill: '#64748b', fontSize: 12 } }
+      line: { style: { stroke: 'var(--border-primary)' } },
+      label: { style: { fill: 'var(--text-secondary)', fontSize: 12 } }
     },
     yAxis: {
-      grid: { line: { style: { stroke: '#334155', lineDash: [4, 4] } } },
-      label: { style: { fill: '#64748b', fontSize: 12 } }
+      grid: { line: { style: { stroke: 'var(--border-primary)', lineDash: [4, 4] } } },
+      label: { style: { fill: 'var(--text-secondary)', fontSize: 12 } }
     },
     tooltip: {
       customContent: (title, items) => {
@@ -129,11 +131,11 @@ const UserDashboard = () => {
     color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
     statistic: {
       title: {
-        style: { color: '#64748b', fontSize: '14px', fontWeight: 500 },
+        style: { color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 },
         content: 'Total',
       },
       content: {
-        style: { color: '#fff', fontSize: '20px', fontWeight: 700 },
+        style: { color: 'var(--text-primary)', fontSize: '20px', fontWeight: 700 },
         customHtml: (container, view, datum, data) => {
           const total = data.reduce((sum, item) => sum + item.value, 0);
           return `₹${(total / 1000).toFixed(0)}K`;
@@ -181,8 +183,8 @@ const UserDashboard = () => {
       dataIndex: 'professional',
       render: (prof) => (
         <Space>
-          <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#00B0F0' }} />
-          <span>{prof?.name}</span>
+          <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'var(--primary-color)' }} />
+          <span style={{ color: 'var(--text-primary)' }}>{prof?.name}</span>
         </Space>
       )
     },
@@ -199,7 +201,7 @@ const UserDashboard = () => {
           size="small"
           icon={<VideoCameraOutlined />}
           onClick={() => window.open(record.zoomJoinUrl || '#', '_blank')}
-          style={{ background: '#00B0F0' }}
+          style={{ background: 'var(--primary-color)', borderColor: 'var(--primary-color)' }}
           disabled={!record.zoomJoinUrl}
         >
           Join
@@ -210,16 +212,24 @@ const UserDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
-      <div className="dashboard-header">
-        <h1 className="dashboard-title">My Financial Overview</h1>
+      {/* Step 1: The Pulse (Now) */}
+      <div className="dashboard-header" style={{ marginBottom: 40 }}>
+        <div>
+          <h1 className="dashboard-title" style={{ fontSize: '2.5rem', marginBottom: 8 }}>Your Financial Pulse</h1>
+          <Text style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+            Everything looks <b style={{ color: 'var(--success-color)' }}>Stable</b> today. You have <span style={{ color: 'var(--warning-color)' }}>{data.stats.pendingTasks}</span> items requiring your attention.
+          </Text>
+        </div>
         <Space>
           <Button
-            className="dashboard-action-btn"
+            type="primary"
+            size="large"
+            shape="round"
             icon={<UploadOutlined />}
             onClick={() => setUploadModalVisible(true)}
+            style={{ height: 50, padding: '0 30px' }}
           >
-            Upload Document
+            Magic Upload
           </Button>
           <Button
             className="dashboard-action-btn"
@@ -231,67 +241,62 @@ const UserDashboard = () => {
         </Space>
       </div>
 
-      {/* KPI Cards */}
+      {/* Primary Narrative Metric: The MOAT Score */}
       <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col xs={24} sm={8}>
-          <Card className="kpi-card blue" bordered={false}>
-            <div className="kpi-icon-wrapper blue">
-              <FileTextOutlined />
-            </div>
-            <div className="kpi-label">Total Documents</div>
-            <div className="kpi-value">{data.stats.totalDocuments}</div>
-            <div className="kpi-subtitle">
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
-              Safe & Secure
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="kpi-card yellow" bordered={false}>
-            <div className="kpi-icon-wrapper yellow">
-              <CalendarOutlined />
-            </div>
-            <div className="kpi-label">Upcoming Meetings</div>
-            <div className="kpi-value">{data.stats.totalMeetings}</div>
-            <div className="kpi-subtitle">
-              <CheckCircleOutlined style={{ color: '#F2C811' }} />
-              Scheduled
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="kpi-card green" bordered={false}>
-            <div className="kpi-icon-wrapper green">
-              <CheckCircleOutlined />
-            </div>
-            <div className="kpi-label">Pending Tasks</div>
-            <div className="kpi-value">{data.stats.pendingTasks}</div>
-            <div className="kpi-subtitle">
-              {data.stats.pendingTasks > 0 ? (
-                <span style={{ color: '#f59e0b' }}>Requires Action</span>
-              ) : (
-                <span style={{ color: '#10b981' }}>All Clear</span>
-              )}
-            </div>
+        <Col span={24}>
+          <Card
+            className="widget-card"
+            bordered={false}
+          >
+            <Row gutter={48} align="middle">
+              <Col xs={24} md={10}>
+                <div style={{ height: '100%', paddingRight: 24, borderRight: '1px solid var(--border-secondary)' }}>
+                  <WealthHealthWidget score={data.health?.score} metrics={data.health?.metrics} />
+                </div>
+              </Col>
+              <Col xs={24} md={14}>
+                <div style={{ padding: '0 20px' }}>
+                  <Text strong style={{ color: 'var(--text-primary)', fontSize: '18px', display: 'block', marginBottom: 12 }}>Current Logic Trace</Text>
+                  <Paragraph style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.8' }}>
+                    Your MOAT score is supported by a <b style={{ color: 'var(--success-color)' }}>healthy savings-to-debt ratio</b>.
+                    However, the AI detected <b style={{ color: 'var(--warning-color)' }}>3 unlinked bank statements</b> from the last quarter which could provide a higher confidence rating.
+                    Scan these to unlock "Platinum Readiness" status.
+                  </Paragraph>
+                  <Space size="large" style={{ marginTop: 20 }}>
+                    <Statistic title={<span style={{ color: 'var(--text-secondary)' }}>Liquidity</span>} value="6.2 Mo" valueStyle={{ color: 'var(--primary-color)' }} />
+                    <Statistic title={<span style={{ color: 'var(--text-secondary)' }}>Debt Load</span>} value="12%" valueStyle={{ color: 'var(--success-color)' }} />
+                    <Statistic title={<span style={{ color: 'var(--text-secondary)' }}>Tax Efficiency</span>} value="High" valueStyle={{ color: '#3b82f6' }} />
+                  </Space>
+                </div>
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>
 
-      {/* Wealth & Goals Widgets */}
+      {/* Step 3: The Horizon (Future) */}
       <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col xs={24} lg={12}>
-          <WealthHealthWidget score={data.health?.score} metrics={data.health?.metrics} />
-        </Col>
-        <Col xs={24} lg={12}>
+        <Col span={24}>
           <GoalProgressWidget goals={data.goals} />
         </Col>
       </Row>
 
-      {/* Charts */}
+      {/* Step 2: The Signal (Why) */}
       <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
         <Col xs={24} lg={16}>
-          <Card className="widget-card" title="Spending Trends" bordered={false}>
+          <Card
+            className="widget-card"
+            title={<Space><FileTextOutlined /> <span>Spending Trends (The Signal)</span></Space>}
+            bordered={false}
+          >
             <Line {...spendingConfig} />
+            <div style={{ marginTop: 20, padding: 16, background: 'var(--bg-card)', borderRadius: 'var(--card-radius)', border: '1px solid var(--border-primary)' }}>
+              <Text style={{ color: 'var(--primary-color)', display: 'block', marginBottom: 4, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '1px' }}>AI Narrative Translation</Text>
+              <Text style={{ color: 'var(--text-primary)', fontSize: '13px' }}>
+                Your savings rate is currently <b style={{ color: 'var(--success-color)' }}>12% above</b> the historical average for your income bracket.
+                This creates a "surplus signal" that can be redirected to your <b style={{ color: 'var(--primary-color)' }}>Dream Home</b> goal to reduce the time-to-arrival by 4 months.
+              </Text>
+            </div>
           </Card>
         </Col>
         <Col xs={24} lg={8}>

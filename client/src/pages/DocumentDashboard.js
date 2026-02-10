@@ -9,18 +9,30 @@ const { Title, Text, Paragraph } = Typography;
 const { Dragger } = Upload;
 
 const DashboardContainer = styled.div`
-  padding: 24px;
-  max-width: 1400px;
+  padding: var(--space-6);
+  max-width: 1600px;
   margin: 0 auto;
 `;
 
 const InsightCard = styled(Card)`
-  background: rgba(20, 20, 20, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--card-radius);
+  
+  .ant-card-head {
+    border-bottom: 1px solid var(--border-primary);
+    padding: 0 var(--space-4);
+  }
   
   .ant-card-head-title {
-    color: white;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .ant-card-body {
+    padding: var(--space-4);
   }
 `;
 
@@ -217,9 +229,9 @@ const DocumentDashboard = () => {
             render: (text, record) => (
                 <Space direction="vertical" size={0}>
                     <Space>
-                        <FileTextOutlined style={{ color: '#00B0F0' }} />
-                        <Text style={{ color: 'white', fontWeight: 600 }}>{text}</Text>
-                        {record.aiProcessingStatus === 'completed' && <Tag color="green">AI Analyzed</Tag>}
+                        <FileTextOutlined style={{ color: 'var(--primary-color)' }} />
+                        <Text style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{text}</Text>
+                        {record.aiProcessingStatus === 'completed' && <Tag color="success">AI Analyzed</Tag>}
                     </Space>
                     <Space style={{ marginTop: 4 }}>
                         <Tag color={record.category.startsWith('professional') ? 'gold' : 'blue'} style={{ fontSize: '10px' }}>
@@ -241,7 +253,7 @@ const DocumentDashboard = () => {
                         size="small"
                         icon={<RobotOutlined />}
                         onClick={() => viewInsights(record)}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+                        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                         disabled={record.category === 'professional_report' || record.category === 'assessment'}
                     >
                         Insights
@@ -249,7 +261,7 @@ const DocumentDashboard = () => {
                     <Button
                         size="small"
                         onClick={() => handleDownload(record.id, record.fileName)}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}
+                        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                     >
                         Download
                     </Button>
@@ -261,8 +273,8 @@ const DocumentDashboard = () => {
     return (
         <DashboardContainer>
             <div style={{ marginBottom: 32 }}>
-                <Title level={2} style={{ color: 'white' }}>Financial Document Intelligence</Title>
-                <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>
+                <Title level={2} style={{ color: 'var(--text-primary)' }}>Financial Document Intelligence</Title>
+                <Paragraph style={{ color: 'var(--text-secondary)' }}>
                     Upload bank statements, ITRs, and GST returns. Our AI will extract, classify, and validate financial data instantly.
                     {(user?.role === 'ca' || user?.role === 'financial_planner') && " Professionals can also upload reports and assessments."}
                 </Paragraph>
@@ -272,12 +284,12 @@ const DocumentDashboard = () => {
                 <Col span={24}>
                     <InsightCard title="Upload New Document">
                         <div style={{ marginBottom: 20 }}>
-                            <Text style={{ color: 'white', display: 'block', marginBottom: 8 }}>Select Document Category:</Text>
+                            <Text style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Select Document Category:</Text>
                             <Select
                                 value={uploadCategory}
                                 onChange={setUploadCategory}
                                 style={{ width: 300 }}
-                                dropdownStyle={{ background: '#1c1c1c' }}
+                                dropdownStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}
                             >
                                 {categories.map(cat => (
                                     <Select.Option key={cat.value} value={cat.value}>
@@ -286,12 +298,12 @@ const DocumentDashboard = () => {
                                 ))}
                             </Select>
                         </div>
-                        <Dragger {...uploadProps} style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                        <Dragger {...uploadProps} style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                             <p className="ant-upload-drag-icon">
-                                <InboxOutlined style={{ color: '#00B0F0' }} />
+                                <InboxOutlined style={{ color: 'var(--primary-color)' }} />
                             </p>
-                            <p className="ant-upload-text" style={{ color: 'white' }}>Click or drag file here</p>
-                            <p className="ant-upload-hint" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                            <p className="ant-upload-text" style={{ color: 'var(--text-primary)' }}>Click or drag file here</p>
+                            <p className="ant-upload-hint" style={{ color: 'var(--text-secondary)' }}>
                                 Support for PDF, JPG, PNG. Category: <Tag color="blue">{uploadCategory.toUpperCase()}</Tag>
                             </p>
                         </Dragger>
@@ -315,7 +327,7 @@ const DocumentDashboard = () => {
                             defaultValue="all"
                             style={{ width: 180 }}
                             onChange={setFilterCategory}
-                            dropdownStyle={{ background: '#1c1c1c' }}
+                            dropdownStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}
                         >
                             <Select.Option value="all">All Categories</Select.Option>
                             {categories.map(cat => (
@@ -335,7 +347,7 @@ const DocumentDashboard = () => {
             </InsightCard>
 
             <Modal
-                title={<Space><RobotOutlined style={{ color: '#00B0F0' }} /> AI Financial Insights</Space>}
+                title={<Space><RobotOutlined style={{ color: 'var(--primary-color)' }} /> AI Financial Insights</Space>}
                 open={insightModalVisible}
                 onCancel={() => setInsightModalVisible(false)}
                 footer={[
@@ -357,7 +369,13 @@ const DocumentDashboard = () => {
                 {analyzing ? (
                     <div style={{ textAlign: 'center', padding: 40 }}>
                         <Spin size="large" />
-                        <p style={{ marginTop: 16 }}>Analyzing document structure and extracting financial data...</p>
+                        <p style={{ marginTop: 16 }}>
+                            <SyncOutlined spin style={{ marginRight: 8, color: 'var(--primary-color)' }} />
+                            {insightModalVisible ? 'Retrieving cross-document context and knowledge base rules...' : 'Analyzing document structure and extracting financial data...'}
+                        </p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Powered by RAG Intelligence
+                        </p>
                     </div>
                 ) : insights ? (
                     <div style={{ padding: 8 }}>
@@ -366,7 +384,7 @@ const DocumentDashboard = () => {
                             description={insights.summary}
                             type="info"
                             showIcon
-                            style={{ marginBottom: 24 }}
+                            style={{ marginBottom: 24, background: 'rgba(59, 130, 246, 0.1)', border: '1px solid var(--primary-color)' }}
                         />
 
                         <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -377,6 +395,13 @@ const DocumentDashboard = () => {
                             <Col span={16}>
                                 <Text strong>Document Type:</Text> <Tag color="blue">{insights.insightType.toUpperCase()}</Tag>
                                 <div style={{ marginTop: 8 }}>
+                                    <Text strong>Intelligence Layer: </Text>
+                                    <Tag color="green">Basic Analysis</Tag>
+                                    {(insights.metadata?.hasRagContext || insights._meta?.hasRagContext) && (
+                                        <Tag color="cyan" icon={<RobotOutlined />}>RAG Enhanced</Tag>
+                                    )}
+                                </div>
+                                <div style={{ marginTop: 8 }}>
                                     <Text strong>Validation Status: </Text>
                                     <Tag color="green">Valid Format</Tag>
                                 </div>
@@ -384,7 +409,7 @@ const DocumentDashboard = () => {
                         </Row>
 
                         {insights.redFlags && insights.redFlags.length > 0 && (
-                            <Card type="inner" title={<span style={{ color: '#ff4d4f' }}><AlertOutlined /> Risk Flags</span>} style={{ marginBottom: 24, borderColor: '#ff4d4f' }}>
+                            <Card type="inner" title={<span style={{ color: 'var(--error-color)' }}><AlertOutlined /> Risk Flags</span>} style={{ marginBottom: 24, borderColor: 'var(--error-color)', background: 'rgba(239, 68, 68, 0.05)' }}>
                                 <ul>
                                     {insights.redFlags.map((flag, idx) => (
                                         <li key={idx}><Text type="danger">{flag}</Text></li>
@@ -393,13 +418,13 @@ const DocumentDashboard = () => {
                             </Card>
                         )}
 
-                        <Card type="inner" title="Extracted Financial Data" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                        <Card type="inner" title="Extracted Financial Data" style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                             <Descriptions column={2} bordered size="small" style={{ background: 'transparent' }}>
                                 {Object.entries(insights.extractedData || {}).map(([key, value]) => {
                                     if (typeof value === 'object' && value !== null) return null;
                                     return (
-                                        <Descriptions.Item key={key} label={<span style={{ color: 'rgba(255,255,255,0.6)' }}>{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>}>
-                                            <span style={{ color: 'white' }}>{value?.toString() || 'N/A'}</span>
+                                        <Descriptions.Item key={key} label={<span style={{ color: 'var(--text-secondary)' }}>{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>}>
+                                            <span style={{ color: 'var(--text-primary)' }}>{value?.toString() || 'N/A'}</span>
                                         </Descriptions.Item>
                                     );
                                 })}
@@ -407,7 +432,7 @@ const DocumentDashboard = () => {
 
                             {insights.extractedData?.loanEmis && insights.extractedData.loanEmis.length > 0 && (
                                 <div style={{ marginTop: 16 }}>
-                                    <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>Detected Loan EMIs:</Text>
+                                    <Text strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Detected Loan EMIs:</Text>
                                     <Table
                                         size="small"
                                         pagination={false}

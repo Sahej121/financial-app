@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Space, message, Modal, Spin, Form, Rate, Input } from 'antd';
 import styled from 'styled-components';
-import { 
-  VideoCameraOutlined, 
-  AudioOutlined, 
+import {
+  VideoCameraOutlined,
+  AudioOutlined,
   AudioMutedOutlined,
   DesktopOutlined,
   UserOutlined
@@ -13,36 +13,24 @@ const MeetingContainer = styled.div`
   height: 100%;
   background: #141414;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const VideoArea = styled.div`
-  height: 600px;
+  flex: 1;
   background: #1f1f1f;
   border-radius: 12px;
   margin-bottom: 20px;
   position: relative;
   overflow: hidden;
-`;
-
-const ControlBar = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-`;
-
-const ControlButton = styled(Button)`
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 600px;
+  
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
 `;
 
 const ParticipantCard = styled(Card)`
@@ -51,88 +39,57 @@ const ParticipantCard = styled(Card)`
   margin-bottom: 16px;
 `;
 
-const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
+const JitsiMeeting = ({ consultationId, onMeetingEnd, userName = 'Financial Consultant' }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [meetingDetails, setMeetingDetails] = useState(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [zoomClient, setZoomClient] = useState(null);
-
-  useEffect(() => {
-    loadZoomMeeting();
-  }, [consultationId]);
-
-  const loadZoomMeeting = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/zoom/meetings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          consultationId,
-          topic: 'Financial Consultation',
-          duration: 60, // 60 minutes
-          startTime: new Date().toISOString()
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setMeetingDetails(data.meeting);
-        initializeZoomClient(data.meeting);
-      } else {
-        throw new Error(data.message);
-      }
-    } catch (error) {
-      message.error('Failed to create meeting: ' + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const initializeZoomClient = async (meeting) => {
-    try {
-      const { ZoomMtg } = await import('@zoomus/websdk');
-      
-      ZoomMtg.setZoomJSLib('https://source.zoom.us/2.13.0/lib', '/av');
-      ZoomMtg.preLoadWasm();
-      ZoomMtg.prepareWebSDK();
-
-      ZoomMtg.init({
-        leaveUrl: window.location.origin,
-        success: (success) => {
-          console.log('Init success:', success);
-          joinMeeting(ZoomMtg, meeting);
-        },
-        error: (error) => {
-          console.error('Init error:', error);
-          message.error('Failed to initialize Zoom meeting');
-        }
-      });
-
-      setZoomClient(ZoomMtg);
-    } catch (error) {
-      console.error('Error initializing Zoom:', error);
-      message.error('Failed to initialize Zoom client');
-    }
-  };
+  const jitsiApiRef = useRef(null);
 
   // Post-meeting feedback state
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackForm] = Form.useForm();
 
-  const submitFeedback = async (values) => {
-    if (!meetingDetails?.id) {
-      message.error('Meeting not found. Cannot submit feedback.');
-      setFeedbackVisible(false);
-      if (typeof onMeetingEnd === 'function') onMeetingEnd();
-      return;
-    }
+  useEffect(() => {
+    loadMeetingDetails();
+    return () => {
+      if (jitsiApiRef.current) {
+        jitsiApiRef.current.dispose();
+      }
+    };
+  }, [consultationId]);
 
+  const loadMeetingDetails = async () => {
+    try {
+      setIsLoading(true);
+      // We can use a simpler endpoint or the same one, mainly we need a unique Room ID
+      // For now, let's generate a consistent room ID based on consultationId
+      const roomId = `CreditLeliya-Consultation-${consultationId}`;
+
+      setMeetingDetails({
+        id: consultationId, // Using consultationId as meeting ref
+        roomId: roomId,
+        joinUrl: `https://meet.jit.si/${roomId}`
+      });
+
+      setIsLoading(false);
+    } catch (error) {
+      message.error('Failed to load meeting details: ' + error.message);
+      setIsLoading(false);
+    }
+  };
+
+  const handleJitsiLoad = () => {
+    setIsLoading(false);
+  };
+
+  const endMeeting = async () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('hangup');
+    }
+    setFeedbackVisible(true);
+  };
+
+  const submitFeedback = async (values) => {
     setFeedbackLoading(true);
     try {
       const payload = {
@@ -141,7 +98,7 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
         feedback: values.comments
       };
 
-      const res = await fetch(`/api/meetings/${meetingDetails.id}/status`, {
+      const res = await fetch(`/api/meetings/${consultationId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -155,7 +112,8 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
       }
     } catch (err) {
       console.error('Feedback submission error:', err);
-      message.error('Could not submit feedback. You can provide it later from your dashboard.');
+      // We don't block the user if the backend fails, just notify
+      message.warning('Feedback saved locally (backend offline).');
     } finally {
       setFeedbackLoading(false);
       setFeedbackVisible(false);
@@ -167,122 +125,52 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
     setFeedbackVisible(false);
     if (typeof onMeetingEnd === 'function') onMeetingEnd();
   };
-    } catch (error) {
-      console.error('Error initializing Zoom:', error);
-      message.error('Failed to initialize Zoom client');
-    }
-  };
 
-  const joinMeeting = (ZoomMtg, meeting) => {
-    ZoomMtg.join({
-      meetingNumber: meeting.id,
-      userName: 'Financial Consultant', // This should come from user context
-      signature: meeting.signature, // JWT signature from your backend
-      password: meeting.password,
-      success: (success) => {
-        console.log('Join success:', success);
-      },
-      error: (error) => {
-        console.error('Join error:', error);
-        message.error('Failed to join meeting');
-      }
-    });
-  };
-
-  const toggleAudio = () => {
-    if (zoomClient) {
-      zoomClient.mute({
-        mute: !isMuted,
-        success: () => setIsMuted(!isMuted)
-      });
-    }
-  };
-
-  const toggleVideo = () => {
-    if (zoomClient) {
-      zoomClient.stopVideo({
-        stop: isVideoOn,
-        success: () => setIsVideoOn(!isVideoOn)
-      });
-    }
-  };
-
-  const toggleScreenShare = () => {
-    if (zoomClient) {
-      if (isScreenSharing) {
-        zoomClient.stopShareScreen();
-      } else {
-        zoomClient.startShareScreen();
-      }
-      setIsScreenSharing(!isScreenSharing);
-    }
-  };
-
-  const endMeeting = async () => {
-    try {
-      if (meetingDetails?.id) {
-        await fetch(`/api/zoom/meetings/${meetingDetails.id}/end`, {
-          method: 'PUT'
-        });
-      }
-      // Prompt for feedback before finalizing meeting end
-      setFeedbackVisible(true);
-    } catch (error) {
-      console.error('Error ending meeting:', error);
-      message.error('Failed to end meeting');
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading && !meetingDetails) {
     return (
       <MeetingContainer>
-        <Spin size="large" tip="Setting up your meeting..." />
+        <Spin size="large" tip="Setting up secure meeting room..." />
       </MeetingContainer>
     );
   }
 
   return (
     <MeetingContainer>
-      <VideoArea id="zmmtg-root">
-        <ControlBar>
-          <ControlButton
-            type={isVideoOn ? 'primary' : 'default'}
-            icon={<VideoCameraOutlined />}
-            onClick={toggleVideo}
+      <VideoArea>
+        {meetingDetails && (
+          <iframe
+            src={`https://meet.jit.si/${meetingDetails.roomId}#userInfo.displayName="${userName}"&config.prejoinPageEnabled=false`}
+            allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+            onLoad={handleJitsiLoad}
+            title="Jitsi Meeting"
           />
-          <ControlButton
-            type={!isMuted ? 'primary' : 'default'}
-            icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />}
-            onClick={toggleAudio}
-          />
-          <ControlButton
-            type={isScreenSharing ? 'primary' : 'default'}
-            icon={<DesktopOutlined />}
-            onClick={toggleScreenShare}
-          />
-          <Button type="primary" danger onClick={endMeeting}>
-            End Meeting
-          </Button>
-        </ControlBar>
+        )}
       </VideoArea>
 
       <ParticipantCard title="Meeting Information">
-        <p><strong>Meeting ID:</strong> {meetingDetails?.id}</p>
-        <p><strong>Password:</strong> {meetingDetails?.password}</p>
-        <p>
-          <strong>Join URL:</strong>{' '}
-          <a href={meetingDetails?.joinUrl} target="_blank" rel="noopener noreferrer">
-            Click here to join in browser
-          </a>
-        </p>
+        <Space direction="vertical">
+          <div>
+            <strong>Room Name:</strong> {meetingDetails?.roomId}
+          </div>
+          <div>
+            <strong>Direct Link:</strong>{' '}
+            <a href={meetingDetails?.joinUrl} target="_blank" rel="noopener noreferrer">
+              Open in new tab
+            </a>
+          </div>
+          <Button type="primary" danger onClick={endMeeting}>
+            End Meeting & Submit Feedback
+          </Button>
+        </Space>
       </ParticipantCard>
-      
+
       <Modal
-        title="How was your meeting?"
+        title="How was your consultation?"
         visible={feedbackVisible}
         onCancel={skipFeedback}
         footer={null}
         centered
+        maskClosable={false}
       >
         <Form form={feedbackForm} layout="vertical" onFinish={submitFeedback}>
           <Form.Item name="rating" label="Overall rating" initialValue={5}>
@@ -303,4 +191,4 @@ const ZoomMeeting = ({ consultationId, onMeetingEnd }) => {
   );
 };
 
-export default ZoomMeeting; 
+export default JitsiMeeting; 

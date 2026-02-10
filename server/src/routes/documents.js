@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const documentController = require('../controllers/documentController');
 const documentAnalysisController = require('../controllers/documentAnalysisController');
+const ragController = require('../controllers/ragController');
 const { auth } = require('../controllers/authController');
 const requireRole = require('../middleware/requireRole');
 const multer = require('multer');
@@ -49,6 +50,13 @@ router.patch('/:documentId/review',
   documentController.reviewDocument
 );
 
+// Bulk review documents (professionals only)
+router.post('/bulk-review',
+  auth,
+  requireRole(['ca', 'financial_planner']),
+  documentController.bulkReviewDocuments
+);
+
 // Download document (authorized users only - owner, assigned professional, or admin)
 router.get('/:documentId/download',
   auth,
@@ -60,5 +68,6 @@ router.post('/:documentId/analyze', auth, documentAnalysisController.analyzeDocu
 router.get('/:documentId/insights', auth, documentAnalysisController.getDocumentInsights);
 router.get('/submission/:submissionId/snapshot', auth, documentAnalysisController.getSubmissionSnapshot);
 router.get('/submission/:submissionId/briefing', auth, documentAnalysisController.getSubmissionBriefing);
+router.post('/submission/rag/query', auth, ragController.queryDocuments);
 
 module.exports = router;

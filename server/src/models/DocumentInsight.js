@@ -60,6 +60,12 @@ module.exports = (sequelize) => {
             defaultValue: {},
             comment: 'Mapping of keys to source snippets and page coordinates { key: { text, page, bbox } }'
         },
+        metadata: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: {},
+            comment: 'AI provider metadata, RAG status, and gating info'
+        },
         processedAt: {
             type: DataTypes.DATE,
             allowNull: false,

@@ -1,0 +1,89 @@
+# Financial App: Comprehensive Functionality Guide
+
+This document provides a detailed overview of every core functionality available in the platform, categorized by system area and user role.
+
+## 🛡️ Core Infrastructure & Security
+
+| Feature | Description | Status |
+| :--- | :--- | :--- |
+| **Unified Authentication** | Secure Login/Registration via Email, Google Social Auth, and Apple ID. | ✅ Live |
+| **Identity Verification** | OTP (One-Time Password) verification for registrations and password resets. | ✅ Live |
+| **Multi-Role Access** | Role-based permissions for Clients, CAs (Chartered Accountants), Financial Planners (Analysts), and Admins. | ✅ Live |
+| **Security Hardening** | JWT-based session management, CSRF protection, and 2FA (Two-Factor Authentication) toggle. | ✅ Live |
+| **Theme & UX** | Glassmorphic UI with Dark/Light mode support and personalized user settings. | ✅ Live |
+
+---
+
+## 📊 Client Dashboard (Wealth Monitor)
+
+The central hub for individual users to track their financial life.
+
+*   **Real-time Net Worth**: Automated calculation of total wealth based on asset entries and uploads.
+*   **Asset Allocation**: Dynamic pie chart visualization of wealth distribution (Bank, Equity, Cash, etc.).
+*   **Activity Feed**: Audit trail of every action taken within the account for security and transparency.
+*   **Consultation Hub**: Direct line to book and attend meetings with verified professionals.
+
+---
+
+## 🤖 Docs AI: Intelligent Document Management
+
+A state-of-the-art document archival and analysis system.
+
+```mermaid
+graph LR
+    A[Upload PDF/Image] --> B{AI Processor}
+    B --> C[Metadata Extraction]
+    B --> D[Text Embedding]
+    D --> E[(RAG Knowledge Base)]
+    C --> F[Professional Review]
+```
+
+*   **Multimodal Ingestion**: Supports PDFs, Images (OCR), and Text files.
+*   **AI Extraction**: Automated parsing of key data from receipts, invoices, and contracts using LLMs (Groq/Llama).
+*   **RAG Knowledge Base**: A "Chat with your Docs" feature allowing users to ask natural language questions about their uploaded files.
+*   **Assignment Engine**: Route documents to your CA or Financial Planner for professional validation.
+*   **Bulk Queue Management**: Special tools for professionals to clear dozens of pending documents efficiently.
+
+---
+
+## 📑 GST Workspace & Compliance
+
+Tailored for business owners and CAs to manage tax compliance seamlessly.
+
+*   **ITC Optimization**: Track Input Tax Credit records and identify optimization opportunities.
+*   **HSN Intelligence**: Integrated HSN code lookup and categorization for accurate invoice creation.
+*   **Filing Tracker**: Real-time status monitoring of GST filings (Submitted, Pending, Approved).
+*   **Professional Reporting**: CAs can generate and transmit high-fidelity, customized GST performance reports directly to clients.
+
+---
+
+## 🧠 Fin-Plan: Decision Intelligence
+
+The engine that powers smart financial choices.
+
+*   **Structured Submissions**: Comprehensive forms for life-goal based financial planning.
+*   **Automated Decision Packs**: AI-generated reports that score financial health and provide actionable signals.
+*   **Card Intelligence**: A personalized recommendation engine that analyzes spending patterns to suggest the most rewarding Credit Cards.
+*   **Analyst Feedback Loop**: Professionals can "Accept" or "Reject" AI signals to ensure human-in-the-loop accuracy (Truth Validation).
+
+---
+
+## 🔎 Analyst & MOAT (Decision Intelligence)
+
+Dedicated tools for professional analysts to provide high-fidelity financial advice.
+
+*   **Decision Pack Viewer**: Interactive dashboard for professionals to review AI-generated risk scores, income projections, and spending signals.
+*   **Outcome Tracking**: A "Closed-Loop" feedback system where analysts record the final outcome of financial advice to improve future AI accuracy.
+*   **Truth Validation**: Automated consistency checks between user-submitted data and extracted document evidence.
+*   **Analyst Stats**: Performance tracking for professionals, including review counts, avg. response times, and consultation ratings.
+
+---
+
+## 🛠️ Global Platform Features
+
+*   **Smart Notifications**: Real-time alerts for document status changes, meeting reminders, and new AI signals.
+*   **Feedback System**: Integrated feedback loops for every major feature area to drive continuous improvement.
+*   **Knowledge Base (FAQ)**: Built-in searchable help center for application navigation.
+
+> [!IMPORTANT]
+> All AI features leverage high-performance LLMs via Groq and OpenAI, ensuring sub-second response times for document queries and intelligence generation.

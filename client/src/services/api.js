@@ -4,7 +4,11 @@ const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {}
+  withCredentials: true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
 });
 
 // Add request interceptor for debugging
@@ -56,11 +60,39 @@ api.interceptors.response.use(
 
 // Add token to requests if available
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // 1. Attach JWT Token
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // 2. Handle CSRF Token for non-GET requests
+    const stateChangingMethods = ['post', 'put', 'delete', 'patch'];
+    if (stateChangingMethods.includes(config.method?.toLowerCase()) && !config._isCsrfFetch) {
+      try {
+        if (!window._csrfToken) {
+          console.log('Fetching fresh CSRF token via api instance...');
+          // Use the 'api' instance to ensure withCredentials and baseURL are handled correctly
+          // We use a custom flag _isCsrfFetch to avoid recursion in this interceptor
+          const { data } = await api.get('/csrf-token', {
+            _isCsrfFetch: true,
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (data && data.token) {
+            window._csrfToken = data.token;
+          }
+        }
+
+        if (window._csrfToken) {
+          config.headers['x-csrf-token'] = window._csrfToken;
+        }
+      } catch (err) {
+        console.error('Failed to handle CSRF token:', err);
+      }
+    }
+
     return config;
   },
   (error) => {

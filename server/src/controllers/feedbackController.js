@@ -37,20 +37,30 @@ exports.submitFeedback = async (req, res) => {
       });
     }
 
-    // Log feedback to console (in production, you'd save to database)
-    console.log('=== NEW FEEDBACK RECEIVED ===');
-    console.log('Timestamp:', timestamp || new Date().toISOString());
-    console.log('Source:', source || 'Unknown');
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Phone:', phone || 'Not provided');
-    console.log('Feedback Type:', feedbackType);
-    console.log('Related Service:', service || 'Not specified');
-    console.log('Rating:', rating || 'Not provided');
-    console.log('Message:', message);
-    console.log('User Agent:', req.get('User-Agent'));
-    console.log('IP Address:', req.ip || req.connection.remoteAddress);
-    console.log('================================');
+    // Save to database
+    const { Feedback, User } = require('../models');
+
+    // Try to find user by email if not provided
+    let userId = null;
+    if (email) {
+      const user = await User.findOne({ where: { email } });
+      if (user) userId = user.id;
+    }
+
+    const newFeedback = await Feedback.create({
+      name,
+      email,
+      userId,
+      phone,
+      feedbackType,
+      service,
+      rating,
+      message,
+      source: source || 'web',
+      status: 'new'
+    });
+
+    console.log('Feedback saved to database:', newFeedback.id);
 
     // Prepare email content
     const emailSubject = `New Feedback: ${feedbackType.toUpperCase()} - ${name}`;

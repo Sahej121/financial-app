@@ -136,6 +136,12 @@ module.exports = (sequelize) => {
       comment: 'Client provided notes or requirements'
     },
 
+    reportContent: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Formal report written by the analyst after the meeting'
+    },
+
     // Completion tracking
     completedAt: {
       type: DataTypes.DATE,

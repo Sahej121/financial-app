@@ -15,7 +15,8 @@ export const register = createAsyncThunk(
       }
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || error.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      return rejectWithValue(message);
     }
   }
 );
@@ -30,7 +31,8 @@ export const login = createAsyncThunk(
       }
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || error.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      return rejectWithValue(message);
     }
   }
 );
