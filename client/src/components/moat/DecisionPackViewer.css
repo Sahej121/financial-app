@@ -157,6 +157,36 @@
     color: rgba(255, 255, 255, 0.5);
 }
 
+/* Intelligence Findings */
+.findings-section {
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.executive-summary {
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    white-space: pre-wrap;
+}
+
+.nuance-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.nuance-tag {
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    background: rgba(102, 126, 234, 0.1);
+    color: #a3bffa;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .pack-summary-row {

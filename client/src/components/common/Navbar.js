@@ -10,9 +10,9 @@ const { Header } = Layout;
 const { useBreakpoint } = Grid;
 
 const StyledHeader = styled(Header)`
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-glass-heavy);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,7 +34,7 @@ const LogoContainer = styled(Link)`
   text-decoration: none;
   
   span {
-    background: linear-gradient(90deg, #fff, #aaa);
+    background: linear-gradient(90deg, #fff, var(--text-secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -56,8 +56,8 @@ const DesktopMenu = styled(Menu)`
     transition: all 0.3s ease;
 
     &:hover {
-      color: white !important;
-      background: rgba(255, 255, 255, 0.1) !important;
+      color: var(--text-primary) !important;
+      background: var(--bg-surface-hover) !important;
     }
 
     &::after {
@@ -66,7 +66,7 @@ const DesktopMenu = styled(Menu)`
     
     &.ant-menu-item-selected {
       color: #fff !important;
-      background: rgba(255, 255, 255, 0.15) !important;
+      background: var(--primary-color-alpha) !important;
       font-weight: 600;
     }
   }
@@ -88,13 +88,13 @@ const MobileMenuButton = styled(Button)`
 `;
 
 const SidebarButton = styled(Button)`
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-surface);
   color: white;
   border-radius: 20px;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.15) !important;
+    background: var(--bg-surface-hover) !important;
     border-color: white !important;
     color: white !important;
   }
@@ -129,15 +129,15 @@ const Navbar = () => {
   };
 
   const menuItems = [
-    { key: '/', icon: <HomeOutlined style={{ color: '#00B0F0' }} />, label: 'Home' },
+    { key: '/', icon: <HomeOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Home' },
     ...(token && user ? [
-      { key: getDashboardPath(), icon: <DashboardOutlined style={{ color: '#00B0F0' }} />, label: 'Dashboard' },
-      { key: '/wealth-monitor', icon: <RocketOutlined style={{ color: '#00B0F0' }} />, label: 'Wealth Monitor' },
-      { key: '/gst', icon: <AuditOutlined style={{ color: '#00B0F0' }} />, label: 'GST Filing' }
+      { key: getDashboardPath(), icon: <DashboardOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Dashboard' },
+      { key: '/wealth-monitor', icon: <RocketOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Wealth Monitor' },
+      { key: '/gst', icon: <AuditOutlined style={{ color: 'var(--primary-color)' }} />, label: 'GST Filing' }
     ] : []),
-    { key: '/planning', icon: <BankOutlined style={{ color: '#00B0F0' }} />, label: 'Planning' },
-    { key: '/ca-selection', icon: <TeamOutlined style={{ color: '#00B0F0' }} />, label: 'Expert CA' },
-    { key: '/credit-card', icon: <CreditCardOutlined style={{ color: '#00B0F0' }} />, label: 'Cards' },
+    { key: '/planning', icon: <BankOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Planning' },
+    { key: '/ca-selection', icon: <TeamOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Expert CA' },
+    { key: '/credit-card', icon: <CreditCardOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Cards' },
   ];
 
   // Filter menu items based on role
@@ -153,15 +153,15 @@ const Navbar = () => {
   }));
 
   const userMenu = (
-    <Menu theme="dark" style={{ background: '#1c1c1c', border: '1px solid #333' }}>
-      <Menu.Item key="dashboard" icon={<DashboardOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate(getDashboardPath())}>
+    <Menu theme="dark" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)' }}>
+      <Menu.Item key="dashboard" icon={<DashboardOutlined style={{ color: 'var(--primary-color)' }} />} onClick={() => navigate(getDashboardPath())}>
         Dashboard
       </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined style={{ color: '#00B0F0' }} />} onClick={() => navigate('/settings')}>
+      <Menu.Item key="settings" icon={<SettingOutlined style={{ color: 'var(--primary-color)' }} />} onClick={() => navigate('/settings')}>
         Settings
       </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: '#ff4d4f' }}>
+      <Menu.Divider style={{ borderColor: 'var(--border-secondary)' }} />
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: 'var(--error-color)' }}>
         Logout
       </Menu.Item>
     </Menu>
@@ -228,8 +228,8 @@ const Navbar = () => {
         placement="right"
         onClose={() => setMobileMenuOpen(false)}
         visible={mobileMenuOpen}
-        bodyStyle={{ padding: 0, background: '#121212' }}
-        headerStyle={{ background: '#121212', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+        bodyStyle={{ padding: 0, background: 'var(--bg-base)' }}
+        headerStyle={{ background: 'var(--bg-base)', borderBottom: '1px solid var(--border-primary)' }}
         width={280}
       >
         <Menu
@@ -241,9 +241,9 @@ const Navbar = () => {
         />
 
         {!token && (
-          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '10px' }}>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border-primary)', marginTop: '10px' }}>
             <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button block type="default" style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}>Log In</Button>
+              <Button block type="default" style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', background: 'transparent' }}>Log In</Button>
             </Link>
             <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
               <Button block type="primary" style={{ background: 'white', color: 'black', border: 'none' }}>Get Started</Button>

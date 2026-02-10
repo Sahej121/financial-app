@@ -1,4 +1,4 @@
-const { PDFParse } = require('pdf-parse');
+const pdfParse = require('pdf-parse');
 const Tesseract = require('tesseract.js');
 const fs = require('fs');
 const logger = require('../utils/logger');
@@ -30,12 +30,10 @@ exports.extractText = async (filePath, mimeType) => {
 
 async function extractTextFromPDF(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
-    let parser = null;
     try {
-        parser = new PDFParse({ data: dataBuffer });
-        const result = await parser.getText();
+        const result = await pdfParse(dataBuffer);
         const text = result.text.trim();
-        const numpages = result.total; // result.total is page count in v2
+        const numpages = result.numpages;
 
         // Improved scanned PDF detection
         // If there's very little text but many pages, it's likely scanned
@@ -60,10 +58,6 @@ async function extractTextFromPDF(filePath) {
     } catch (error) {
         logger.error('PDF extraction error', { error: error.message, filePath });
         throw new Error('Failed to parse PDF content: ' + error.message);
-    } finally {
-        if (parser) {
-            await parser.destroy();
-        }
     }
 }
 

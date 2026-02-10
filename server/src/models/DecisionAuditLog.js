@@ -32,6 +32,22 @@ module.exports = (sequelize) => {
             type: DataTypes.JSON,
             allowNull: false
         },
+        promptVersion: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            comment: 'V1.0 is default'
+        },
+        rawInputLen: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            comment: 'Char count of document text sent to AI'
+        },
+        hallucinationCheck: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            defaultValue: false,
+            comment: 'True if AI output was cross-verified by deterministic rules'
+        },
         performer: {
             type: DataTypes.STRING,
             defaultValue: 'SYSTEM'

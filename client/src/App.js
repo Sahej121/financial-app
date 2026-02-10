@@ -75,6 +75,10 @@ function App() {
           algorithm: theme.darkAlgorithm,
           token: {
             colorPrimary: '#00B0F0',
+            colorInfo: '#00B0F0',
+            colorSuccess: '#10b981',
+            colorWarning: '#f59e0b',
+            colorError: '#ef4444',
             colorBgBase: '#000000',
             colorBgContainer: '#141414',
             borderRadius: 8,
@@ -82,28 +86,37 @@ function App() {
             colorTextHeading: '#FFFFFF',
             colorText: 'rgba(255, 255, 255, 0.85)',
             colorTextLightSolid: '#FFFFFF', // Ensures white text on primary buttons
+            controlHeight: 48, // Taller inputs/buttons
           },
           components: {
             Button: {
-              controlHeight: 45,
+              controlHeight: 48,
               borderRadius: 12,
               primaryShadow: '0 4px 14px 0 rgba(0, 176, 240, 0.3)',
+              fontWeight: 600,
             },
             Card: {
               colorBorderSecondary: 'rgba(255, 255, 255, 0.08)',
+              colorBgContainer: '#141414',
             },
             Input: {
-              controlHeight: 45,
+              controlHeight: 48,
               borderRadius: 12,
-              colorBgContainer: '#0A0A0A', // Consistent with --bg-secondary
+              colorBgContainer: 'rgba(255, 255, 255, 0.03)',
               colorBorder: 'rgba(255, 255, 255, 0.08)',
               activeBorderColor: '#00B0F0',
             },
             Select: {
-              controlHeight: 45,
+              controlHeight: 48,
               borderRadius: 12,
-              colorBgContainer: '#0A0A0A',
+              colorBgContainer: 'rgba(255, 255, 255, 0.03)',
               colorBorder: 'rgba(255, 255, 255, 0.08)',
+            },
+            Table: {
+              colorBgContainer: 'transparent',
+              headerBg: 'rgba(255, 255, 255, 0.03)',
+              headerColor: 'rgba(255, 255, 255, 0.7)',
+              fontSize: 14,
             }
           }
         }}

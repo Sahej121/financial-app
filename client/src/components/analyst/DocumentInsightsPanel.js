@@ -27,13 +27,15 @@ const DocumentInsightsPanel = ({ documents, insights }) => {
     return (
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <Typography.Title level={4} style={{ color: 'white', marginBottom: '16px' }}>
-                <RobotOutlined style={{ marginRight: '8px' }} /> Document Intelligence
+                <RobotOutlined style={{ marginRight: '8px', color: '#00B0F0' }} /> Document Intelligence
             </Typography.Title>
 
             <Collapse ghost expandIconPosition="right">
                 {documents.map(doc => {
                     const insight = getInsightForDoc(doc.id);
                     const isDocImage = doc.fileType?.startsWith('image/');
+                    const meta = insight?.metadata || insight?._meta;
+                    const hasRag = meta?.hasRagContext;
 
                     return (
                         <Panel
@@ -43,7 +45,14 @@ const DocumentInsightsPanel = ({ documents, insights }) => {
                                     {isDocImage ? <FileImageOutlined /> : <FilePdfOutlined />}
                                     <Text style={{ color: 'white' }}>{doc.fileName}</Text>
                                     {insight ? (
-                                        <Tag color="#52c41a">AI Analyzed</Tag>
+                                        <Space>
+                                            <Tag color="#52c41a">AI Analyzed</Tag>
+                                            {hasRag && (
+                                                <Tooltip title="This analysis improved by cross-referencing other documents and knowledge base">
+                                                    <Tag color="cyan" icon={<RobotOutlined />}>RAG Enhanced</Tag>
+                                                </Tooltip>
+                                            )}
+                                        </Space>
                                     ) : (
                                         <Tag color="orange">Analysis Pending</Tag>
                                     )}
@@ -56,7 +65,7 @@ const DocumentInsightsPanel = ({ documents, insights }) => {
                             {insight ? (
                                 <div style={{ padding: '0 12px' }}>
                                     <Descriptions column={2} bordered size="small" style={{ marginBottom: '16px' }}>
-                                        {Object.entries(insight.extractedData).map(([key, value]) => {
+                                        {Object.entries(insight.extractedData || {}).map(([key, value]) => {
                                             const highlight = insight.highlights?.[key];
 
                                             // Formatters for high-value professional fields
@@ -125,9 +134,22 @@ const DocumentInsightsPanel = ({ documents, insights }) => {
                                     )}
 
                                     {insight.summary && (
-                                        <div style={{ background: 'rgba(82, 196, 26, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #52c41a' }}>
+                                        <div style={{ background: 'rgba(82, 196, 26, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #52c41a', marginBottom: '16px' }}>
                                             <Text strong style={{ color: '#52c41a' }}>AI Intelligence Report: </Text>
                                             <Text style={{ color: 'white' }}>{insight.summary}</Text>
+                                        </div>
+                                    )}
+
+                                    {hasRag && (
+                                        <div style={{ background: 'rgba(0, 176, 240, 0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 176, 240, 0.2)' }}>
+                                            <Space direction="vertical" size={4}>
+                                                <Text strong style={{ color: '#00B0F0', fontSize: '12px' }}>
+                                                    <RobotOutlined /> RETRIEVAL-AUGMENTED INTELLIGENCE
+                                                </Text>
+                                                <Text type="secondary" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>
+                                                    This document was cross-verified against other files in this submission and the system knowledge base (Standard Indian Financial Guidelines) for higher precision.
+                                                </Text>
+                                            </Space>
                                         </div>
                                     )}
                                 </div>

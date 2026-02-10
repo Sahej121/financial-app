@@ -80,6 +80,36 @@ const DecisionPackViewer = ({ pack, loading = false }) => {
                 </Card>
             </div>
 
+            {/* Intelligence Findings (High Attention) */}
+            {pack.demandIntelligence && (
+                <Card
+                    title={<span><ThunderboltOutlined style={{ color: '#faad14' }} /> Intelligence Findings</span>}
+                    className="pack-section findings-section"
+                >
+                    <div className="executive-summary">
+                        {pack.demandIntelligence.summary || "No executive summary available."}
+                    </div>
+
+                    <div className="nuance-tags">
+                        {(pack.demandIntelligence.nuances || []).map(nuance => (
+                            <Tag key={nuance} className="nuance-tag">
+                                {nuance.replace(/_/g, ' ')}
+                            </Tag>
+                        ))}
+                        {pack.demandIntelligence.urgency && (
+                            <Tag color={pack.demandIntelligence.urgency === 'HIGH' ? 'red' : 'blue'}>
+                                URGENCY: {pack.demandIntelligence.urgency}
+                            </Tag>
+                        )}
+                        {pack.demandIntelligence.complexityLevel && (
+                            <Tag color="purple">
+                                COMPLEXITY: {pack.demandIntelligence.complexityLevel}
+                            </Tag>
+                        )}
+                    </div>
+                </Card>
+            )}
+
             {/* Financial Snapshot */}
             <Card title="Financial Snapshot" className="pack-section">
                 <Descriptions column={2} bordered size="small">

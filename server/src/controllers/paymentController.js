@@ -1,6 +1,6 @@
 const { Transaction, Meeting, User, FinancialPlanningSubmission } = require('../models');
 const razorpayService = require('../services/razorpayService');
-const zoomService = require('../services/zoomService');
+// const zoomService = require('../services/zoomService'); // Removed for Jitsi
 const winston = require('winston');
 const moment = require('moment');
 
@@ -80,19 +80,9 @@ exports.verifyPayment = async (req, res) => {
                 const startTime = details.startsAt;
                 const duration = moment(details.endsAt).diff(moment(details.startsAt), 'minutes');
 
-                // Generate Zoom Link
-                let zoomData = {};
-                try {
-                    zoomData = await zoomService.createMeeting(
-                        details.title || 'Financial Consultation',
-                        startTime,
-                        duration,
-                        details.clientNotes || ''
-                    );
-                } catch (zoomErr) {
-                    winston.error('Zoom creation failed during payment verify:', zoomErr);
-                    // Proceed but without zoom link
-                }
+                // Generate Jitsi Link (Free & Embedded)
+                const roomName = `CreditLeliya-Consultation-${transaction.id}-${Date.now()}`;
+                const jitsiUrl = `https://meet.jit.si/${roomName}`;
 
                 // Create Meeting
                 const meeting = await Meeting.create({
@@ -105,15 +95,11 @@ exports.verifyPayment = async (req, res) => {
                     endsAt: details.endsAt,
                     clientNotes: details.clientNotes,
                     status: 'confirmed',
-                    zoomMeetingId: zoomData?.id?.toString(),
-                    zoomJoinUrl: zoomData?.joinUrl,
-                    zoomStartUrl: zoomData?.startUrl,
-                    zoomPassword: zoomData?.password,
+                    zoomMeetingId: roomName,
+                    zoomJoinUrl: jitsiUrl,
+                    zoomStartUrl: jitsiUrl,
+                    zoomPassword: '',
                     transactionId: transaction.id,
-                    // Map other intake fields if passed in metadata...
-                    // For brevity, assuming basic creating here, or we fetch from a pending Submission?
-                    // Ideally, we persist the full payload in Transaction metadata or pass it again.
-                    // Let's assume metadata passes the critical distinct fields.
                     ...details.intakeFields // Spread the rest of the form data
                 });
 

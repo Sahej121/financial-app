@@ -33,6 +33,8 @@ const WealthMonitor = require('./WealthMonitor');
 const DecisionAuditLog = require('./DecisionAuditLog');
 const Transaction = require('./Transaction');
 const GSTReport = require('./GSTReport');
+const OutcomeRecord = require('./OutcomeRecord');
+const Feedback = require('./Feedback');
 
 // Initialize models
 const models = {
@@ -48,6 +50,8 @@ const models = {
   DocumentChunk: DocumentChunk(sequelize),
   FinancialPlanner: FinancialPlanner(sequelize),
   ActivityLog: ActivityLog(sequelize),
+  OutcomeRecord: OutcomeRecord(sequelize),
+  Feedback: Feedback(sequelize),
   // GST Models
   GSTProfile: GSTProfile(sequelize),
   GSTInvoice: GSTInvoice(sequelize),
@@ -57,7 +61,8 @@ const models = {
   WealthMonitor: WealthMonitor(sequelize),
   DecisionAuditLog: DecisionAuditLog(sequelize),
   Transaction: Transaction(sequelize),
-  GSTReport: GSTReport(sequelize)
+  GSTReport: GSTReport(sequelize),
+  Correction: require('./Correction')(sequelize)
 };
 
 // Set up associations

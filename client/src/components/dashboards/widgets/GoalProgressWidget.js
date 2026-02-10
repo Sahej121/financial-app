@@ -7,9 +7,9 @@ import styled from 'styled-components';
 const { Title, Text } = Typography;
 
 const WidgetCard = styled(Card)`
-  background: linear-gradient(145deg, rgba(20, 20, 20, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--card-radius) !important;
   height: 100%;
   position: relative;
   overflow: hidden;
@@ -18,7 +18,7 @@ const WidgetCard = styled(Card)`
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, #F2C811, #ff4d4f);
+    background: linear-gradient(90deg, var(--warning-color), var(--error-color));
     opacity: 0.7;
   }
 `;
@@ -35,8 +35,8 @@ const GoalItem = styled.div`
     justify-content: space-between;
     margin-bottom: 6px;
     
-    .title { color: white; font-weight: 500; font-size: 14px; }
-    .amount { color: rgba(255,255,255,0.65); font-size: 12px; }
+    .title { color: var(--text-primary); font-weight: 500; font-size: 14px; }
+    .amount { color: var(--text-secondary); font-size: 12px; }
   }
 `;
 
@@ -73,15 +73,15 @@ const GoalProgressWidget = ({ goals: initialGoals }) => {
     return (
         <WidgetCard>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
-                <Title level={5} style={{ color: 'white', margin: 0 }}>
-                    <TrophyOutlined style={{ color: '#F2C811', marginRight: 8 }} />
+                <Title level={5} style={{ color: 'var(--text-primary)', margin: 0 }}>
+                    <TrophyOutlined style={{ color: 'var(--warning-color)', marginRight: 8 }} />
                     Financial Goals
                 </Title>
                 <Button
                     type="text"
                     icon={<PlusOutlined />}
                     size="small"
-                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                    style={{ color: 'var(--text-secondary)' }}
                     onClick={() => setIsModalVisible(true)}
                 >
                     Add
@@ -133,10 +133,11 @@ const GoalProgressWidget = ({ goals: initialGoals }) => {
                 okText="Add Goal"
                 cancelText="Cancel"
                 centered
+                bodyStyle={{ background: 'var(--bg-card)' }}
             >
                 <Form form={form} layout="vertical" onFinish={handleAdd}>
                     <Form.Item name="title" label="Goal Title" rules={[{ required: true, message: 'Please enter a title' }]}>
-                        <Input placeholder="e.g. New Car, Wedding" />
+                        <Input placeholder="e.g. New Car, Wedding" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} />
                     </Form.Item>
                     <Form.Item name="target" label="Target Amount (₹)" rules={[{ required: true, message: 'Please enter target amount' }]}>
                         <InputNumber style={{ width: '100%' }} formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value.replace(/\₹\s?|(,*)/g, '')} />

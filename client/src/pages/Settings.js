@@ -11,7 +11,7 @@ const SettingsContainer = styled.div`
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  background: #000;
+  background: var(--bg-base);
   min-height: 100vh;
   position: relative;
   overflow: hidden;
@@ -31,10 +31,10 @@ const SettingsContainer = styled.div`
 `;
 
 const SettingsCard = styled(Card)`
-  background: rgba(18, 18, 18, 0.8);
+  background: var(--bg-glass-heavy);
   backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--card-radius);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
@@ -51,7 +51,7 @@ const SettingsCard = styled(Card)`
     padding: 32px 32px 0 32px;
 
     .ant-card-head-title {
-      color: white;
+      color: var(--text-primary);
       font-size: 20px;
       font-weight: 800;
       display: flex;
@@ -71,10 +71,10 @@ const SettingItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface);
   border-radius: 18px;
   margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-primary);
   transition: all 0.3s ease;
 
   &:hover {
@@ -98,7 +98,7 @@ const SettingTitle = styled(Title)`
 `;
 
 const SettingDescription = styled(Text)`
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   font-size: 14px;
   display: block;
 `;

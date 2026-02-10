@@ -42,7 +42,8 @@ exports.getFinancialPlanners = async (req, res) => {
 
         const planners = await FinancialPlanner.findAll({
             where: { isActive: true },
-            order: [['rating', 'DESC']]
+            order: [['rating', 'DESC']],
+            raw: true
         });
         res.json(planners);
     } catch (error) {
@@ -219,12 +220,54 @@ exports.getAnalystStats = async (req, res) => {
             upcomingMeetings: upcomingMeetingsCount,
             aumHistory,
             portfolioAllocation,
-            clientAcquisition
+            clientAcquisition,
+            // Reputation Metrics
+            reputation: {
+                trustScore: user?.FinancialPlanner?.trustScore || user?.CA?.trustScore || 50,
+                competenceScore: user?.FinancialPlanner?.competenceScore || user?.CA?.competenceScore || 0,
+                responsivenessScore: user?.FinancialPlanner?.responsivenessScore || user?.CA?.responsivenessScore || 0,
+                outcomeScore: user?.FinancialPlanner?.outcomeScore || user?.CA?.outcomeScore || 0,
+                consistencyScore: user?.FinancialPlanner?.consistencyScore || user?.CA?.consistencyScore || 0,
+                totalCompletedCases: user?.FinancialPlanner?.totalCompletedCases || user?.CA?.totalCompletedCases || 0,
+                verifiedSpecializations: user?.FinancialPlanner?.verifiedSpecializations || user?.CA?.verifiedSpecializations || {}
+            }
         };
 
         res.json(stats);
     } catch (error) {
         console.error('Error getting analyst stats:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.createOutcome = async (req, res) => {
+    try {
+        const { clientId, meetingId, adviceType, adviceSummary, outcomeScore, financialImpact } = req.body;
+        const analystId = req.user.id;
+
+        // 1. Create the outcome record
+        const { OutcomeRecord } = require('../models');
+        const outcome = await OutcomeRecord.create({
+            analystId,
+            clientId,
+            meetingId,
+            adviceType,
+            adviceSummary,
+            outcomeScore,
+            financialImpact,
+            status: 'pending' // pending client confirmation
+        });
+
+        // 2. Trigger async trust score update
+        const reputationService = require('../services/reputationService');
+        // We don't await this to keep response fast, but in production use a queue
+        reputationService.updateTrustScore(analystId, req.user.role || 'financial_planner').catch(err =>
+            console.error('Background trust score update failed:', err)
+        );
+
+        res.status(201).json({ success: true, outcome });
+    } catch (error) {
+        console.error('Error creating outcome:', error);
         res.status(500).json({ error: error.message });
     }
 };

@@ -89,13 +89,27 @@ class AIProvider {
 
     /**
      * Generate embeddings for a text string
+     * LOCAL-FIRST: Uses on-device model by default for privacy & cost.
      * @param {string} text - The text to embed
-     * @returns {Promise<number[]>} - The embedding vector
+     * @returns {Promise<number[]>} - The embedding vector (384-dim local, 1536-dim OpenAI)
      */
     async getEmbedding(text) {
-        // Try OpenAI first if available
+        // LOCAL-FIRST: Keep financial text on-device, eliminate embedding API costs
+        try {
+            const embedder = await this._getLocalEmbedder();
+            if (embedder) {
+                logger.debug(`[AIProvider] Generating local embedding for text length: ${text.length}`);
+                const output = await embedder(text, { pooling: 'mean', normalize: true });
+                return Array.from(output.data);
+            }
+        } catch (e) {
+            logger.warn('[AIProvider] Local embedding failed, trying OpenAI fallback:', e.message);
+        }
+
+        // Fallback to OpenAI only if local model unavailable
         if (this._getOpenAI()) {
             try {
+                logger.info('[AIProvider] Using OpenAI embedding fallback');
                 const response = await this._getOpenAI().embeddings.create({
                     model: "text-embedding-3-small",
                     input: text,
@@ -103,28 +117,8 @@ class AIProvider {
                 });
                 return response.data[0].embedding;
             } catch (error) {
-                // If it fails, we fall back. Only log as error if it's not a quota/auth issue
-                if (error.status === 401 || error.status === 429) {
-                    logger.warn(`[AIProvider] OpenAI embedding unavailable (${error.status}), using local engine.`);
-                } else {
-                    logger.error('[AIProvider] OpenAI embedding failed, falling back to local:', error.message);
-                }
+                logger.error('[AIProvider] OpenAI embedding also failed:', error.message);
             }
-        } else {
-            // Quietly use local if OpenAI is not configured
-            logger.debug('[AIProvider] OpenAI not configured, defaulting to local embeddings.');
-        }
-
-        // Fallback to local
-        try {
-            const embedder = await this._getLocalEmbedder();
-            if (embedder) {
-                logger.info(`[AIProvider] Generating local embedding for text length: ${text.length}`);
-                const output = await embedder(text, { pooling: 'mean', normalize: true });
-                return Array.from(output.data);
-            }
-        } catch (e) {
-            logger.error('[AIProvider] Local embedding failed:', e);
         }
 
         logger.warn('[AIProvider] No embedding provider available. Returning mock.');

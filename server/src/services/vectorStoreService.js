@@ -8,8 +8,10 @@ const logger = require('../utils/logger');
  * - Chunking
  * - Embedding
  * - Storage
- * - Retrieval
+ * - Retrieval (with similarity floor for anti-hallucination)
  */
+const SIMILARITY_FLOOR = 0.70; // Discard chunks below this threshold
+
 class VectorStoreService {
     constructor() {
         this.splitter = new RecursiveCharacterTextSplitter({
@@ -125,7 +127,11 @@ class VectorStoreService {
                 }
             );
 
-            return results;
+            // Apply similarity floor — discard irrelevant chunks
+            const filtered = results.filter(r => parseFloat(r.similarity) >= SIMILARITY_FLOOR);
+            logger.info(`[VectorStore] Search returned ${results.length} chunks, ${filtered.length} above similarity floor (${SIMILARITY_FLOOR})`);
+
+            return filtered;
         } catch (error) {
             console.error('[VectorStore] Search failed:', error);
             throw error;

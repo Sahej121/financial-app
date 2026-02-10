@@ -137,6 +137,35 @@ const CADashboard = () => {
     }
   };
 
+  const handleClearQueue = async () => {
+    if (data.documents.length === 0) return;
+
+    Modal.confirm({
+      title: 'Clear Document Queue',
+      content: `This will mark all ${data.documents.length} pending documents as reviewed. Are you sure?`,
+      okText: 'Clear All',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          message.loading({ content: 'Clearing document queue...', key: 'clear_queue' });
+          const docIds = data.documents.map(d => d.id);
+          console.log('Clearing document IDs:', docIds);
+          const response = await api.post('/documents/bulk-review', {
+            documentIds: docIds,
+            status: 'reviewed',
+            reviewNotes: 'Bulk cleared from dashboard'
+          });
+          console.log('Bulk review response:', response.data);
+          message.success({ content: 'Queue cleared successfully', key: 'clear_queue' });
+          loadDashboardData();
+        } catch (error) {
+          console.error('Failed to clear queue:', error);
+          message.error({ content: 'Failed to clear document queue', key: 'clear_queue' });
+        }
+      }
+    });
+  };
+
   const submitGSTReport = async (values) => {
     try {
       message.loading({ content: 'Sending GST Report...', key: 'gst_report_submit' });
@@ -217,10 +246,73 @@ const CADashboard = () => {
     ],
     angleField: 'value',
     colorField: 'type',
-    radius: 0.8,
-    innerRadius: 0.6,
-    color: ['#107C10', '#F2C811', '#D13438', '#00B0F0'],
-    legend: { position: 'bottom', itemHeight: 20 }
+    radius: 0.85,
+    innerRadius: 0.65,
+    radius: 0.85,
+    innerRadius: 0.65,
+    color: ['#00B0F0', '#52c41a', '#F2C811', '#ff4d4f'],
+    legend: {
+      position: 'bottom',
+      itemHeight: 24,
+      itemName: {
+        style: { fill: '#cbd5e1', fontSize: 13 }
+      }
+    },
+    statistic: {
+      title: {
+        style: { color: '#64748b', fontSize: '14px', fontWeight: 500 },
+        content: 'Total',
+      },
+      content: {
+        style: {
+          color: '#fff',
+          fontSize: '28px',
+          fontWeight: 800,
+          textShadow: '0 0 10px rgba(0,176,240,0.5)'
+        },
+        customHtml: (container, view, datum, data) => {
+          const total = data.reduce((sum, item) => sum + item.value, 0);
+          return `${total}`;
+        },
+      },
+    },
+    label: {
+      type: 'spider',
+      labelHeight: 28,
+      content: '{percentage}',
+      style: {
+        fill: '#fff',
+        fontSize: 12,
+        fontWeight: 600,
+      },
+    },
+    tooltip: {
+      customContent: (title, items) => {
+        if (!items || items.length === 0) return null;
+        return `
+          <div style="padding: 12px; background: rgba(30, 41, 59, 0.95); border: 1px solid #334155; border-radius: 8px;">
+            <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 4px;">${items[0]?.data?.type}</div>
+            <div style="color: #fff; font-size: 16px; font-weight: 600;">${items[0]?.value} Documents</div>
+          </div>
+        `;
+      }
+    },
+    interactions: [{ type: 'element-selected' }, { type: 'element-active' }],
+    pieStyle: {
+      lineWidth: 2,
+      stroke: '#1e293b',
+      shadowColor: 'rgba(0,0,0,0.5)',
+      shadowBlur: 10,
+      shadowOffsetX: 5,
+      shadowOffsetY: 5,
+      cursor: 'pointer',
+    },
+    animation: {
+      appear: {
+        animation: 'wave-in',
+        duration: 1500,
+      },
+    },
   };
 
   // --- Columns ---
@@ -421,12 +513,12 @@ const CADashboard = () => {
     {
       title: 'Document',
       dataIndex: 'fileName',
-      render: (name) => <span style={{ fontWeight: 500 }}>{name}</span>
+      render: (name) => <span style={{ fontWeight: 600, color: 'white' }}>{name || 'Unknown Document'}</span>
     },
     {
       title: 'Client',
       dataIndex: 'owner',
-      render: (owner) => owner?.name
+      render: (owner) => <span style={{ color: 'rgba(255,255,255,0.85)' }}>{owner?.name || 'Multiple Clients'}</span>
     },
     {
       title: 'Priority',
@@ -553,7 +645,10 @@ const CADashboard = () => {
             </div>
             <div className="kpi-label">Pending Reviews</div>
             <div className="kpi-value">{data.stats.pendingReviews}</div>
-            <div className={`kpi-trend negative`}>Requires attention</div>
+            <div className="kpi-subtitle">
+              <WarningOutlined style={{ color: '#F2C811' }} />
+              Requires attention
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={8}>
@@ -563,17 +658,23 @@ const CADashboard = () => {
             </div>
             <div className="kpi-label">Scheduled Meetings</div>
             <div className="kpi-value">{data.stats.scheduledMeetings}</div>
-            <div className={`kpi-trend positive`}>For this week</div>
+            <div className="kpi-subtitle">
+              <CheckCircleOutlined style={{ color: '#00B0F0' }} />
+              For this week
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={8}>
-          <Card className="kpi-card red" bordered={false} style={{ borderColor: '#ef4444' }}>
+          <Card className="kpi-card red" bordered={false}>
             <div className="kpi-icon-wrapper" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-              <WarningOutlined style={{ fontSize: '24px' }} />
+              <WarningOutlined />
             </div>
             <div className="kpi-label">Urgent Documents</div>
             <div className="kpi-value">{data.stats.urgentAttention}</div>
-            <div className={`kpi-trend negative`}>High Priority</div>
+            <div className="kpi-subtitle">
+              <WarningOutlined style={{ color: '#ef4444' }} />
+              High Priority
+            </div>
           </Card>
         </Col>
       </Row>
@@ -603,7 +704,24 @@ const CADashboard = () => {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card className="widget-card" title="Document Review Queue" bordered={false}>
+          <Card
+            className="widget-card"
+            title="Document Review Queue"
+            bordered={false}
+            extra={
+              data.documents.length > 0 && (
+                <Button
+                  type="link"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={handleClearQueue}
+                  style={{ padding: 0 }}
+                >
+                  Clear Queue
+                </Button>
+              )
+            }
+          >
             <Table
               dataSource={data.documents.slice(0, 5)}
               columns={documentColumns}

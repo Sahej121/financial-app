@@ -2,7 +2,11 @@ const { OpenAI } = require('openai');
 const Groq = require('groq-sdk');
 const logger = require('../utils/logger');
 const systemExtractionService = require('./systemExtractionService');
+const vectorStoreService = require('./vectorStoreService');
+const piiScrubber = require('../utils/piiScrubber');
 const { DocumentInsight, FinancialPlanningSubmission, User } = require('../models');
+
+const PROMPT_VERSION = 'V2.0-LOGIC-TRACE';
 
 /**
  * Multi-Provider Financial Data Extraction Service
@@ -40,10 +44,13 @@ function getActiveProvider() {
 /**
  * Build the analysis prompt
  */
-function buildPrompt(text, documentType) {
+function buildPrompt(text, documentType, context = '') {
+    const contextPrompt = context ? `\n\nRELEVANT CONTEXT FROM OTHER DOCUMENTS OR GUIDELINES:\n${context}` : '';
+
     if (documentType === 'wealth_monitor') {
         return `You are an expert Financial Strategy Consultant. 
 Analyze this receipt/bill and provide financial insights for wealth monitoring.
+${contextPrompt}
 
 TEXT FROM RECEIPT:
 ${text.substring(0, 12000)}
@@ -52,21 +59,23 @@ Return a JSON object with this structure:
 {
   "extractedData": {
     "merchantName": "string",
-    "amount": number,
-    "category": "Food/Travel/Shopping/Luxury/Utilities/Healthcare/Other",
+    "amount": { "value": number, "evidence_snippet": "exact text from receipt" },
+    "category": { "value": "Food/...", "evidence_snippet": "reasoning text" },
     "isAvoidable": boolean,
     "itrRelevance": "80C/80D/Business/None"
   },
-  "summary": "1-2 sentence advice on if this purchase helps or hurts their financial goals",
-  "recommendations": ["1-2 actionable steps for budgeting"],
+  "summary": "1-2 sentence advice...",
+  "recommendations": ["1-2 actionable steps"],
   "confidenceScore": 0.8
 }
 
+CRITICAL: All monetary values MUST use Indian Rupees (₹). Do NOT use dollars ($).
 Return ONLY valid JSON.`;
     }
 
     return `You are an expert Financial Analyst specializing in Indian financial documents.
 Analyze the following document text and extract structured financial intelligence.
+${contextPrompt}
 
 DOCUMENT CATEGORY: ${documentType}
 
@@ -77,16 +86,16 @@ Extract and return a JSON object with this structure:
 {
   "extractedData": {
     "documentType": "${documentType}",
-    "accountHolder": "name if found",
-    "institution": "bank/org name if found",
-    "period": "date range covered",
-    "totalCredits": 0,
-    "totalDebits": 0,
-    "avgMonthlyBalance": 0,
+    "accountHolder": { "value": "name", "evidence_snippet": "snippet" },
+    "institution": { "value": "bank", "evidence_snippet": "snippet" },
+    "period": { "value": "range", "evidence_snippet": "snippet" },
+    "totalCredits": { "value": 0, "evidence_snippet": "snippet" },
+    "totalDebits": { "value": 0, "evidence_snippet": "snippet" },
+    "avgMonthlyBalance": { "value": 0, "evidence_snippet": "snippet" },
     "revenueTrend": "up/down/flat",
     "cashPercentage": 0,
     "gstMismatchFlags": [],
-    "loanEmis": [],
+    "loanEmis": [ { "amount": 0, "lender": "bank", "evidence_snippet": "snippet" } ],
     "keyTransactions": []
   },
   "summary": "string (2-3 sentence overview)",
@@ -95,7 +104,10 @@ Extract and return a JSON object with this structure:
   "confidenceScore": 0.0
 }
 
+CRITICAL: For every field in extractedData (except ID strings), you MUST provide an "evidence_snippet" which is the EXACT verbatim text from the document that supports the value. If no evidence exists, set snippet to null.
+
 Guidelines:
+- All monetary values MUST use Indian Rupees (₹). Do NOT use dollars ($).
 - Set confidenceScore between 0.0-1.0 based on data clarity
 - Identify any red flags like unusual transactions, mismatches, or compliance issues
 - For bank statements: focus on cash flow patterns and EMI obligations
@@ -196,15 +208,15 @@ async function localHeuristicParse(text, documentType) {
 /**
  * Main extraction function - Gated by Confidence
  */
-exports.extractFinancialData = async (text, documentType) => {
-    logger.info('Starting extraction', { documentType });
+exports.extractFinancialData = async (text, documentType, submissionId = null) => {
+    logger.info('Starting extraction', { documentType, submissionId });
 
     // 1. Try Local Heuristic Parse First (Deterministic Core)
     const heuristicResult = await localHeuristicParse(text, documentType);
     logger.info('Heuristic confidence score', { score: heuristicResult.confidenceScore });
 
-    // GATE 1: High Confidence (>0.85) -> FULLY DETERMINISTIC, NO LLM
-    if (heuristicResult.confidenceScore >= 0.85) {
+    // GATE 1: Extreme Confidence (>0.95) -> FULLY DETERMINISTIC, NO LLM
+    if (heuristicResult.confidenceScore >= 0.95) {
         logger.info('DETERMINISTIC HIGH CONFIDENCE: Skipping LLM (Authority Layer 1)');
         heuristicResult._meta = {
             provider: 'local_heuristic',
@@ -241,7 +253,25 @@ exports.extractFinancialData = async (text, documentType) => {
         return mock;
     }
 
-    const prompt = buildPrompt(text, documentType);
+    // 2. RETRIEVE RAG CONTEXT
+    let context = '';
+    if (submissionId) {
+        try {
+            const chunks = await vectorStoreService.findContextForAnalysis(text, submissionId);
+            context = chunks.map(c => `[Context from ${c.metadata?.fileName || 'Knowledge Base'}]: ${c.content}`).join('\n\n');
+            logger.info('RAG context retrieved', { chunkCount: chunks.length });
+        } catch (ragError) {
+            logger.error('Failed to retrieve RAG context', { error: ragError.message });
+        }
+    }
+
+    // 3. PII SCRUB — remove sensitive identifiers before sending to external LLM
+    const { scrubbed: scrubbedText, restore: restorePII, piiFound } = piiScrubber.scrub(text);
+    if (piiFound.length > 0) {
+        logger.info('PII scrubbed before LLM call', { count: piiFound.length, types: piiFound.map(p => p.type) });
+    }
+
+    const prompt = buildPrompt(scrubbedText, documentType, context);
 
     try {
         let result;
@@ -251,13 +281,31 @@ exports.extractFinancialData = async (text, documentType) => {
             result = await callOpenAI(prompt);
         }
 
+        // Restore PII tokens in the result
+        if (result.summary) result.summary = restorePII(result.summary);
+        if (result.extractedData) {
+            // Restore PII in string values within extractedData
+            for (const [key, val] of Object.entries(result.extractedData)) {
+                if (typeof val === 'string') {
+                    result.extractedData[key] = restorePII(val);
+                } else if (val && typeof val === 'object' && 'value' in val && typeof val.value === 'string') {
+                    val.value = restorePII(val.value);
+                }
+            }
+        }
+
         // Add Gating Metadata and ensure confidence reflects deterministic inputs
         result._meta = {
             provider,
             analyzedAt: new Date().toISOString(),
             documentType,
+            promptVersion: PROMPT_VERSION,
+            inputLength: text.length,
             heuristicConfidence: heuristicResult.confidenceScore,
-            gating: heuristicResult.confidenceScore >= 0.65 ? 'Limited LLM Explanation' : 'Analyst Required - Summarization only'
+            gating: heuristicResult.confidenceScore >= 0.65 ? 'Limited LLM Explanation' : 'Analyst Required - Summarization only',
+            hasRagContext: !!context,
+            piiScrubbed: piiFound.length > 0,
+            piiCount: piiFound.length
         };
 
         return result;

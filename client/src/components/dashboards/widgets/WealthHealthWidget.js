@@ -9,10 +9,10 @@ const { Title, Text } = Typography;
 const WealthHealthWidget = ({ score = 50, metrics }) => {
     // Fix score label logic
     const getScoreLabel = (score) => {
-        if (score >= 80) return { text: 'Excellent', color: '#10b981', className: 'excellent' };
-        if (score >= 60) return { text: 'Good', color: '#3b82f6', className: 'good' };
-        if (score >= 40) return { text: 'Fair', color: '#f59e0b', className: 'fair' };
-        return { text: 'Needs Improvement', color: '#ef4444', className: 'poor' };
+        if (score >= 80) return { text: 'Excellent', color: 'var(--success-color)', className: 'excellent' };
+        if (score >= 60) return { text: 'Good', color: 'var(--primary-color)', className: 'good' };
+        if (score >= 40) return { text: 'Fair', color: 'var(--warning-color)', className: 'fair' };
+        return { text: 'Needs Improvement', color: 'var(--error-color)', className: 'poor' };
     };
 
     const scoreLabel = getScoreLabel(score);
@@ -30,7 +30,7 @@ const WealthHealthWidget = ({ score = 50, metrics }) => {
                 style: {
                     fontSize: '48px',
                     lineHeight: '48px',
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                     fontWeight: '700',
                 },
                 formatter: () => `${score}`,
@@ -41,9 +41,9 @@ const WealthHealthWidget = ({ score = 50, metrics }) => {
         axis: {
             label: {
                 formatter: (v) => Number(v) * 100,
-                style: { fill: '#64748b', fontSize: 11 }
+                style: { fill: 'var(--text-secondary)', fontSize: 11 }
             },
-            subTickLine: { count: 3, style: { stroke: '#475569' } }
+            subTickLine: { count: 3, style: { stroke: 'var(--border-secondary)' } }
         }
     };
 
@@ -54,32 +54,32 @@ const WealthHealthWidget = ({ score = 50, metrics }) => {
     ];
 
     return (
-        <Card className="widget-card" bordered={false}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-                <Title level={5} style={{ color: 'white', margin: 0, fontSize: 18, fontWeight: 600 }}>
-                    <SafetyCertificateOutlined style={{ color: '#10b981', marginRight: 8 }} />
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
+                <Title level={5} style={{ color: 'var(--text-primary)', margin: 0, fontSize: 16, fontWeight: 600 }}>
+                    <SafetyCertificateOutlined style={{ color: 'var(--success-color)', marginRight: 8 }} />
                     Wealth Health
                 </Title>
                 <Tooltip title="A composite score of your financial wellbeing based on savings, debt, liquidity, and insurance coverage.">
-                    <InfoCircleOutlined style={{ color: '#64748b', cursor: 'pointer' }} />
+                    <InfoCircleOutlined style={{ color: 'var(--text-secondary)', cursor: 'pointer' }} />
                 </Tooltip>
             </div>
 
-            <Row gutter={32} align="middle">
-                <Col xs={24} md={12}>
-                    <div className="wealth-gauge-container">
+            <Row gutter={[16, 16]} align="middle" style={{ flex: 1 }}>
+                <Col span={12} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="wealth-gauge-container" style={{ width: '100%', maxWidth: 180 }}>
                         <Gauge {...config} />
-                        <div className={`gauge-label ${scoreLabel.className}`} style={{ marginTop: 8 }}>
+                        <div className={`gauge-label ${scoreLabel.className}`} style={{ marginTop: -20, textAlign: 'center', fontWeight: 'bold' }}>
                             {scoreLabel.text}
                         </div>
                     </div>
                 </Col>
-                <Col xs={24} md={12}>
-                    <div className="health-metrics">
+                <Col span={12}>
+                    <div className="health-metrics" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {defaultMetrics.map((item, idx) => (
-                            <div key={idx} className="metric-item">
-                                <div className="metric-label">{item.label}</div>
-                                <div className={`metric-value ${item.status}`}>
+                            <div key={idx} className="metric-item" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-secondary)', paddingBottom: 4 }}>
+                                <div className="metric-label" style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{item.label}</div>
+                                <div className={`metric-value ${item.status}`} style={{ fontWeight: 600 }}>
                                     {item.value}
                                 </div>
                             </div>
@@ -87,7 +87,7 @@ const WealthHealthWidget = ({ score = 50, metrics }) => {
                     </div>
                 </Col>
             </Row>
-        </Card>
+        </div>
     );
 };
 

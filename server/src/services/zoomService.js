@@ -1,4 +1,13 @@
+/**
+ * DEPRECATED: This service is no longer used. 
+ * The application has migrated to Jitsi Meet for free/embedded meetings.
+ * Room generation is now handled directly in controllers.
+ */
+// Original Zoom Service code below (for reference if needed)
+/*
 const axios = require('axios');
+...
+*/
 const winston = require('winston');
 
 let cachedToken = null;

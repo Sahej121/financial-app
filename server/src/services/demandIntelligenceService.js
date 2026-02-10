@@ -75,12 +75,20 @@ class DemandIntelligenceService {
         - Documents: ${context.documents}
 
         TASK:
-        Classify the client's situation into these categories:
-        1. nuances: Array of strings (e.g., "TAX_OPTIMIZATION", "DEBT_DISTRESS", "SCALING_OPPORTUNITY", "LIQUIDITY_CRUNCH", "CAPITAL_PRESERVATION", "HIGH_GROWTH", "FAMILY_ESTATE").
+        Classify the client's situation and provide an executive summary that serves as a "Basic Answer" to their core financial demand.
+        The summary should be approximately 100-150 words, professional in tone, and address:
+        - The primary financial challenge or opportunity.
+        - Key data points from their documents that support this finding.
+        - Immediate actionable advice or "basic answers" for the analyst to discuss with the client.
+        
+        CRITICAL: All monetary values MUST use Indian Rupees (₹) unless specifically identified otherwise in the text. Do NOT use dollars ($).
+
+        JSON FIELDS:
+        1. nuances: Array of strings (e.g., "TAX_OPTIMIZATION", "DEBT_DISTRESS", "SCALING_OPPORTUNITY", "LIQUIDITY_CRUNCH", "CAPITAL_PRESERVATION", "HIGH_GROWTH").
         2. urgency: "HIGH", "MEDIUM", or "LOW".
         3. complexityLevel: "SIMPLE", "MODERATE", or "COMPLEX".
-        4. suggestedExpertise: Array of strings (e.g. "TAX_SPECIALIST", "DEBT_RESTRUCTURING_EXPERT", "WEALTH_MANAGER", "LEGAL_ADVISOR").
-        5. summary: A 1-sentence executive summary of their core need.
+        4. suggestedExpertise: Array of strings (e.g. "TAX_SPECIALIST", "DEBT_RESTRUCTURING_EXPERT", "WEALTH_MANAGER").
+        5. summary: The 100-150 word executive summary described above.
 
         JSON FORMAT:
         {

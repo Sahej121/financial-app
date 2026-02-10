@@ -1,6 +1,6 @@
 const { Meeting, User, Document, DocumentInsight, ActivityLog, FinancialPlanningSubmission } = require('../models');
 const { Op } = require('sequelize');
-const zoomService = require('../services/zoomService');
+// const zoomService = require('../services/zoomService'); // Removed for Jitsi
 
 // Get user's meetings (for clients)
 exports.getUserMeetings = async (req, res) => {
@@ -433,6 +433,11 @@ exports.updateMeetingStatus = async (req, res) => {
       updateData.completedAt = new Date();
     }
 
+    // Allow updating report content
+    if (req.body.reportContent) {
+      updateData.reportContent = req.body.reportContent;
+    }
+
     await meeting.update(updateData);
 
     // Step 7: Real-time Change Log
@@ -476,8 +481,8 @@ exports.updateMeetingStatus = async (req, res) => {
   }
 };
 
-// Generate Zoom meeting link (professional only)
-exports.generateZoomLink = async (req, res) => {
+// Generate Meeting Link (Jitsi Meet) - Free & Embedded
+exports.generateMeetingLink = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -489,7 +494,7 @@ exports.generateZoomLink = async (req, res) => {
       });
     }
 
-    // Only the assigned professional can generate Zoom links
+    // Only the assigned professional can generate links
     if (meeting.professionalId !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -497,32 +502,29 @@ exports.generateZoomLink = async (req, res) => {
       });
     }
 
-    // Use actual Zoom API to create meeting
-    const zoomDetails = await zoomService.createMeeting(
-      meeting.title || 'Financial Consultation',
-      meeting.startsAt.toISOString(),
-      Math.round((new Date(meeting.endsAt) - new Date(meeting.startsAt)) / 60000)
-    );
+    // Generate Jitsi Room ID
+    const roomName = `CreditLeliya-Consultation-${meeting.id}`;
+    const joinUrl = `https://meet.jit.si/${roomName}`;
 
     const updateData = {
-      zoomMeetingId: zoomDetails.id.toString(),
-      zoomJoinUrl: zoomDetails.joinUrl,
-      zoomStartUrl: zoomDetails.startUrl,
-      zoomPassword: zoomDetails.password
+      zoomMeetingId: roomName, // Storing room name in existing column for now
+      zoomJoinUrl: joinUrl,
+      zoomStartUrl: joinUrl,   // Jitsi doesn't verify start/join distinction
+      zoomPassword: ''         // Jitsi free doesn't require password by default
     };
 
     await meeting.update(updateData);
 
     res.json({
       success: true,
-      zoomDetails,
-      message: 'Zoom meeting link generated successfully'
+      meetingLink: joinUrl,
+      message: 'Meeting link generated successfully'
     });
   } catch (error) {
-    console.error('Generate Zoom link error:', error);
+    console.error('Generate Meeting link error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to generate Zoom link'
+      message: 'Failed to generate meeting link'
     });
   }
 };

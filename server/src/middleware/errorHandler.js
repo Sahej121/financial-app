@@ -45,6 +45,15 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Handle CSRF errors
+  if (err.code === 'EBADCSRFTOKEN' || err.message === 'invalid csrf token') {
+    return res.status(403).json({
+      success: false,
+      error: 'CSRF Error',
+      message: 'Security validation failed. Please refresh the page and try again.'
+    });
+  }
+
   // Final fallback
   const response = {
     success: false,

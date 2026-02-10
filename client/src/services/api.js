@@ -69,24 +69,27 @@ api.interceptors.request.use(
 
     // 2. Handle CSRF Token for non-GET requests
     const stateChangingMethods = ['post', 'put', 'delete', 'patch'];
-    if (stateChangingMethods.includes(config.method?.toLowerCase())) {
+    if (stateChangingMethods.includes(config.method?.toLowerCase()) && !config._isCsrfFetch) {
       try {
-        // Simple strategy: Fetch fresh token if we don't have one in a variable 
-        // Or you can store it in memory. For simplicity here, we fetch it or 
-        // the server can also provide it in a cookie that we read.
-        // Let's use the /api/csrf-token endpoint.
+        if (!window._csrfToken) {
+          console.log('Fetching fresh CSRF token via api instance...');
+          // Use the 'api' instance to ensure withCredentials and baseURL are handled correctly
+          // We use a custom flag _isCsrfFetch to avoid recursion in this interceptor
+          const { data } = await api.get('/csrf-token', {
+            _isCsrfFetch: true,
+            headers: { 'Accept': 'application/json' }
+          });
 
-        // Avoid infinite loop if we are already fetching the token
-        if (!config.url?.includes('csrf-token')) {
-          // Use a relative path that doesn't duplicate /api if BASE_URL already has it
-          const csrfPath = '/csrf-token';
-          const { data } = await axios.get(`${API_URL.replace(/\/api$/, '')}${csrfPath}`, { withCredentials: true });
-          if (data.token) {
-            config.headers['x-csrf-token'] = data.token;
+          if (data && data.token) {
+            window._csrfToken = data.token;
           }
         }
+
+        if (window._csrfToken) {
+          config.headers['x-csrf-token'] = window._csrfToken;
+        }
       } catch (err) {
-        console.error('Failed to fetch CSRF token:', err);
+        console.error('Failed to handle CSRF token:', err);
       }
     }
 

@@ -1,6 +1,7 @@
 const documentAnalysisService = require('../services/documentAnalysisService');
 const decisionPackService = require('../services/decisionPackService');
 const briefingService = require('../services/briefingService');
+const vectorStoreService = require('../services/vectorStoreService');
 const { Document, DocumentInsight } = require('../models');
 
 /**
@@ -22,6 +23,20 @@ exports.analyzeDocument = async (req, res) => {
         // Trigger async analysis (could be shifted to a worker queue if throughput is high)
         // For MVP, we'll wait for it or handle it in background depending on request type
         const insight = await documentAnalysisService.analyzeDocument(documentId, submissionId);
+
+        // --- RAG Ingestion ---
+        // We ingest the full document text into our vector store for chat capabilities
+        // Note: extracting text from 'document' or 'insight' depends on where the full text lives.
+        // Assuming 'documentAnalysisService' might return the text or we fetch it.
+        // For now, simpler: retrieve text if not provided.
+        // Actually, documentAnalysisService probably extracts text. We'll verify that file next.
+        // If extracted text is in the insight (e.g. extractedData), we can use it, but usually standard OCR text is needed.
+
+        // Temporarily, we will assume we can get the text. 
+        // IF documentAnalysisService returns { insight, fullText } that would be ideal.
+        // Let's assume for now we need to trigger it separately or it handles it.
+        // But for this edit, let's just add the call as if we had text.
+        // Real implementation: vectorStoreService.ingestDocument(fullText, { documentId, submissionId });
 
         res.json({
             success: true,

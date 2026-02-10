@@ -131,10 +131,12 @@ exports.extractBasicData = async (text, documentType) => {
     }
 
     // Determine if we can skip AI
-    if (data.confidenceScore >= 0.7) {
+    // We only skip if confidence is extremely high (near certain deterministic match)
+    // For bank statements and receipts, we almost always want AI insights for better UX
+    if (data.confidenceScore >= 0.95) {
         data.canSkipAI = true;
         data.summary = "High-confidence deterministic extraction completed.";
-    } else if (data.extractedData.ids.pan || data.extractedData.ids.aadhaar || data.extractedData.ids.gstin) {
+    } else if (documentType !== 'bank_statements' && (data.extractedData.ids.pan || data.extractedData.ids.aadhaar || data.extractedData.ids.gstin)) {
         data.canSkipAI = true;
         data.summary = "Identity document verified via ID numbers.";
         data.confidenceScore = Math.max(data.confidenceScore, 0.85);

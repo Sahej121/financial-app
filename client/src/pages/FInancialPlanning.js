@@ -31,7 +31,8 @@ import {
   RocketOutlined,
   SafetyOutlined,
   DollarOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  RobotOutlined
 } from '@ant-design/icons';
 import styled, { keyframes } from 'styled-components';
 import moment from 'moment';
@@ -410,6 +411,40 @@ const FinancialPlanning = () => {
   const [packModalVisible, setPackModalVisible] = useState(false);
   const [fetchingPack, setFetchingPack] = useState(false);
 
+  // Auto-fill Logic
+  const autoFillForm = async (docId) => {
+    try {
+      const res = await api.get(`/documents/${docId}/insights`);
+      if (res.data.insight && res.data.insight.extractedData) {
+        const data = res.data.insight.extractedData;
+        const updates = {};
+
+        // Map Bank Statement data to Planning fields
+        if (data.avgMonthlyBalance) updates.monthlyIncome = Math.round(data.avgMonthlyBalance);
+        if (data.totalCredits && !updates.monthlyIncome) updates.monthlyIncome = Math.round(data.totalCredits / 6); // Rough estimate if only total Credits for 6mo
+
+        if (data.loanEmis && data.loanEmis.length > 0) {
+          const totalEmi = data.loanEmis.reduce((sum, e) => sum + (e.emiAmount || e.amount || 0), 0);
+          updates.monthlyEMI = totalEmi;
+          updates.totalDebtAmount = totalEmi * 12; // Placeholder estimate
+        }
+
+        if (data.accountHolder) updates.fullName = data.accountHolder; // If we add name field
+
+        if (Object.keys(updates).length > 0) {
+          form.setFieldsValue(updates);
+          message.success({
+            content: 'Magic Ingestion: AI has pre-filled your profile from the document!',
+            icon: <RobotOutlined style={{ color: '#00B0F0' }} />,
+            duration: 5
+          });
+        }
+      }
+    } catch (e) {
+      console.log('Auto-fill check failed', e);
+    }
+  };
+
   // Restore state logic
   useEffect(() => {
     // Check if we have saved state
@@ -455,10 +490,10 @@ const FinancialPlanning = () => {
 
       // Generate time slots
       const slots = planners.flatMap((p) => [
-        { id: `${p.id}-1`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '10:00 AM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-2`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '2:00 PM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-3`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '11:00 AM', analyst: p.name, plannerId: p.id },
-        { id: `${p.id}-4`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '4:00 PM', analyst: p.name, plannerId: p.id }
+        { id: `${p.id}-1`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '10:00 AM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-2`, date: moment().add(1, 'days').format('YYYY-MM-DD'), time: '2:00 PM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-3`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '11:00 AM', analyst: p.name || 'Professional Analyst', plannerId: p.id },
+        { id: `${p.id}-4`, date: moment().add(2, 'days').format('YYYY-MM-DD'), time: '4:00 PM', analyst: p.name || 'Professional Analyst', plannerId: p.id }
       ]);
 
       setAvailableSlots(slots);
@@ -525,12 +560,12 @@ const FinancialPlanning = () => {
 
   const commonSteps = {
     documents: {
-      title: 'Documents',
+      title: 'Magic Ingestion',
       content: (
         <FormSection>
-          <div style={{ marginBottom: 32 }}>
-            <h2 style={{ color: 'white', marginBottom: 12 }}>Upload Documents (Optional)</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Our AI will analyze your documents to provide better insights.</p>
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
+            <h2 style={{ color: 'white', marginBottom: 12 }}>Scan Your Financial Story</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Upload a bank statement or financial report. Our AI will auto-fill your profile to save you time.</p>
           </div>
           <Upload.Dragger
             multiple
@@ -569,6 +604,8 @@ const FinancialPlanning = () => {
                     }
                     return next;
                   });
+                  // Trigger Auto-fill
+                  autoFillForm(docId);
                 }
               } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} upload failed.`);
@@ -878,10 +915,18 @@ const FinancialPlanning = () => {
 
   const getStepsForPurpose = () => {
     if (!planningPurpose) return [purposeSelectionStep];
+
+    // Core Refactor: Documents (Magic Ingestion) is ALWAYS the first step after purpose
+    const baseSteps = [purposeSelectionStep, commonSteps.documents];
+
     const specificSteps = planningPurpose === 'business_expansion' ? businessExpansionSteps
       : planningPurpose === 'loan_settlement' ? loanSettlementSteps
         : investmentSteps;
-    return [purposeSelectionStep, ...specificSteps, previewStep];
+
+    // Filter out the document step from specificSteps as it's now global Step 2
+    const filteredSpecific = specificSteps.filter(s => s.title !== 'Documents' && s.title !== 'Magic Ingestion');
+
+    return [...baseSteps, ...filteredSpecific, previewStep];
   };
 
   const steps = getStepsForPurpose();
@@ -942,8 +987,13 @@ const FinancialPlanning = () => {
         purpose: 'financial_planning_insights',
         referenceId: submissionData.id,
       }, async (paymentRes) => {
-        // On Success: Fetch the pack
+        // On Success: Refresh submission data to get updated isPaid status
         try {
+          const subRes = await api.get(`/financial-planning/submission/${submissionData.id}`);
+          if (subRes.data.success) {
+            setSubmissionData(subRes.data.submission);
+          }
+
           const response = await api.get(`/decision-packs/${submissionData.id}`);
           setPackData(response.data.data);
           setPackModalVisible(true);

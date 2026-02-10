@@ -1,7 +1,9 @@
+const vectorStoreService = require('./vectorStoreService');
 const ocrService = require('./ocrService');
 const classificationService = require('./classificationService');
 const extractionService = require('./extractionService');
 const systemExtractionService = require('./systemExtractionService');
+const templateExtractionService = require('./templateExtractionService');
 const validationService = require('./validationService');
 const logger = require('../utils/logger');
 const { Document, DocumentInsight, FinancialPlanningSubmission } = require('../models');
@@ -20,8 +22,12 @@ class DocumentAnalysisService {
         try {
             logger.info('Starting analysis pipeline', { documentId, submissionId });
 
-            // 1. Update status to processing
-            await document.update({ aiProcessingStatus: 'processing' });
+            // 1. Update status to processing and link to submission if provided
+            const updateData = { aiProcessingStatus: 'processing' };
+            if (submissionId && !document.submissionId) {
+                updateData.submissionId = submissionId;
+            }
+            await document.update(updateData);
 
             // 2. OCR / Text Extraction
             const filePath = path.join(__dirname, '../../', document.fileUrl.replace(/^\//, ''));
@@ -36,16 +42,28 @@ class DocumentAnalysisService {
             const classification = await classificationService.classifyDocument(text, document.fileName);
             const documentType = classification.type || document.category || 'other';
 
-            // 4. Extraction
-            // Try lightweight system extraction first
+            // 4. Extraction — Tiered Pipeline
+            // Tier 1: Lightweight system extraction (regex + keywords)
             let analysis = await systemExtractionService.extractBasicData(text, documentType);
 
-            // If system extraction is not enough, fallback to AI
+            // Tier 2: Template extraction (structured table parsing)
             if (!analysis.canSkipAI) {
-                logger.info('System extraction insufficient, calling AI', { documentId });
-                analysis = await extractionService.extractFinancialData(text, documentType);
+                logger.info('Tier 1 insufficient, trying Tier 2 template extraction', { documentId });
+                const templateResult = await templateExtractionService.extract(text, documentType, analysis);
+
+                if (templateResult.canSkipAI) {
+                    logger.info('Tier 2 template extraction sufficient — LLM skipped', {
+                        documentId, confidence: templateResult.confidenceScore
+                    });
+                    analysis = templateResult;
+                } else {
+                    // Tier 3: AI extraction (PII-scrubbed LLM call)
+                    logger.info('Tier 2 insufficient, falling to Tier 3 LLM extraction', { documentId });
+                    // Merge Tier 1+2 data forward so LLM has context
+                    analysis = await extractionService.extractFinancialData(text, documentType, submissionId);
+                }
             } else {
-                logger.info('System extraction successful, skipping AI API', { documentId });
+                logger.info('Tier 1 system extraction sufficient — LLM skipped', { documentId });
             }
 
             // 5. Validation
@@ -61,6 +79,7 @@ class DocumentAnalysisService {
                 summary: analysis.summary,
                 redFlags: analysis.redFlags || validation.warnings,
                 confidenceScore: (ocrConfidence + (analysis.confidenceScore || 0.8)) / 2,
+                metadata: analysis._meta || {}, // Persist RAG and provider info
                 processedAt: new Date()
             });
 
@@ -70,6 +89,21 @@ class DocumentAnalysisService {
                 aiProcessedAt: new Date(),
                 category: documentType // Update category if classified differently
             });
+
+            // 8. RAG Ingestion (Vector Embedding)
+            if (text && text.length > 50) {
+                try {
+                    await vectorStoreService.ingestDocument(text, {
+                        documentId: document.id,
+                        submissionId,
+                        fileName: document.fileName,
+                        type: documentType
+                    });
+                    logger.info('RAG Ingestion successful', { documentId });
+                } catch (ragError) {
+                    logger.error('RAG Ingestion failed (non-blocking)', { error: ragError.message });
+                }
+            }
 
             return insight;
 

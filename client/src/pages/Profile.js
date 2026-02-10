@@ -11,7 +11,7 @@ const ProfileContainer = styled.div`
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  background: #000;
+  background: var(--bg-base);
   min-height: 100vh;
   position: relative;
   overflow: hidden;
@@ -31,10 +31,10 @@ const ProfileContainer = styled.div`
 `;
 
 const ProfileCard = styled(Card)`
-  background: rgba(18, 18, 18, 0.8);
+  background: var(--bg-glass-heavy);
   backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--card-radius);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
@@ -66,9 +66,9 @@ const UserHeader = styled.div`
   text-align: center;
   margin-bottom: 32px;
   padding: 32px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+    .ant-card-head-title {
+      color: var(--text-primary);
+      font-size: 24px;
 `;
 
 const UserAvatar = styled(Avatar)`
@@ -93,7 +93,7 @@ const RoleTag = styled(Tag)`
 const StyledDescriptions = styled(Descriptions)`
   .ant-descriptions-item-label {
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     font-size: 15px;
     background: transparent !important;
     padding: 16px 0 !important;
@@ -102,14 +102,14 @@ const StyledDescriptions = styled(Descriptions)`
 
   .ant-descriptions-item-content {
     font-size: 16px;
-    color: white;
+    color: var(--text-primary);
     padding: 16px 0 !important;
     background: transparent !important;
     border: none !important;
   }
 
   .ant-descriptions-row > td {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-bottom: 1px solid var(--border-secondary) !important;
   }
 
   .ant-descriptions-item {

@@ -60,6 +60,8 @@ const WealthMonitor = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [logicModalVisible, setLogicModalVisible] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -136,8 +138,16 @@ const WealthMonitor = () => {
             key: 'analysis',
             render: (_, record) => (
                 <Space direction="vertical" size={0}>
-                    <Tag color={record.isAvoidable ? 'error' : 'success'}>
+                    <Tag
+                        color={record.isAvoidable ? 'error' : 'success'}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                            setSelectedEntry(record);
+                            setLogicModalVisible(true);
+                        }}
+                    >
                         {record.isAvoidable ? 'Avoidable' : 'Essential'}
+                        <RobotOutlined style={{ marginLeft: 4, fontSize: '10px' }} />
                     </Tag>
                     {record.itrRelevance !== 'None' && record.itrRelevance && (
                         <Tag color="blue" style={{ marginTop: 4 }}>{record.itrRelevance}</Tag>
@@ -247,12 +257,82 @@ const WealthMonitor = () => {
                                             ? "Your luxury spending is slightly high this month. Consider moving 'Avoidable' funds into your Debt-Repayment SIP."
                                             : "Great job! Your spending is focused on essentials. Keep maintaining this surplus for your long-term goals."}
                                     </Paragraph>
+                                    <Button
+                                        type="link"
+                                        size="small"
+                                        style={{ padding: 0, marginTop: 8, color: '#00B0F0' }}
+                                        onClick={() => {
+                                            Modal.info({
+                                                title: 'AI Logic Trace',
+                                                content: (
+                                                    <div>
+                                                        <Paragraph>This tip is based on your <b>{stats?.avoidablePercentage}%</b> avoidable spending ratio.</Paragraph>
+                                                        <Paragraph>The AI identifies <b>{Object.keys(stats?.categories || {}).join(', ')}</b> categories from your scanned receipts to calculate this threshold.</Paragraph>
+                                                        <Text type="secondary">Threshold: {'>'}20% triggers rebalancing advice.</Text>
+                                                    </div>
+                                                ),
+                                                className: 'glass-modal',
+                                                centered: true,
+                                                icon: <RobotOutlined />
+                                            });
+                                        }}
+                                    >
+                                        Why this tip?
+                                    </Button>
                                 </div>
                             </Space>
                         </AdviceCard>
                     </Space>
                 </Col>
             </Row>
+
+            <Modal
+                title={<Space><RobotOutlined style={{ color: '#00B0F0' }} /> Logic Trace: AI Decision</Space>}
+                open={logicModalVisible}
+                onCancel={() => setLogicModalVisible(false)}
+                footer={[
+                    <Button key="close" onClick={() => setLogicModalVisible(false)}>Close</Button>
+                ]}
+                centered
+                bodyStyle={{ padding: '24px' }}
+            >
+                {selectedEntry && (
+                    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                        <div>
+                            <Text type="secondary" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Reasoning for "{selectedEntry.isAvoidable ? 'Avoidable' : 'Essential'}" Flag</Text>
+                            <Paragraph style={{ color: 'white', fontSize: '16px', marginTop: 8 }}>
+                                {selectedEntry.aiAdvice}
+                            </Paragraph>
+                        </div>
+
+                        <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>Data Points Extracted:</Text>
+                            <List size="small">
+                                <List.Item style={{ border: 'none', padding: '4px 0' }}>
+                                    <Text type="secondary">Merchant:</Text> <Text style={{ color: 'white' }}>{selectedEntry.merchantName}</Text>
+                                </List.Item>
+                                <List.Item style={{ border: 'none', padding: '4px 0' }}>
+                                    <Text type="secondary">Amount:</Text> <Text style={{ color: 'white' }}>₹{selectedEntry.amount}</Text>
+                                </List.Item>
+                                <List.Item style={{ border: 'none', padding: '4px 0' }}>
+                                    <Text type="secondary">Category:</Text> <Tag color="blue">{selectedEntry.category}</Tag>
+                                </List.Item>
+                                <List.Item style={{ border: 'none', padding: '4px 0' }}>
+                                    <Text type="secondary">ITR Relevance:</Text> <Tag>{selectedEntry.itrRelevance}</Tag>
+                                </List.Item>
+                            </List>
+                        </div>
+
+                        <div>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                                This decision was made by the Llama-3-70B model based on the extracted text:
+                                <br />
+                                <i style={{ opacity: 0.6 }}>"{selectedEntry.rawOcrText?.substring(0, 100)}..."</i>
+                            </Text>
+                        </div>
+                    </Space>
+                )}
+            </Modal>
         </MonitorContainer>
     );
 };

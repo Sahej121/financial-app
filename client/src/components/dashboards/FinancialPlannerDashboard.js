@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Tabs, Card, Statistic, Badge, Typography } from 'antd';
-import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, FileTextOutlined, SafetyCertificateOutlined, WarningOutlined, CheckCircleOutlined, DollarCircleOutlined, AuditOutlined } from '@ant-design/icons';
+import { Row, Col, Table, Button, Tag, Space, Avatar, message, Modal, Form, Select, Input, Tabs, Card, Statistic, Typography } from 'antd';
+import { UserOutlined, VideoCameraOutlined, EyeOutlined, EditOutlined, ReloadOutlined, RobotOutlined, FileTextOutlined, SafetyCertificateOutlined, CheckCircleOutlined, DollarCircleOutlined } from '@ant-design/icons';
 import { Pie, Area, Column } from '@ant-design/plots';
 import moment from 'moment';
 import api from '../../services/api';
@@ -13,7 +13,7 @@ import DocumentPreviewModal from '../analyst/DocumentPreviewModal';
 const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 // Helper to download CSV
 const downloadCSV = (content, fileName) => {
@@ -38,17 +38,28 @@ const FinancialPlannerDashboard = () => {
       aum: 12500000,
       activeClients: 0,
       meetingsToday: 0,
-      satisfaction: 4.9
+      satisfaction: 4.9,
+      reputation: {
+        trustScore: 50,
+        competenceScore: 0,
+        outcomeScore: 0,
+        totalCompletedCases: 0
+      }
     },
     aiInsights: []
   });
 
+  const [refreshing, setRefreshing] = useState(false);
+
+  // AI Prep State
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [selectedMeetingInsights, setSelectedMeetingInsights] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Document Review State
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [reviewForm] = Form.useForm();
 
   // Report Writing State
   const [reportModalVisible, setReportModalVisible] = useState(false);
@@ -59,9 +70,12 @@ const FinancialPlannerDashboard = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
 
-  const [reviewForm] = Form.useForm();
+  // Client Submission View State
   const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+
+  // Outcome Logging State
+  const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
+  const [selectedMeetingForOutcome, setSelectedMeetingForOutcome] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -78,9 +92,6 @@ const FinancialPlannerDashboard = () => {
         api.get('/meetings/professional?role=financial_planner&upcoming=false&limit=10').catch(() => ({ data: { meetings: [] } }))
       ]);
 
-      console.log('Past Meetings Data:', pastMeetingsRes.data);
-      console.log('Documents Data:', documentsRes.data);
-
       setData({
         meetings: meetingsRes.data.meetings || [],
         pastMeetings: pastMeetingsRes.data.meetings || [],
@@ -89,7 +100,7 @@ const FinancialPlannerDashboard = () => {
           ...statsRes.data,
           meetingsToday: meetingsRes.data.meetings?.filter(m => moment(m.startsAt).isSame(moment(), 'day')).length || 0,
           activeClients: new Set(meetingsRes.data.meetings?.map(m => m.client?.id)).size || 0,
-          aum: statsRes.data?.aum || 12500000 // Ensure fallback
+          aum: statsRes.data?.aum || 12500000
         }
       });
       if (isRefresh) message.success('Dashboard data synchronized');
@@ -104,33 +115,15 @@ const FinancialPlannerDashboard = () => {
   const handleExport = () => {
     try {
       message.loading({ content: 'Generating report...', key: 'export' });
-
       let csv = 'ANALYST DASHBOARD REPORT\n';
       csv += `Generated: ${moment().format('MMMM Do YYYY, h:mm:ss a')}\n\n`;
-
       csv += '--- PRIMARY KPIs ---\n';
       csv += `AUM (Estimated),${(data.stats.aum / 10000000).toFixed(2)} Cr\n`;
       csv += `Active Clients,${data.stats.activeClients}\n`;
-      csv += `Meetings Today,${data.stats.meetingsToday}\n`;
-      csv += `Client Satisfaction,${data.stats.satisfaction}/5.0\n\n`;
-
-      csv += '--- UPCOMING MEETINGS ---\n';
-      csv += 'Client,Goal,Urgency,Starts At\n';
-      data.meetings.forEach(m => {
-        csv += `${m.client?.name || 'N/A'},${m.engagementPurpose},${m.timeSensitivity},${moment(m.startsAt).format('YYYY-MM-DD HH:mm')}\n`;
-      });
-      csv += '\n';
-
-      csv += '--- PENDING DOCUMENTS ---\n';
-      csv += 'File Name,Client,Status\n';
-      data.documents.forEach(d => {
-        csv += `${d.fileName},${d.owner?.name || 'N/A'},${d.status}\n`;
-      });
-
+      csv += `Trust Score,${data.stats.reputation?.trustScore || 'N/A'}\n\n`;
       downloadCSV(csv, `Analyst_Report_${moment().format('YYYYMMDD')}.csv`);
       message.success({ content: 'Report exported successfully', key: 'export' });
     } catch (error) {
-      console.error('Export failed:', error);
       message.error({ content: 'Failed to export report', key: 'export' });
     }
   };
@@ -139,12 +132,10 @@ const FinancialPlannerDashboard = () => {
     try {
       setAiLoading(true);
       setAiModalVisible(true);
-      console.log('Selected Meeting Submission:', meeting.submission);
       setSelectedSubmission(meeting.submission);
       const res = await api.get(`/documents/submission/${meeting.submissionId}/snapshot`);
       setSelectedMeetingInsights(res.data.insights || []);
     } catch (error) {
-      console.error('Error loading AI insights:', error);
       message.error('Failed to load AI intelligence for this client');
     } finally {
       setAiLoading(false);
@@ -162,21 +153,42 @@ const FinancialPlannerDashboard = () => {
 
   const handleReportSubmit = async (values) => {
     try {
-      // Assuming endpoint to update meeting details
       await api.patch(`/meetings/${selectedMeetingForReport.id}`, {
         reportContent: values.reportContent,
         rating: values.rating
       });
       message.success('Report saved successfully');
       setReportModalVisible(false);
-      loadDashboardData(); // Refresh to show updated data
+      loadDashboardData();
     } catch (error) {
-      console.error('Error saving report:', error);
       message.error('Failed to save report');
     }
   };
 
-  // --- Charts Config ---
+  const handleLogOutcome = (meeting) => {
+    setSelectedMeetingForOutcome(meeting);
+    setOutcomeModalVisible(true);
+  };
+
+  const submitOutcome = async (values) => {
+    try {
+      const response = await api.post('/financial-planners/outcomes', {
+        clientId: selectedMeetingForOutcome.client?.id,
+        meetingId: selectedMeetingForOutcome.id,
+        adviceType: selectedMeetingForOutcome.planningType || 'financial_planning',
+        ...values
+      });
+
+      if (response.status === 201) {
+        message.success('Outcome logged. Trust Score updating...');
+        setOutcomeModalVisible(false);
+        loadDashboardData();
+      }
+    } catch (error) {
+      message.error('Failed to log outcome');
+    }
+  };
+
   const aumConfig = {
     data: data.stats.aumHistory || [],
     xField: 'month',
@@ -215,7 +227,6 @@ const FinancialPlannerDashboard = () => {
     setPreviewVisible(true);
   };
 
-  // --- Table Columns ---
   const meetingColumns = [
     {
       title: 'Client',
@@ -232,24 +243,8 @@ const FinancialPlannerDashboard = () => {
       title: 'Goal',
       dataIndex: 'engagementPurpose',
       width: 100,
-      render: (purpose) => {
-        const labels = {
-          tax_filing: 'Tax Filing',
-          loan_expansion: 'Loan/Expansion',
-          compliance_cleanup: 'Compliance',
-          advisory: 'Advisory'
-        };
-        return <Tag color="gold" style={{ fontSize: '11px', margin: 0 }}>{labels[purpose] || 'Review'}</Tag>;
-      }
-    },
-    {
-      title: 'Urgency',
-      dataIndex: 'timeSensitivity',
-      width: 100,
-      render: (urgency) => (
-        <Tag color={urgency === 'deadline_driven' ? 'red' : 'green'} style={{ fontSize: '11px', margin: 0 }}>
-          {urgency === 'deadline_driven' ? 'URGENT' : 'STANDARD'}
-        </Tag>
+      render: (purpose) => (
+        <Tag color="gold" style={{ fontSize: '11px', margin: 0 }}>{purpose || 'Review'}</Tag>
       )
     },
     {
@@ -257,12 +252,6 @@ const FinancialPlannerDashboard = () => {
       dataIndex: 'startsAt',
       width: 120,
       render: (time) => <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>{moment(time).format('MMM DD, HH:mm')}</span>
-    },
-    {
-      title: 'Payment',
-      dataIndex: 'transactionId',
-      width: 100,
-      render: (tid) => <Tag color={tid ? 'success' : 'warning'}>{tid ? 'PAID' : 'PENDING'}</Tag>
     },
     {
       title: 'Action',
@@ -274,13 +263,7 @@ const FinancialPlannerDashboard = () => {
             type="primary"
             size="small"
             icon={<VideoCameraOutlined />}
-            onClick={() => {
-              if (record.zoomStartUrl) {
-                window.open(record.zoomStartUrl, '_blank');
-              } else {
-                message.warning('Zoom link not generated for this meeting yet.');
-              }
-            }}
+            onClick={() => window.open(record.zoomStartUrl || '#', '_blank')}
             style={{ background: '#00B0F0', fontSize: '11px', borderColor: '#00B0F0' }}
           >
             Join
@@ -335,7 +318,6 @@ const FinancialPlannerDashboard = () => {
             icon={<EyeOutlined />}
             size="small"
             onClick={() => handlePreview(record)}
-            title="Preview Document"
             style={{ background: 'rgba(0, 176, 240, 0.1)', color: '#00B0F0', borderColor: 'rgba(0, 176, 240, 0.3)' }}
           />
           <Button
@@ -343,7 +325,6 @@ const FinancialPlannerDashboard = () => {
             icon={<EditOutlined />}
             size="small"
             onClick={() => { setSelectedDocument(record); setReviewModalVisible(true); }}
-            title="Review Document"
           />
         </Space>
       )
@@ -374,6 +355,51 @@ const FinancialPlannerDashboard = () => {
       </div>
 
       <Row gutter={[24, 24]}>
+        {/* NEW: Reputation & Trust Score Card */}
+        <Col span={24}>
+          <Card className="widget-card reputation-card" title="Reputation & Impact" bordered={false}>
+            <Row gutter={16}>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Trust Score"
+                  value={data.stats.reputation?.trustScore || 50}
+                  precision={1}
+                  valueStyle={{ color: '#faad14' }}
+                  prefix={<SafetyCertificateOutlined />}
+                  suffix="/ 100"
+                />
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: 5 }}>
+                  Based on competence, outcomes & speed
+                </div>
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Competence"
+                  value={data.stats.reputation?.competenceScore || 0}
+                  precision={0}
+                  suffix="%"
+                  valueStyle={{ color: '#fff' }}
+                />
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Client Outcomes"
+                  value={data.stats.reputation?.outcomeScore || 0}
+                  precision={0}
+                  valueStyle={{ color: '#52c41a' }}
+                />
+              </Col>
+              <Col xs={24} sm={6}>
+                <Statistic
+                  title="Completed Cases"
+                  value={data.stats.reputation?.totalCompletedCases || 0}
+                  valueStyle={{ color: '#fff' }}
+                />
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+
         <Col xs={24} sm={12} lg={6}>
           <Card className="kpi-card blue" bordered={false}>
             <div className="kpi-icon-wrapper blue">
@@ -417,7 +443,6 @@ const FinancialPlannerDashboard = () => {
       </Row>
 
       <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
-        {/* Charts Row */}
         <Col xs={24} lg={16}>
           <Card className="chart-container widget-card" title="Portfolio Growth (AUM)" bordered={false}>
             <Area {...aumConfig} height={300} />
@@ -429,8 +454,6 @@ const FinancialPlannerDashboard = () => {
           </Card>
         </Col>
 
-        {/* Third Row - Main Tables */}
-        {/* Third Row - Main Tables */}
         <Col span={24}>
           <Card className="widget-card" bordered={false} bodyStyle={{ padding: 0 }}>
             <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 24px' }}>
@@ -460,24 +483,35 @@ const FinancialPlannerDashboard = () => {
                         render: s => <Tag color={s === 'completed' ? 'green' : 'default'}>{s ? s.toUpperCase() : 'UNKNOWN'}</Tag>
                       },
                       {
-                        title: 'Report',
-                        key: 'report',
+                        title: 'Action',
+                        key: 'action',
                         fixed: 'right',
-                        width: 100,
+                        width: 200,
                         render: (_, record) => (
-                          <Button
-                            size="small"
-                            type={record.reportContent ? 'default' : 'primary'}
-                            ghost={!!record.reportContent}
-                            icon={<EditOutlined />}
-                            onClick={() => openReportModal(record)}
-                            style={record.reportContent ?
-                              { borderColor: 'rgba(255,255,255,0.3)', color: 'white' } :
-                              { background: '#00B0F0', border: 'none' }
-                            }
-                          >
-                            {record.reportContent ? 'Edit' : 'Write'}
-                          </Button>
+                          <Space>
+                            <Button
+                              size="small"
+                              type={record.reportContent ? 'default' : 'primary'}
+                              ghost={!!record.reportContent}
+                              icon={<EditOutlined />}
+                              onClick={() => openReportModal(record)}
+                              style={record.reportContent ?
+                                { borderColor: 'rgba(255,255,255,0.3)', color: 'white' } :
+                                { background: '#00B0F0', border: 'none' }
+                              }
+                            >
+                              {record.reportContent ? 'Edit' : 'Write'}
+                            </Button>
+                            <Button
+                              size="small"
+                              type="text"
+                              icon={<CheckCircleOutlined />}
+                              style={{ color: '#52c41a', background: 'rgba(82, 196, 26, 0.1)', borderColor: '#52c41a' }}
+                              onClick={() => handleLogOutcome(record)}
+                            >
+                              Outcome
+                            </Button>
+                          </Space>
                         )
                       }
                     ]}
@@ -506,7 +540,6 @@ const FinancialPlannerDashboard = () => {
           </Card>
         </Col>
 
-        {/* Fourth Row - Secondary Chart */}
         <Col span={24}>
           <Card className="chart-container widget-card" title="New Client Acquisition Trends" bordered={false}>
             <Column {...acquisitionConfig} height={200} />
@@ -546,7 +579,6 @@ const FinancialPlannerDashboard = () => {
         </Form>
       </Modal>
 
-      {/* Report Writing Modal */}
       <Modal
         title={
           <Space>
@@ -615,10 +647,7 @@ const FinancialPlannerDashboard = () => {
         closeIcon={<CloseOutlined style={{ color: 'white' }} />}
       >
         <Tabs defaultActiveKey="1" className="ai-prep-tabs">
-          <TabPane
-            tab={<span><RobotOutlined /> Intelligent Briefing</span>}
-            key="1"
-          >
+          <TabPane tab={<span><RobotOutlined /> Intelligent Briefing</span>} key="1">
             {selectedSubmission?.id && <BriefingPanel submissionId={selectedSubmission.id} />}
             <ClientSnapshot insights={selectedMeetingInsights} loading={aiLoading} />
             <div style={{ marginTop: '24px' }}>
@@ -628,10 +657,7 @@ const FinancialPlannerDashboard = () => {
               />
             </div>
           </TabPane>
-          <TabPane
-            tab={<span><FileTextOutlined /> Client Submission Data (Report)</span>}
-            key="2"
-          >
+          <TabPane tab={<span><FileTextOutlined /> Client Submission Data (Report)</span>} key="2">
             {selectedSubmission ? (
               <ClientSubmissionReport submission={selectedSubmission} />
             ) : (
@@ -658,6 +684,32 @@ const FinancialPlannerDashboard = () => {
             background: #00B0F0;
           }
         `}} />
+      </Modal>
+
+      <Modal
+        title="Log Outcome & Impact"
+        visible={outcomeModalVisible}
+        onCancel={() => setOutcomeModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          layout="vertical"
+          onFinish={submitOutcome}
+          initialValues={{ outcomeScore: 8 }}
+        >
+          <Form.Item label="Outcome Score (1-10)" name="outcomeScore" rules={[{ required: true }]}>
+            <Input type="number" min={1} max={10} />
+          </Form.Item>
+          <Form.Item label="Financial Impact (₹)" name="financialImpact" help="Estimated savings or value generated">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Advice Summary" name="adviceSummary" rules={[{ required: true }]}>
+            <TextArea rows={3} placeholder="Briefly describe the key recommendation..." />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block style={{ background: '#52c41a', borderColor: '#52c41a' }}>
+            Submit & Close Loop
+          </Button>
+        </Form>
       </Modal>
 
       <DocumentPreviewModal

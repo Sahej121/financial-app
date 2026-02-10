@@ -78,6 +78,7 @@ const financialPlannerController = require('../controllers/financialPlannerContr
 router.get('/financial-planners', financialPlannerController.getFinancialPlanners);
 router.post('/financial-planners', financialPlannerController.createFinancialPlanner);
 router.get('/financial-planners/stats', financialPlannerController.getAnalystStats);
+router.post('/financial-planners/outcomes', authController.auth, financialPlannerController.createOutcome);
 
 // Credit Card Submissions routes
 const creditCardSubmissionRoutes = require('./creditCardSubmissions');

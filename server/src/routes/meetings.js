@@ -35,7 +35,7 @@ router.patch('/:id/status',
 router.post('/:id/zoom-link',
   auth,
   requireRole(['ca', 'financial_planner']),
-  meetingController.generateZoomLink
+  meetingController.generateMeetingLink
 );
 
 // Generate professional pre-call briefing

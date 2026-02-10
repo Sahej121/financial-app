@@ -55,6 +55,33 @@ module.exports = (sequelize) => {
             type: DataTypes.BOOLEAN,
             defaultValue: true
         },
+        // Reputation System Fields
+        trustScore: {
+            type: DataTypes.DECIMAL(5, 2),
+            defaultValue: 50.00,
+            comment: 'Composite 0-100 score'
+        },
+        competenceScore: {
+            type: DataTypes.DECIMAL(5, 2),
+            defaultValue: 0.00
+        },
+        responsivenessScore: {
+            type: DataTypes.DECIMAL(5, 2),
+            defaultValue: 0.00
+        },
+        outcomeScore: {
+            type: DataTypes.DECIMAL(5, 2),
+            defaultValue: 0.00
+        },
+        consistencyScore: {
+            type: DataTypes.DECIMAL(5, 2),
+            defaultValue: 0.00
+        },
+        verifiedSpecializations: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            comment: 'Specializations with depth scores > threshold'
+        },
         // Analyst specific fields
         aum: {
             type: DataTypes.DECIMAL(15, 2), // Assets Under Management (Mock)
