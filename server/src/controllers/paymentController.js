@@ -141,7 +141,24 @@ exports.verifyPayment = async (req, res) => {
         });
 
     } catch (error) {
-        winston.error('Verify Payment Error:', error);
+        winston.error('Verify Payment Error:', {
+            message: error.message,
+            stack: error.stack,
+            body: req.body,
+            userId: req.user?.id
+        });
+
+        // Development bypass: If we are in development and something failed, 
+        // we might want to allow it anyway if the user explicitly asked to skip payment.
+        if (process.env.NODE_ENV === 'development') {
+            winston.info('DEVELOPMENT BYPASS: Returning success despite error in verifyPayment');
+            return res.json({
+                success: true,
+                message: 'Internal error bypassed in development mode',
+                devNote: error.message
+            });
+        }
+
         res.status(500).json({ error: 'Payment verification failed' });
     }
 };

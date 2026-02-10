@@ -161,6 +161,22 @@ const gstApi = {
     validateGSTIN: async (gstin) => {
         const response = await api.get('/gst/validate-gstin', { params: { gstin } });
         return response.data;
+    },
+
+    // ============== REPORTS ==============
+    getReportingClients: async () => {
+        const response = await api.get('/gst/reports/clients');
+        return response.data;
+    },
+
+    createReport: async (reportData) => {
+        const response = await api.post('/gst/reports', reportData);
+        return response.data;
+    },
+
+    getReports: async () => {
+        const response = await api.get('/gst/reports');
+        return response.data;
     }
 };
 

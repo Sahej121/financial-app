@@ -8,6 +8,6 @@ exports.registerValidation = [
 ];
 
 exports.loginValidation = [
-    body('email').isEmail().withMessage('Invalid email format'),
+    body('email').trim().isEmail().withMessage('Invalid email format'),
     body('password').notEmpty().withMessage('Password is required'),
 ];

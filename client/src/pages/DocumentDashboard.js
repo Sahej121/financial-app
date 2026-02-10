@@ -15,13 +15,7 @@ const DashboardContainer = styled.div`
 `;
 
 const InsightCard = styled(Card)`
-  background: rgba(20, 20, 20, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   margin-bottom: 24px;
-  
-  .ant-card-head-title {
-    color: white;
-  }
 `;
 
 const DocumentDashboard = () => {
@@ -357,7 +351,13 @@ const DocumentDashboard = () => {
                 {analyzing ? (
                     <div style={{ textAlign: 'center', padding: 40 }}>
                         <Spin size="large" />
-                        <p style={{ marginTop: 16 }}>Analyzing document structure and extracting financial data...</p>
+                        <p style={{ marginTop: 16 }}>
+                            <SyncOutlined spin style={{ marginRight: 8, color: '#00B0F0' }} />
+                            {insightModalVisible ? 'Retrieving cross-document context and knowledge base rules...' : 'Analyzing document structure and extracting financial data...'}
+                        </p>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                            Powered by RAG Intelligence
+                        </p>
                     </div>
                 ) : insights ? (
                     <div style={{ padding: 8 }}>
@@ -376,6 +376,13 @@ const DocumentDashboard = () => {
                             </Col>
                             <Col span={16}>
                                 <Text strong>Document Type:</Text> <Tag color="blue">{insights.insightType.toUpperCase()}</Tag>
+                                <div style={{ marginTop: 8 }}>
+                                    <Text strong>Intelligence Layer: </Text>
+                                    <Tag color="green">Basic Analysis</Tag>
+                                    {(insights.metadata?.hasRagContext || insights._meta?.hasRagContext) && (
+                                        <Tag color="cyan" icon={<RobotOutlined />}>RAG Enhanced</Tag>
+                                    )}
+                                </div>
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong>Validation Status: </Text>
                                     <Tag color="green">Valid Format</Tag>

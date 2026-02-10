@@ -172,10 +172,10 @@ const FormSection = styled.div`
 `;
 
 const StyledInput = styled(Input)`
-  height: 56px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  height: var(--input-height);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
   color: white;
   font-size: 16px;
   padding: 0 20px;
@@ -183,18 +183,18 @@ const StyledInput = styled(Input)`
   font-family: 'Inter', sans-serif;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--input-bg-hover);
+    border-color: var(--input-border-hover);
   }
 
   &:focus {
     background: rgba(0, 0, 0, 0.4);
-    border-color: #00B0F0;
-    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1);
+    border-color: var(--input-border-focus);
+    box-shadow: var(--input-focus-shadow);
   }
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: var(--text-muted);
   }
 `;
 
@@ -202,10 +202,10 @@ const StyledSelect = styled(Select)`
   width: 100%;
   
   .ant-select-selector {
-    height: 56px !important;
-    background: rgba(0, 0, 0, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
+    height: var(--input-height) !important;
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: var(--input-radius) !important;
     display: flex !important;
     align-items: center !important;
     padding: 0 20px !important;
@@ -219,7 +219,7 @@ const StyledSelect = styled(Select)`
   }
 
   .ant-select-selection-placeholder {
-    color: rgba(255, 255, 255, 0.25) !important;
+    color: var(--text-muted) !important;
     font-size: 16px;
   }
 
@@ -228,13 +228,13 @@ const StyledSelect = styled(Select)`
   }
 
   &:hover .ant-select-selector {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
+    background: var(--input-bg-hover) !important;
+    border-color: var(--input-border-hover) !important;
   }
 
   &.ant-select-focused .ant-select-selector {
-    border-color: #00B0F0 !important;
-    box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1) !important;
+    border-color: var(--input-border-focus) !important;
+    box-shadow: var(--input-focus-shadow) !important;
   }
   
   &.ant-select-multiple .ant-select-selection-item {
@@ -307,22 +307,21 @@ const TimeSlotCard = styled.div`
 `;
 
 const NextButton = styled(Button)`
-  height: 60px;
-  border-radius: 30px;
-  font-size: 1.2rem;
-  font-weight: 600;
+  height: var(--input-height);
+  border-radius: var(--input-radius);
+  font-size: 1.1rem;
+  font-weight: 700;
   padding: 0 48px;
-  background: #00B0F0;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
   border: none;
-  color: black;
-  box-shadow: 0 8px 25px rgba(0, 176, 240, 0.3);
+  color: white !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
   margin-top: 40px;
+  transition: all 0.3s ease;
   
   &:hover {
     transform: translateY(-2px);
-    background: white;
-    color: black;
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
   }
 
   &:disabled {
@@ -422,12 +421,13 @@ const FinancialPlanning = () => {
 
     if (savedState && token) {
       try {
-        const { formData, purpose, step } = JSON.parse(savedState);
+        const { formData, purpose, step, docIds } = JSON.parse(savedState);
 
         // Restore
-        form.setFieldsValue(formData);
+        if (formData) form.setFieldsValue(formData);
         if (purpose) setPlanningPurpose(purpose);
         if (step) setCurrentStep(step);
+        if (docIds) setUploadedDocumentIds(docIds);
 
         message.success('Welcome back! Your progress has been restored.');
 
@@ -535,17 +535,44 @@ const FinancialPlanning = () => {
           <Upload.Dragger
             multiple
             name="file"
-            action="/api/documents/upload"
-            data={{
-              category: planningPurpose === 'business_expansion' ? 'financial_statements' : 'bank_statements'
+            customRequest={async ({ file, onSuccess, onError }) => {
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('category', planningPurpose === 'business_expansion' ? 'financial_statements' : 'bank_statements');
+
+              try {
+                const response = await api.post('/documents/upload', formData, {
+                  headers: {
+                    'Content-Type': 'multipart/form-data',
+                  },
+                });
+                onSuccess(response.data, file);
+              } catch (error) {
+                onError(error);
+              }
             }}
-            headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
             onChange={(info) => {
               if (info.file.status === 'done') {
                 message.success(`${info.file.name} uploaded successfully`);
-                setUploadedDocumentIds(prev => [...prev, info.file.response.document.id]);
+                // The response structure might depend on how axios returns it vs how antd expects it in onSuccess
+                // api.post returns { data: ... }. In onSuccess(response.data), info.file.response will be response.data.
+                const docId = info.file.response?.document?.id || info.file.response?.data?.document?.id;
+                if (docId) {
+                  setUploadedDocumentIds(prev => {
+                    const next = [...prev, docId];
+                    // Update session storage if it exists
+                    const saved = sessionStorage.getItem('pendingFinancialPlan');
+                    if (saved) {
+                      const constParsed = JSON.parse(saved);
+                      constParsed.docIds = next;
+                      sessionStorage.setItem('pendingFinancialPlan', JSON.stringify(constParsed));
+                    }
+                    return next;
+                  });
+                }
               } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} upload failed.`);
+                console.error('Upload error:', info.file.error);
               }
             }}
             style={{
@@ -965,7 +992,8 @@ const FinancialPlanning = () => {
           const stateToSave = {
             formData,
             purpose: planningPurpose,
-            step: currentStep
+            step: currentStep,
+            docIds: uploadedDocumentIds
           };
           sessionStorage.setItem('pendingFinancialPlan', JSON.stringify(stateToSave));
 

@@ -45,6 +45,16 @@
   /* Glassmorphism */
   --glass-blur: 12px;
 
+  /* Premium UI Tokens */
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --input-bg-hover: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-border-hover: rgba(255, 255, 255, 0.2);
+  --input-border-focus: var(--primary-color);
+  --input-focus-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+  --input-radius: 14px;
+  --input-height: 52px;
+
   /* Spacing (8px grid) */
   --space-1: 8px;
   --space-2: 16px;
@@ -102,24 +112,31 @@ h6 {
 }
 
 .ant-btn-primary {
-  background: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+  border: none !important;
   color: white !important;
   font-weight: 600;
+  height: var(--input-height);
+  border-radius: var(--input-radius) !important;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease !important;
 }
 
 .ant-btn-primary:hover {
-  background: var(--primary-hover) !important;
-  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.3);
 }
 
 .ant-btn {
+  border-radius: var(--input-radius) !important;
+  height: var(--input-height);
   color: white !important;
+  font-weight: 500;
 }
 
 .ant-btn-default {
   background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .ant-input,
@@ -127,14 +144,39 @@ h6 {
 .ant-picker,
 .ant-select-selector,
 .ant-input-number {
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-primary) !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
   color: var(--text-primary) !important;
+  border-radius: var(--input-radius) !important;
+  height: var(--input-height) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-input-affix-wrapper input {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-input:hover,
+.ant-input:focus,
+.ant-input-affix-wrapper:hover,
+.ant-input-affix-wrapper-focused,
+.ant-select-selector:hover {
+  background: var(--input-bg-hover) !important;
+  border-color: var(--input-border-hover) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--input-border-focus) !important;
+  box-shadow: var(--input-focus-shadow) !important;
 }
 
 .ant-input::placeholder,
 .ant-select-selection-placeholder {
-  color: var(--text-tertiary) !important;
+  color: var(--text-muted) !important;
 }
 
 .ant-table {

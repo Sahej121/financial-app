@@ -38,6 +38,11 @@ router.get('/filings/:id/export/json', gstController.exportFilingJSON);
 router.get('/filings/:id/export/excel', gstController.exportFilingExcel);
 router.post('/filings/:id/mark-filed', gstController.markAsFiled);
 
+// ============== REPORTS ==============
+router.get('/reports', gstController.getGSTReports);
+router.post('/reports', gstController.createGSTReport);
+router.get('/reports/clients', gstController.getCAReportingClients);
+
 // ============== HSN CODES ==============
 router.get('/hsn/search', gstController.searchHSN);
 

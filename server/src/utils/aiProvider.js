@@ -1,15 +1,21 @@
 const { OpenAI } = require('openai');
 const Groq = require('groq-sdk');
+const logger = require('./logger');
+let pipeline = null;
 
 class AIProvider {
     constructor() {
         this.openaiClient = null;
         this.groqClient = null;
+        this.embeddingPipeline = null;
     }
 
     _getOpenAI() {
-        if (!this.openaiClient && process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.length > 10) {
-            this.openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const key = process.env.OPENAI_API_KEY;
+        const isPlaceholder = !key || key === 'your_openai_api_key_here' || key.includes('your_openai_api_key');
+
+        if (!this.openaiClient && key && key.length > 20 && !isPlaceholder) {
+            this.openaiClient = new OpenAI({ apiKey: key });
         }
         return this.openaiClient;
     }
@@ -19,6 +25,23 @@ class AIProvider {
             this.groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
         }
         return this.groqClient;
+    }
+
+    async _getLocalEmbedder() {
+        if (!this.embeddingPipeline) {
+            try {
+                logger.info('[AIProvider] Loading local embedding pipeline (Xenova/all-MiniLM-L6-v2)...');
+                // Dynamic import to avoid issues if module missing
+                const { pipeline: transformerPipeline } = await import('@xenova/transformers');
+                // Use a small, fast model. 384 dimensions.
+                this.embeddingPipeline = await transformerPipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+                logger.info('[AIProvider] Local pipeline loaded successfully.');
+            } catch (e) {
+                logger.error('[AIProvider] Failed to load local embedder:', e);
+                return null;
+            }
+        }
+        return this.embeddingPipeline;
     }
 
     getActiveProvider() {
@@ -62,6 +85,50 @@ class AIProvider {
             console.error(`[AIProvider] Error with ${provider}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Generate embeddings for a text string
+     * @param {string} text - The text to embed
+     * @returns {Promise<number[]>} - The embedding vector
+     */
+    async getEmbedding(text) {
+        // Try OpenAI first if available
+        if (this._getOpenAI()) {
+            try {
+                const response = await this._getOpenAI().embeddings.create({
+                    model: "text-embedding-3-small",
+                    input: text,
+                    encoding_format: "float",
+                });
+                return response.data[0].embedding;
+            } catch (error) {
+                // If it fails, we fall back. Only log as error if it's not a quota/auth issue
+                if (error.status === 401 || error.status === 429) {
+                    logger.warn(`[AIProvider] OpenAI embedding unavailable (${error.status}), using local engine.`);
+                } else {
+                    logger.error('[AIProvider] OpenAI embedding failed, falling back to local:', error.message);
+                }
+            }
+        } else {
+            // Quietly use local if OpenAI is not configured
+            logger.debug('[AIProvider] OpenAI not configured, defaulting to local embeddings.');
+        }
+
+        // Fallback to local
+        try {
+            const embedder = await this._getLocalEmbedder();
+            if (embedder) {
+                logger.info(`[AIProvider] Generating local embedding for text length: ${text.length}`);
+                const output = await embedder(text, { pooling: 'mean', normalize: true });
+                return Array.from(output.data);
+            }
+        } catch (e) {
+            logger.error('[AIProvider] Local embedding failed:', e);
+        }
+
+        logger.warn('[AIProvider] No embedding provider available. Returning mock.');
+        return new Array(384).fill(0); // Mock for local dimension
     }
 }
 

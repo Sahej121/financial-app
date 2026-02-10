@@ -11,7 +11,7 @@ const itcOptimizationService = require('../services/itcOptimizationService');
 const invoiceExtractionService = require('../services/invoiceExtractionService');
 const { Op } = require('sequelize');
 
-const { GSTProfile, GSTInvoice, GSTFiling, HSNCode, ITCRecord, User, Document } = models;
+const { GSTProfile, GSTInvoice, GSTFiling, HSNCode, ITCRecord, User, Document, GSTReport, CA } = models;
 
 // ============== GST PROFILE ==============
 
@@ -860,5 +860,112 @@ exports.getPendingFilings = async (req, res) => {
     } catch (error) {
         console.error('[GST] Get pending filings error:', error);
         res.status(500).json({ error: 'Failed to fetch pending filings' });
+    }
+};
+
+/**
+ * Create a new GST report for a client
+ */
+exports.createGSTReport = async (req, res) => {
+    try {
+        if (req.user.role !== 'ca') {
+            return res.status(403).json({ error: 'Only CAs can create reports' });
+        }
+
+        const { userId, title, content, financialYear, metadata } = req.body;
+
+        const ca = await CA.findOne({ where: { userId: req.user.id } });
+        if (!ca) {
+            return res.status(404).json({ error: 'CA profile not found' });
+        }
+
+        const report = await GSTReport.create({
+            caId: ca.id,
+            userId,
+            title,
+            content,
+            financialYear,
+            status: 'sent',
+            metadata
+        });
+
+        res.status(201).json(report);
+    } catch (error) {
+        console.error('[GST] Create report error:', error);
+        res.status(500).json({ error: 'Failed to create GST report' });
+    }
+};
+
+/**
+ * Get GST reports for a CA or Client
+ */
+exports.getGSTReports = async (req, res) => {
+    try {
+        const where = {};
+        if (req.user.role === 'ca') {
+            const ca = await CA.findOne({ where: { userId: req.user.id } });
+            if (!ca) return res.status(404).json({ error: 'CA profile not found' });
+            where.caId = ca.id;
+        } else {
+            where.userId = req.user.id;
+        }
+
+        const reports = await GSTReport.findAll({
+            where,
+            include: [
+                { model: User, as: 'client', attributes: ['name', 'email'] },
+                { model: CA, as: 'ca', attributes: ['name'] }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json(reports);
+    } catch (error) {
+        console.error('[GST] Get reports error:', error);
+        res.status(500).json({ error: 'Failed to fetch GST reports' });
+    }
+};
+
+/**
+ * Get clients associated with a CA (based on meetings or profiles)
+ */
+exports.getCAReportingClients = async (req, res) => {
+    try {
+        if (req.user.role !== 'ca') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const ca = await CA.findOne({ where: { userId: req.user.id } });
+        if (!ca) return res.status(404).json({ error: 'CA profile not found' });
+
+        // Get unique client IDs from GST filings where the CA has verified
+        const filings = await GSTFiling.findAll({
+            where: { caId: ca.id },
+            include: [{ model: GSTProfile, as: 'gstProfile', include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }] }]
+        });
+
+        const clientsMap = new Map();
+        filings.forEach(f => {
+            if (f.gstProfile && f.gstProfile.user) {
+                clientsMap.set(f.gstProfile.user.id, f.gstProfile.user);
+            }
+        });
+
+        // Also check meetings
+        const meetings = await models.Meeting.findAll({
+            where: { professionalId: ca.id, professionalRole: 'ca' },
+            include: [{ model: User, as: 'client', attributes: ['id', 'name', 'email'] }]
+        });
+
+        meetings.forEach(m => {
+            if (m.client) {
+                clientsMap.set(m.client.id, m.client);
+            }
+        });
+
+        res.json(Array.from(clientsMap.values()));
+    } catch (error) {
+        console.error('[GST] Get reporting clients error:', error);
+        res.status(500).json({ error: 'Failed to fetch reporting clients' });
     }
 };

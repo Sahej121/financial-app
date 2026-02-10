@@ -104,13 +104,13 @@ const SettingDescription = styled(Text)`
 `;
 
 const ActionButton = styled(Button)`
-  height: 44px;
-  border-radius: 14px;
+  height: var(--input-height);
+  border-radius: var(--input-radius) !important;
   font-weight: 700;
   font-size: 14px;
-  background: white;
-  border: none;
-  color: black;
+  background: white !important;
+  border: none !important;
+  color: black !important;
   transition: all 0.3s ease;
   padding: 0 24px;
 
@@ -144,18 +144,12 @@ const FormContainer = styled.div`
   }
 
   .ant-input {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 16px;
+    min-height: var(--input-height);
+    border-radius: var(--input-radius) !important;
     font-size: 16px;
-    height: 52px;
-    color: white;
-    transition: all 0.3s ease;
-
-    &:focus, &:hover {
-      border-color: white;
-      background: rgba(255, 255, 255, 0.08);
+    
+    &:focus {
+      box-shadow: var(--input-focus-shadow) !important;
     }
   }
 `;
@@ -409,7 +403,7 @@ const Settings = () => {
                         background: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: '14px',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
-                        height: '52px',
+                        height: 'var(--input-height)',
                         color: 'white'
                       }}
                     />

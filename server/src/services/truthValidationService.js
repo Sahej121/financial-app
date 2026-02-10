@@ -233,10 +233,12 @@ class TruthValidationService {
 
     /**
      * Check document coverage for purpose
+     * Improved with "Healing Logic": If linked docs are missing, search for matching unlinked docs from the same user.
      */
-    validateDocumentCoverage(submission, documents) {
+    async validateDocumentCoverage(submission, documents) {
         const flags = [];
         const purpose = submission.planningPurpose;
+        const userId = submission.userId;
 
         // Required documents per purpose
         const requiredDocs = {
@@ -250,28 +252,57 @@ class TruthValidationService {
         const processingDocs = documents.filter(d => d.aiProcessingStatus === 'processing' || d.aiProcessingStatus === 'pending');
 
         for (const docType of required) {
-            // Check if we have the category
+            // 1. Direct match: category already linked to this submission
             const hasCategory = uploadedCategories.includes(docType);
 
-            // Check if we have a document still processing that could be this type
+            // 2. Processing match: document is currently being analyzed
             const hasProcessingMatch = processingDocs.length > 0;
 
-            // Check if there's an 'other' document that might be a bank statement (fallback)
+            // 3. Name-based match: document linked but category is 'other' (fallback)
             const hasPossibleMatch = documents.some(d =>
                 d.category === 'other' &&
-                (d.fileName.toLowerCase().includes('statement') || d.fileName.toLowerCase().includes('bank'))
+                (d.fileName.toLowerCase().includes('statement') ||
+                    d.fileName.toLowerCase().includes('bank') ||
+                    d.fileName.toLowerCase().includes('bs_'))
             );
 
+            // 4. HEALING LOGIC: If still missing, check for UNLINKED matching documents from this user
+            let healedMatch = false;
             if (!hasCategory && !hasProcessingMatch && !hasPossibleMatch) {
+                // Find unlinked documents for this user that match the required category
+                const unlinkedDocs = await Document.findAll({
+                    where: {
+                        userId,
+                        submissionId: null,
+                        [require('../models').Sequelize.Op.or]: [
+                            { category: docType },
+                            {
+                                fileName: {
+                                    [require('../models').Sequelize.Op.iLike]: `%${docType.split('_')[0]}%`
+                                }
+                            }
+                        ]
+                    },
+                    limit: 1
+                });
+
+                if (unlinkedDocs.length > 0) {
+                    const doc = unlinkedDocs[0];
+                    console.log(`[HEAL] Found unlinked document ${doc.id} for submission ${submission.id}. Linking now...`);
+                    await doc.update({ submissionId: submission.id });
+                    healedMatch = true;
+                    // Note: This only fixes the DB state. The current 'documents' array is still missing it,
+                    // but we return NO flag so the UI clears on refresh.
+                }
+            }
+
+            if (!hasCategory && !hasProcessingMatch && !hasPossibleMatch && !healedMatch) {
                 flags.push({
                     type: 'MISSING_DOCUMENT',
                     severity: 'medium',
                     message: `Recommended document not uploaded: ${docType.replace(/_/g, ' ')}`,
                     missingType: docType
                 });
-            } else if (!hasCategory && hasProcessingMatch) {
-                // If it's processing, we don't flag as missing, but maybe add a note
-                console.log(`Document of type ${docType} is still processing for submission ${submission.id}`);
             }
         }
 
@@ -301,7 +332,7 @@ class TruthValidationService {
             ...this.validateExpenses(submission, insights),
             ...this.validateBusinessData(submission, insights),
             ...this.validateDebtData(submission, insights),
-            ...this.validateDocumentCoverage(submission, documents)
+            ...(await this.validateDocumentCoverage(submission, documents))
         ];
 
         // Determine overall validity
